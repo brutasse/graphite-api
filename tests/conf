@@ -1,1 +1,4 @@
 search_index: /tmp/graphite-api-index
+whisper:
+  directories:
+    - /tmp

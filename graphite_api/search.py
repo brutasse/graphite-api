@@ -2,22 +2,14 @@ import time
 import os.path
 
 from .finders import match_entries
-from .utils import is_pattern, write_index
+from .utils import is_pattern
 
 
 class IndexSearcher(object):
     def __init__(self, index_path):
         self.index_path = index_path
-        if not os.path.exists(index_path):
-            try:
-                write_index()
-            except:
-                print("Couldn't build index file %s" % index_path)
-                raise RuntimeError("Couldn't build index file %s" % index_path)
         self.last_mtime = 0
         self._tree = (None, {})  # (data, children)
-        print("[IndexSearcher] performing initial index load")
-        self.reload()
 
     @property
     def tree(self):
