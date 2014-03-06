@@ -96,7 +96,7 @@ def metrics_find():
         errors['query'] = 'this parameter is required.'
 
     if errors:
-        return {'errors': errors}, 400
+        return jsonify({'errors': errors}), 400
 
     query = RequestParams['query']
     matches = sorted(
