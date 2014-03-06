@@ -10,6 +10,7 @@ class IndexSearcher(object):
         self.index_path = index_path
         self.last_mtime = 0
         self._tree = (None, {})  # (data, children)
+        self.reload()
 
     @property
     def tree(self):
@@ -23,24 +24,28 @@ class IndexSearcher(object):
 
     def reload(self):
         print("[IndexSearcher] reading index data from %s" % self.index_path)
+        if not os.path.exists(self.index_path):
+            with open(self.index_path, 'w'):
+                pass
         t = time.time()
         total_entries = 0
         tree = (None, {})  # (data, children)
-        for line in open(self.index_path):
-            line = line.strip()
-            if not line:
-                continue
+        with open(self.index_path, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
 
-            branches = line.split('.')
-            leaf = branches.pop()
-            cursor = tree
-            for branch in branches:
-                if branch not in cursor[1]:
-                    cursor[1][branch] = (None, {})  # (data, children)
-                cursor = cursor[1][branch]
+                branches = line.split('.')
+                leaf = branches.pop()
+                cursor = tree
+                for branch in branches:
+                    if branch not in cursor[1]:
+                        cursor[1][branch] = (None, {})  # (data, children)
+                    cursor = cursor[1][branch]
 
-            cursor[1][leaf] = (line, {})
-            total_entries += 1
+                cursor[1][leaf] = (line, {})
+                total_entries += 1
 
         self._tree = tree
         self.last_mtime = os.path.getmtime(self.index_path)

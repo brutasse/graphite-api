@@ -59,7 +59,15 @@ def events():
 # API calls that actually do something
 @app.route('/metrics/search', methods=methods)
 def metrics_search():
-    max_results = int(RequestParams.get('max_results', 25))
+    errors = {}
+    try:
+        max_results = int(RequestParams.get('max_results', 25))
+    except ValueError:
+        errors['max_results'] = 'must be an integer.'
+    if not 'query' in RequestParams:
+        errors['query'] = 'this parameter is required.'
+    if errors:
+        return jsonify({'errors': errors}), 400
     results = sorted(app.searcher.search(
         query=RequestParams['query'],
         max_results=max_results,

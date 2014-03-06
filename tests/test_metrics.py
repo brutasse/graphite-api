@@ -11,6 +11,10 @@ class MetricsTests(TestCase):
         response = self.app.get(url, query_string={'query': 'test'})
         self.assertJSON(response, [])
 
+        response = self.app.get(url, query_string={'query': 'test',
+                                                   'format': 'completer'})
+        self.assertJSON(response, {'metrics': []})
+
     def test_expand(self):
         url = '/metrics/expand'
 
@@ -35,3 +39,13 @@ class MetricsTests(TestCase):
         url = '/events/get_data'
         response = self.app.get(url)
         self.assertJSON(response, [])
+
+    def test_search(self):
+        url = '/metrics/search'
+        response = self.app.get(url, query_string={'max_results': 'a'})
+        self.assertJSON(response, {'errors': {
+            'max_results': 'must be an integer.',
+            'query': 'this parameter is required.'}}, status_code=400)
+
+        response = self.app.get(url, query_string={'query': 'test'})
+        self.assertJSON(response, {'metrics': []})
