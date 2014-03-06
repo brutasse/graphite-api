@@ -1,0 +1,18 @@
+language: python
+python: 2.7
+
+env:
+  - TOXENV=py26
+  - TOXENV=py27
+  - TOXENV=py33
+  - TOXENV=coverage
+  - TOXENV=lint
+
+before_install:
+  - sudo apt-get -y install libcairo2-dev
+
+install:
+  - pip install tox
+
+script:
+  - tox -e $TOXENV

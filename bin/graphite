@@ -1,0 +1,13 @@
+#! /usr/bin/env python
+import os
+
+os.environ.setdefault('DEBUG', '1')
+
+from graphite_api.app import app
+
+
+if __name__ == '__main__':
+    debug = bool(int(os.environ['DEBUG']))
+    port = int(os.environ.get('PORT', 8888))
+    host = os.environ.get('BIND_ADDRESS', '127.0.0.1')
+    app.run(debug=debug, port=port, host=host)

@@ -1,0 +1,7 @@
+Flask
+cairocffi
+pyparsing
+pytz
+pyyaml
+six
+https://github.com/brutasse/whisper/archive/feature/py3.zip#egg=whisper

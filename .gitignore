@@ -1,0 +1,4 @@
+.tox
+*.egg-info
+.coverage
+htmlcov
