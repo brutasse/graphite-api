@@ -1,3 +1,4 @@
+import json
 import os
 
 try:
@@ -18,3 +19,7 @@ class TestCase(unittest.TestCase):
         app.config['TESTING'] = True
         app.config['GRAPHITE']['store'] = Store([WhisperFinder(whisper_conf)])
         self.app = app.test_client()
+
+    def assertJSON(self, response, data, status_code=200):
+        self.assertEqual(response.status_code, status_code)
+        self.assertEqual(json.loads(response.data.decode('utf-8')), data)
