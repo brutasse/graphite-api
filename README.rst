@@ -108,3 +108,5 @@ from a fresh clone of the repository:
 
     pip install tox
     tox
+
+.. _Tox: https://testrun.org/tox/
