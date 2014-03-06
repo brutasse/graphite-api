@@ -39,7 +39,7 @@ Difference from graphite-web
 * JSON data in request bodies is supported, additionally to form data and
   querystring parameters.
 * Ceres integration will be as an external backend.
-* Compatibility python 2 and 3.
+* Compatibility with python 2 and 3.
 * Easy to install and configure.
 
 Goals
@@ -84,6 +84,32 @@ YAML.
 
 If you need the configuration file to be at a different location, you can set
 the ``GRAPHITE_API_CONFIG`` environment variable to the location you want.
+
+Storage finders
+```````````````
+
+Graphite-API can read from any metrics store as long as it has a compatible
+storage finder. Finders can be configured this way:
+
+.. code-block:: yaml
+
+    finders:
+      - graphite_api.finders.whisper.WhisperFinder
+      - cyanite.CyaniteFinder
+
+Multiple finders are allowed.
+
+Functions
+`````````
+
+Custom functions can be added to extend the built-in grammar. The default
+functions are:
+
+.. code-block:: yaml
+
+    functions:
+      - graphite_api.functions.SeriesFunctions
+      - graphite_api.functions.PieFunctions
 
 Deploying
 ---------
