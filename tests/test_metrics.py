@@ -1,5 +1,3 @@
-import json
-
 from . import TestCase
 
 
@@ -22,6 +20,18 @@ class MetricsTests(TestCase):
                         status_code=400)
 
         response = self.app.get(url, query_string={'query': 'test'})
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(json.loads(response.data.decode('utf-8')),
-                         {'results': []})
+        self.assertJSON(response, {'results': []})
+
+    def test_noop(self):
+        url = '/dashboard/find'
+        response = self.app.get(url)
+        self.assertJSON(response, {'dashboards': []})
+
+        url = '/dashboard/load/foo'
+        response = self.app.get(url)
+        self.assertJSON(response, {'error': "Dashboard 'foo' does not exist."},
+                        status_code=404)
+
+        url = '/events/get_data'
+        response = self.app.get(url)
+        self.assertJSON(response, [])
