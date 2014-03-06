@@ -146,7 +146,7 @@ def metrics_expand():
     if not 'query' in RequestParams:
         errors['query'] = 'this parameter is required.'
     if errors:
-        return {'errors': errors}, 400
+        return jsonify({'errors': errors}), 400
 
     results = defaultdict(set)
     for query in RequestParams.getlist('query'):

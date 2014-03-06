@@ -13,3 +13,16 @@ class MetricsTests(TestCase):
         response = self.app.get(url, query_string={'query': 'test'})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(json.loads(response.data.decode('utf-8')), [])
+
+    def test_expand(self):
+        url = '/metrics/expand'
+
+        response = self.app.get(url)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(json.loads(response.data.decode('utf-8')), {
+            'errors': {'query': 'this parameter is required.'}})
+
+        response = self.app.get(url, query_string={'query': 'test'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(json.loads(response.data.decode('utf-8')),
+                         {'results': []})
