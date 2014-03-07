@@ -57,3 +57,13 @@ def configure(app):
     loaded_config['searcher'] = IndexSearcher(config['search_index'])
     app.config['GRAPHITE'] = loaded_config
     app.config['TIME_ZONE'] = config['time_zone']
+
+    if 'sentry_dsn' in config:
+        try:
+            from raven.contrib.flask import Sentry
+        except ImportError:
+            warnings.warn("'sentry_dsn' is provided in the configuration the "
+                          "sentry client is not installed. Please `pip "
+                          "install raven[flask]`.")
+        else:
+            Sentry(app, dsn=config['sentry_dsn'])

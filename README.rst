@@ -111,6 +111,23 @@ functions are:
       - graphite_api.functions.SeriesFunctions
       - graphite_api.functions.PieFunctions
 
+Error handling
+``````````````
+
+Request exceptions can be sent to `Sentry`_ for painless debugging.
+
+.. _Sentry: http://sentry.readthedocs.org/en/latest/
+
+Just add to your config:
+
+.. code-block:: yaml
+
+    sentry_dsn: https://key:secret@host/id
+
+And install *raven*, the sentry client::
+
+    pip install raven[flask]
+
 Deploying
 ---------
 

@@ -3,5 +3,6 @@ cairocffi
 pyparsing
 pytz
 pyyaml
+raven
 six
 https://github.com/brutasse/whisper/archive/feature/py3.zip#egg=whisper
