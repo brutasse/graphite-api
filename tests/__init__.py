@@ -15,7 +15,7 @@ from graphite_api.finders.whisper import WhisperFinder
 from graphite_api.search import IndexSearcher
 from graphite_api.storage import Store
 
-DATA_DIR = '/tmp/data.{0}'.format(os.getpid())
+DATA_DIR = '/tmp/graphite-api-data.{0}'.format(os.getpid())
 WHISPER_DIR = os.path.join(DATA_DIR, 'whisper')
 SEARCH_INDEX = os.path.join(DATA_DIR, 'index')
 

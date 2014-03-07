@@ -1,4 +1,7 @@
-from . import TestCase
+import os
+import whisper
+
+from . import TestCase, WHISPER_DIR
 
 
 class MetricsTests(TestCase):
@@ -49,3 +52,26 @@ class MetricsTests(TestCase):
 
         response = self.app.get(url, query_string={'query': 'test'})
         self.assertJSON(response, {'metrics': []})
+
+    def test_search_index(self):
+        response = self.app.get('/metrics/search',
+                                query_string={'query': 'collectd.*'})
+        self.assertJSON(response, {'metrics': []})
+        parent = os.path.join(WHISPER_DIR, 'collectd')
+        os.makedirs(parent)
+
+        for metric in ['load', 'memory', 'cpu']:
+            db = os.path.join(parent, '{0}.wsp'.format(metric))
+            whisper.create(db, [(1, 60)])
+
+        response = self.app.put('/index')
+        self.assertJSON(response, {'success': True, 'entries': 3})
+
+        response = self.app.get('/metrics/search',
+                                query_string={'query': 'collectd.*'})
+        self.assertJSON(response, {'metrics': [
+            {'is_leaf': False, 'path': None},
+            {'is_leaf': True, 'path': 'collectd.cpu'},
+            {'is_leaf': True, 'path': 'collectd.load'},
+            {'is_leaf': True, 'path': 'collectd.memory'},
+        ]})

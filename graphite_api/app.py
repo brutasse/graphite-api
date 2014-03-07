@@ -2,6 +2,8 @@ import csv
 import json
 import math
 import pytz
+import shutil
+import tempfile
 import time
 
 from collections import defaultdict
@@ -196,6 +198,27 @@ def prune_datapoints(series, max_datapoints, start, end):
     timestamps = range(series.start, series.end, step)
     datapoints = zip(series, timestamps)
     return {'target': series.name, 'datapoints': datapoints}
+
+
+def recurse(query, index):
+    """
+    Recursively walk across paths, adding leaves to the index as they're found.
+    """
+    for node in app.store.find(query):
+        if node.is_leaf:
+            index.add(node.path)
+        else:
+            recurse('{0}.*'.format(node.path), index)
+
+
+@app.route('/index', methods=['POST', 'PUT'])
+def build_index():
+    index = set()
+    recurse('*', index)
+    with tempfile.NamedTemporaryFile(delete=False) as index_file:
+        index_file.write('\n'.join(sorted(index)).encode('utf-8'))
+    shutil.move(index_file.name, app.searcher.index_path)
+    return jsonify({'success': True, 'entries': len(index)}), 200
 
 
 @app.route('/render', methods=methods)

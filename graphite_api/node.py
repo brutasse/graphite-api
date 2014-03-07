@@ -19,7 +19,7 @@ class LeafNode(Node):
     __slots__ = ('reader', 'intervals')
 
     def __init__(self, path, reader):
-        Node.__init__(self, path)
+        super(LeafNode, self).__init__(path)
         self.reader = reader
         self.intervals = reader.get_intervals()
         self.is_leaf = True
