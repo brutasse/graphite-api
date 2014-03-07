@@ -1,6 +1,9 @@
 import json
 import os
 
+os.environ.setdefault('GRAPHITE_API_CONFIG',
+                      os.path.join(os.path.dirname(__file__), 'conf'))
+
 try:
     import unittest2 as unittest
 except ImportError:

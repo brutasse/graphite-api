@@ -111,6 +111,24 @@ functions are:
       - graphite_api.functions.SeriesFunctions
       - graphite_api.functions.PieFunctions
 
+CORS
+````
+
+If your dashboard and your graphite-api server don't have the same hostname,
+you might need to setup CORS to allow browsers to make cross-domain HTTP
+requests.
+
+For example, if you have graphite-api on ``https://api.graph.example.com`` and
+grafana on ``https://dashboard.graph.example.com``, you need the following in
+your graphite-api config:
+
+.. code-block:: yaml
+
+    allowed_origins:
+      - dashboard.graph.example.com
+
+You can add as many hosts as you want.
+
 Error handling
 ``````````````
 

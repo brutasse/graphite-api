@@ -2,3 +2,6 @@ search_index: /tmp/graphite-api-index
 whisper:
   directories:
     - /tmp
+allowed_origins:
+  - example.com
+  - foo.example.com:8888
