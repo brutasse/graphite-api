@@ -1,3 +1,4 @@
+search_index: /tmp/graphite-api-index
 allowed_origins:
   - example.com
   - foo.example.com:8888
