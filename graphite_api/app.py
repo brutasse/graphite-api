@@ -187,7 +187,6 @@ def prune_datapoints(series, max_datapoints, start, end):
         )
         series.start += nudge
         values_to_lose = nudge // series.step
-        print(values_to_lose)
         del series[:values_to_lose-1]
         series.consolidate(values_per_point)
         step = seconds_per_point
@@ -231,7 +230,7 @@ def render():
     if 'maxDataPoints' in RequestParams:
         try:
             request_options['maxDataPoints'] = int(
-                RequestParams['maxDataPoints'])
+                float(RequestParams['maxDataPoints']))
         except ValueError:
             errors['maxDataPoints'] = 'Must be an integer.'
 
