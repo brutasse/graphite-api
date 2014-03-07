@@ -1,7 +1,7 @@
 from . import TestCase
 
 
-class CorsTestCase(TestCase):
+class HttpTestCase(TestCase):
     def test_cors(self):
         response = self.app.options('/render')
         self.assertFalse(
@@ -24,3 +24,10 @@ class CorsTestCase(TestCase):
         ))
         self.assertFalse(
             'Access-Control-Allow-Origin' in response.headers.keys())
+
+    def test_trailing_slash(self):
+        response = self.app.get('/render?target=foo')
+        self.assertEqual(response.status_code, 200)
+
+        response = self.app.get('/render/?target=foo')
+        self.assertEqual(response.status_code, 200)

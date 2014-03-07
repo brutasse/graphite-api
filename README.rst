@@ -34,8 +34,6 @@ Difference from graphite-web
 * Stateless. No need for a database.
 * No caching. Rendering is live.
 * No Pickle.
-* Graphite-web has a history of accepting URLs with or without a trailing
-  slash. Graphite-API only supports URLs with no trailing slash.
 * JSON data in request bodies is supported, additionally to form data and
   querystring parameters.
 * Ceres integration will be as an external backend.

@@ -4,7 +4,7 @@ import yaml
 
 from importlib import import_module
 
-from .middleware import CORS
+from .middleware import CORS, TrailingSlash
 from .search import IndexSearcher
 from .storage import Store
 
@@ -68,4 +68,5 @@ def configure(app):
                           "install raven[flask]`.")
         else:
             Sentry(app, dsn=config['sentry_dsn'])
-    app.wsgi_app = CORS(app.wsgi_app, config.get('allowed_origins'))
+    app.wsgi_app = TrailingSlash(CORS(app.wsgi_app,
+                                      config.get('allowed_origins')))
