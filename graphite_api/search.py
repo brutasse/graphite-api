@@ -1,12 +1,17 @@
 import time
 import os.path
 
+from structlog import get_logger
+
 from .finders import match_entries
 from .utils import is_pattern
+
+logger = get_logger()
 
 
 class IndexSearcher(object):
     def __init__(self, index_path):
+        self.log = logger.bind(index_path=index_path)
         self.index_path = index_path
         self.last_mtime = 0
         self._tree = (None, {})  # (data, children)
@@ -16,14 +21,15 @@ class IndexSearcher(object):
     def tree(self):
         current_mtime = os.path.getmtime(self.index_path)
         if current_mtime > self.last_mtime:
-            print("[IndexSearcher] reloading stale index, current_mtime=%s "
-                  "last_mtime=%s" % (current_mtime, self.last_mtime))
+            self.log.info('reloading stale index',
+                          current_mtime=current_mtime,
+                          last_mtime=self.last_mtime)
             self.reload()
 
         return self._tree
 
     def reload(self):
-        print("[IndexSearcher] reading index data from %s" % self.index_path)
+        self.log.info("reading index data")
         if not os.path.exists(self.index_path):
             with open(self.index_path, 'w'):
                 pass
@@ -49,8 +55,8 @@ class IndexSearcher(object):
 
         self._tree = tree
         self.last_mtime = os.path.getmtime(self.index_path)
-        print("[IndexSearcher] index reload took %.6f seconds "
-              "(%d entries)" % (time.time() - t, total_entries))
+        self.log.info("search index reloaded", total_entries=total_entries,
+                      duration=time.time() - t)
 
     def search(self, query, max_results=None, keep_query_pattern=False):
         query_parts = query.split('.')

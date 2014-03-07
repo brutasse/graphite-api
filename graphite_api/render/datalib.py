@@ -14,6 +14,10 @@ limitations under the License."""
 
 import time
 
+from structlog import get_logger
+
+logger = get_logger()
+
 
 class TimeSeries(list):
     def __init__(self, name, start, end, step, values, consolidate='average'):
@@ -90,8 +94,8 @@ def fetchData(requestContext, pathExpr):
 
         for node, results in fetches:
             if not results:
-                print("render.datalib.fetchData :: no results for "
-                      "%s.fetch(%s, %s)" % (node, startTime, endTime))
+                logger.info("no results", node=node, start=startTime,
+                            end=endTime)
                 continue
 
             try:

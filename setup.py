@@ -10,11 +10,14 @@ install_requires = [
     'pytz',
     'pyyaml',
     'six',
+    'structlog',
     'whisper',
 ]
 
 if sys.version_info < (2, 7):
     install_requires.append('importlib')
+    install_requires.append('logutils')
+    install_requires.append('ordereddict')
 
 setup(
     name='graphite-api',

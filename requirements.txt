@@ -5,4 +5,5 @@ pytz
 pyyaml
 raven[flask]
 six
+structlog
 https://github.com/brutasse/whisper/archive/feature/py3.zip#egg=whisper

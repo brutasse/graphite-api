@@ -4,7 +4,6 @@ import math
 import pytz
 import shutil
 import tempfile
-import time
 
 from collections import defaultdict
 from datetime import datetime
@@ -503,10 +502,8 @@ def tree_json(nodes, base_path, wildcards=False):
 
 def doImageRender(graphClass, graphOptions):
     pngData = BytesIO()
-    t = time.time()
     img = graphClass(**graphOptions)
     img.output(pngData)
-    print('Rendered PNG in %.6f seconds' % (time.time() - t))
     imageData = pngData.getvalue()
     pngData.close()
     return imageData

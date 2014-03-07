@@ -1,6 +1,7 @@
 import json
 import os
 import shutil
+import sys
 
 os.environ.setdefault('GRAPHITE_API_CONFIG',
                       os.path.join(os.path.dirname(__file__), 'conf.yaml'))
@@ -15,9 +16,34 @@ from graphite_api.finders.whisper import WhisperFinder
 from graphite_api.search import IndexSearcher
 from graphite_api.storage import Store
 
+
 DATA_DIR = '/tmp/graphite-api-data.{0}'.format(os.getpid())
 WHISPER_DIR = os.path.join(DATA_DIR, 'whisper')
 SEARCH_INDEX = os.path.join(DATA_DIR, 'index')
+
+null_handler = 'logging.NullHandler'
+if sys.version_info > (2, 7):
+    from logging.config import dictConfig
+else:
+    from logutils.dictconfig import dictConfig
+
+    class NullHandler(object):
+        def emit(self, record):
+            pass
+
+        def setLevel(self, level):
+            pass
+    null_handler = 'tests.NullHandler'
+
+dictConfig({
+    'version': 1,
+    'handlers': {
+        'raw': {
+            'level': 'DEBUG',
+            'class': null_handler,
+        },
+    },
+})
 
 
 class TestCase(unittest.TestCase):
