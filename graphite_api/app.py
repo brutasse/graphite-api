@@ -203,8 +203,8 @@ def prune_datapoints(series, max_datapoints, start, end):
 def render():
     errors = {}
     graph_options = {
-        'width': 330,
-        'height': 250,
+        'width': 600,
+        'height': 300,
     }
     request_options = {}
     graph_type = RequestParams.get('graphType', 'line')
