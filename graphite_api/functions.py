@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
+from collections import defaultdict
 from datetime import datetime, timedelta
 from functools import partial
 from operator import is_not
@@ -54,7 +54,7 @@ def safeSum(values):
 def safeDiff(values):
     safeValues = filter(not_none, values)
     if safeValues:
-        values = map(lambda x: x*-1, safeValues[1:])
+        values = map(lambda x: -x, safeValues[1:])
         values.insert(0, safeValues[0])
         return sum(values)
 
@@ -243,7 +243,7 @@ def sumSeriesWithWildcards(requestContext, seriesList, *position):  # XXX
     return [newSeries[name] for name in newNames]
 
 
-def averageSeriesWithWildcards(requestContext, seriesList, *position):  # XXX
+def averageSeriesWithWildcards(requestContext, seriesList, *positions):
     """
     Call averageSeries after inserting wildcards at the given position(s).
 
@@ -258,22 +258,17 @@ def averageSeriesWithWildcards(requestContext, seriesList, *position):  # XXX
             host.*.cpu-system.value)
 
     """
-    if isinstance(position, int):
-        positions = [position]
-    else:
-        positions = position
-    result = []
-    matchedList = {}
+    matchedList = defaultdict(list)
     for series in seriesList:
         newname = '.'.join(map(lambda x: x[1],
                                filter(lambda i: i[0] not in positions,
                                       enumerate(series.name.split('.')))))
-        if newname not in matchedList:
-            matchedList[newname] = []
         matchedList[newname].append(series)
-    for name in matchedList.keys():
-        result.append(averageSeries(requestContext, (matchedList[name]))[0])
-        result[-1].name = name
+    result = []
+    for name in matchedList:
+        series = averageSeries(requestContext, (matchedList[name]))[0]
+        series.name = name
+        result.append(series)
     return result
 
 

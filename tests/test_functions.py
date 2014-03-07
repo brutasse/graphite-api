@@ -100,11 +100,13 @@ class FunctionsTest(TestCase):
 
     def _generate_series_list(self):
         seriesList = []
-        config = [range(101), range(101), [1, None, None, None, None]]
+        config = [range(101), range(101), [1] + [None] * 100]
 
         for i, c in enumerate(config):
             name = "collectd.test-db{0}.load.value".format(i + 1)
-            seriesList.append(TimeSeries(name, 0, 1, 1, c))
+            series = TimeSeries(name, 0, 101, 1, c)
+            series.pathExpression = name
+            seriesList.append(series)
         return seriesList
 
     def test_remove_above_percentile(self):
@@ -272,6 +274,17 @@ class FunctionsTest(TestCase):
                 original_value = seriesList[i][counter]
                 expected_value = original_value * multiplier
                 self.assertEqual(value, expected_value)
+
+    def test_average_series(self):
+        series = self._generate_series_list()
+        average = functions.averageSeries({}, series)[0]
+        self.assertEqual(average[:3], [1/3., 1.0, 2.0])
+
+    def test_average_series_wildcards(self):
+        series = self._generate_series_list()
+        average = functions.averageSeriesWithWildcards({}, series, 1)[0]
+        self.assertEqual(average[:3], [1/3., 1.0, 2.0])
+        self.assertEqual(average.name, 'collectd.load.value')
 
     def _generate_mr_series(self):
         seriesList = [
