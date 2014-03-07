@@ -14,5 +14,4 @@ before_install:
 install:
   - pip install tox
 
-script:
-  - .travis.sh
+script: "./.travis.sh"
