@@ -16,6 +16,8 @@
 
 
 from datetime import datetime, timedelta
+from functools import partial
+from operator import is_not
 
 import math
 import re
@@ -42,14 +44,15 @@ def timestamp(datetime):
     return time.mktime(datetime.timetuple())
 
 
+not_none = partial(is_not, None)
+
+
 def safeSum(values):
-    safeValues = [v for v in values if v is not None]
-    if safeValues:
-        return sum(safeValues)
+    return sum(filter(not_none, values))
 
 
 def safeDiff(values):
-    safeValues = [v for v in values if v is not None]
+    safeValues = filter(not_none, values)
     if safeValues:
         values = map(lambda x: x*-1, safeValues[1:])
         values.insert(0, safeValues[0])
@@ -57,7 +60,7 @@ def safeDiff(values):
 
 
 def safeLen(values):
-    return len([v for v in values if v is not None])
+    return len(list(filter(not_none, values)))
 
 
 def safeDiv(a, b):
@@ -93,8 +96,7 @@ def safeStdDev(a):
     ln = safeLen(a)
     avg = safeDiv(sm, ln)
     sum = 0
-    safeValues = [v for v in a if v is not None]
-    for val in safeValues:
+    for val in filter(not_none, a):
         sum = sum + (val - avg) * (val - avg)
     return math.sqrt(sum/ln)
 
