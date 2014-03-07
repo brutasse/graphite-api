@@ -1,28 +1,14 @@
 import json
 import os
 import time
-import logging
 
 import whisper
 
-from . import TestCase, DATA_DIR
-
-# Silence logging during tests
-LOGGER = logging.getLogger()
-
-# logging.NullHandler is a python 2.7ism
-if hasattr(logging, "NullHandler"):
-    LOGGER.addHandler(logging.NullHandler())
+from . import TestCase, WHISPER_DIR
 
 
 class RenderTest(TestCase):
-    db = os.path.join(DATA_DIR, 'test.wsp')
-
-    def wipe_whisper(self):
-        try:
-            os.remove(self.db)
-        except OSError:
-            pass
+    db = os.path.join(WHISPER_DIR, 'test.wsp')
 
     def test_render_view(self):
         url = '/render'
@@ -34,7 +20,6 @@ class RenderTest(TestCase):
         response = self.app.get(url, query_string={'target': 'test'})
         self.assertEqual(response.headers['Content-Type'], 'image/png')
 
-        self.addCleanup(self.wipe_whisper)
         whisper.create(self.db, [(1, 60)])
 
         ts = int(time.time())

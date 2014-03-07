@@ -1,0 +1,3 @@
+allowed_origins:
+  - example.com
+  - foo.example.com:8888
