@@ -67,7 +67,7 @@ Installation
 
 .. code-block:: bash
 
-    git clone git@github.com:brutasse/graphite-api.git
+    git clone https://github.com/brutasse/graphite-api.git
     cd graphite-api
     sudo python setup.py install
 
