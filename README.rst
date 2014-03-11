@@ -40,6 +40,7 @@ Difference from graphite-web
 * Stateless. No need for a database.
 * No caching. Rendering is live.
 * No Pickle.
+* No remote rendering.
 * JSON data in request bodies is supported, additionally to form data and
   querystring parameters.
 * Ceres integration will be as an external backend.
@@ -51,12 +52,13 @@ Goals
 
 * Solid codebase. Strict flake8 compatibility, good test coverage.
 * Ease of installation/use/configuration.
-* Compatibility with the original Graphite-web API.
+* Compatibility with the original Graphite-web API and 3rd-party dashboards.
 
 Non-goals
 ---------
 
-* Support for very old Python versions.
+* Support for very old Python versions (Python 2.6 is still supported but
+  maybe not for long).
 * Built-in support for every metric storage system in the world. Whisper is
   included by default, other storages are added via 3rd-party backends.
 
