@@ -205,7 +205,7 @@ def sumSeries(requestContext, *seriesLists):
     return [series]
 
 
-def sumSeriesWithWildcards(requestContext, seriesList, *position):  # XXX
+def sumSeriesWithWildcards(requestContext, seriesList, *positions):
     """
     Call sumSeries after inserting wildcards at the given position(s).
 
@@ -220,11 +220,6 @@ def sumSeriesWithWildcards(requestContext, seriesList, *position):  # XXX
             host.*.cpu-system.value)
 
     """
-    if isinstance(position, int):
-        positions = [position]
-    else:
-        positions = position
-
     newSeries = {}
     newNames = list()
 
@@ -232,7 +227,7 @@ def sumSeriesWithWildcards(requestContext, seriesList, *position):  # XXX
         newname = '.'.join(map(lambda x: x[1],
                                filter(lambda i: i[0] not in positions,
                                       enumerate(series.name.split('.')))))
-        if newname in newSeries.keys():
+        if newname in newSeries:
             newSeries[newname] = sumSeries(requestContext,
                                            (series, newSeries[newname]))[0]
         else:
@@ -1281,8 +1276,6 @@ def aliasByNode(requestContext, seriesList, *nodes):
         &target=aliasByNode(ganglia.*.cpu.load5,1)
 
     """
-    if isinstance(nodes, int):
-        nodes = [nodes]
     for series in seriesList:
         metric_pieces = re.search('(?:.*\()?(?P<name>[-\w*\.]+)(?:,|\)?.*)?',
                                   series.name).groups()[0].split('.')
