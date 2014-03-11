@@ -194,10 +194,7 @@ def sumSeries(requestContext, *seriesLists):
 
     """
 
-    try:
-        seriesList, start, end, step = normalize(seriesLists)
-    except:
-        return []
+    seriesList, start, end, step = normalize(seriesLists)
     name = "sumSeries(%s)" % formatPathExpressions(seriesList)
     values = (safeSum(row) for row in zip(*seriesList))
     series = TimeSeries(name, start, end, step, values)

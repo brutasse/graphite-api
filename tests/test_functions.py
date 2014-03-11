@@ -318,3 +318,21 @@ class FunctionsTest(TestCase):
             self.assertEqual(results, expectedResult)
         self.assertEqual(mock.mock_calls, [call({}, inputList[0]),
                                            call({}, inputList[1])])
+
+    def test_sum_series(self):
+        series = self._generate_series_list()
+        sum_ = functions.sumSeries({}, series)[0]
+        self.assertEqual(sum_.pathExpression,
+                         "sumSeries(collectd.test-db1.load.value,"
+                         "collectd.test-db2.load.value,"
+                         "collectd.test-db3.load.value)")
+        self.assertEqual(sum_[:3], [1, 2, 4])
+
+    def test_sum_series_wildcards(self):
+        series = self._generate_series_list()
+        sum_ = functions.sumSeriesWithWildcards({}, series, 1)[0]
+        self.assertEqual(sum_.pathExpression,
+                         "sumSeries(collectd.test-db3.load.value,"
+                         "sumSeries(collectd.test-db1.load.value,"
+                         "collectd.test-db2.load.value))")
+        self.assertEqual(sum_[:3], [1, 2, 4])
