@@ -100,7 +100,9 @@ class FunctionsTest(TestCase):
 
     def _generate_series_list(self):
         seriesList = []
-        config = [range(101), range(101), [1] + [None] * 100]
+        config = [range(101),
+                  range(2, 103),
+                  [1] * 2 + [None] * 90 + [1] * 2 + [None] * 7]
 
         for i, c in enumerate(config):
             name = "collectd.test-db{0}.load.value".format(i + 1)
@@ -113,14 +115,14 @@ class FunctionsTest(TestCase):
         seriesList = self._generate_series_list()
         percent = 50
         results = functions.removeAbovePercentile({}, seriesList, percent)
-        for result in results:
-            self.assertListEqual(return_greater(result, percent), [])
+        for result, exc in zip(results, [[], [51, 52]]):
+            self.assertListEqual(return_greater(result, percent), exc)
 
     def test_remove_below_percentile(self):
         seriesList = self._generate_series_list()
         percent = 50
         results = functions.removeBelowPercentile({}, seriesList, percent)
-        expected = [[], [], [1]]
+        expected = [[], [], [1] * 4]
 
         for i, result in enumerate(results):
             self.assertListEqual(return_less(result, percent), expected[i])
@@ -278,12 +280,12 @@ class FunctionsTest(TestCase):
     def test_average_series(self):
         series = self._generate_series_list()
         average = functions.averageSeries({}, series)[0]
-        self.assertEqual(average[:3], [1/3., 1.0, 2.0])
+        self.assertEqual(average[:3], [1.0, 5/3., 3.0])
 
     def test_average_series_wildcards(self):
         series = self._generate_series_list()
         average = functions.averageSeriesWithWildcards({}, series, 1)[0]
-        self.assertEqual(average[:3], [1/3., 1.0, 2.0])
+        self.assertEqual(average[:3], [1.0, 5/3., 3.0])
         self.assertEqual(average.name, 'collectd.load.value')
 
     def _generate_mr_series(self):
@@ -326,7 +328,7 @@ class FunctionsTest(TestCase):
                          "sumSeries(collectd.test-db1.load.value,"
                          "collectd.test-db2.load.value,"
                          "collectd.test-db3.load.value)")
-        self.assertEqual(sum_[:3], [1, 2, 4])
+        self.assertEqual(sum_[:3], [3, 5, 6])
 
     def test_sum_series_wildcards(self):
         series = self._generate_series_list()
@@ -335,4 +337,82 @@ class FunctionsTest(TestCase):
                          "sumSeries(collectd.test-db3.load.value,"
                          "sumSeries(collectd.test-db1.load.value,"
                          "collectd.test-db2.load.value))")
-        self.assertEqual(sum_[:3], [1, 2, 4])
+        self.assertEqual(sum_[:3], [3, 5, 6])
+
+    def test_diff_series(self):
+        series = self._generate_series_list()[:2]
+        diff = functions.diffSeries({}, [series[0]], [series[1]])[0]
+        self.assertEqual(diff[:3], [-2, -2, -2])
+
+    def test_stddev_series(self):
+        series = self._generate_series_list()[:2]
+        dev = functions.stddevSeries({}, [series[0]], [series[1]])[0]
+        self.assertEqual(dev[:3], [1.0, 1.0, 1.0])
+
+    def test_min_series(self):
+        series = self._generate_series_list()[:2]
+        min_ = functions.minSeries({}, [series[0]], [series[1]])[0]
+        self.assertEqual(min_[:3], [0, 1, 2])
+
+    def test_max_series(self):
+        series = self._generate_series_list()[:2]
+        max_ = functions.maxSeries({}, [series[0]], [series[1]])[0]
+        self.assertEqual(max_[:3], [2, 3, 4])
+
+    def test_range_of_series(self):
+        series = self._generate_series_list()[:2]
+        range_ = functions.rangeOfSeries({}, [series[0]], [series[1]])[0]
+        self.assertEqual(range_[:3], [2, 2, 2])
+
+    def test_percentile_of_series(self):
+        series = self._generate_series_list()[:2]
+        percent = functions.percentileOfSeries({}, series, 50)[0]
+        self.assertEqual(percent[:3], [2, 3, 4])
+
+        with self.assertRaises(ValueError):
+            functions.percentileOfSeries({}, series, -1)
+
+    def test_keep_last_value(self):
+        series = self._generate_series_list()[2]
+        last = functions.keepLastValue({}, [series], limit=97)[0]
+        self.assertEqual(last[:3], [1, 1, 1])
+
+        series[-1] = 1
+        last = functions.keepLastValue({}, [series], limit=97)[0]
+        self.assertEqual(last[:3], [1, 1, 1])
+
+    def test_as_percent(self):
+        series = self._generate_series_list()
+        perc = functions.asPercent({}, series)[0]
+        self.assertEqual(perc[:2], [0.0, 20.0])
+        self.assertEqual(perc[3], 37.5)
+
+        with self.assertRaises(ValueError):
+            functions.asPercent({}, series[:2], [1, 2])
+
+        perc = functions.asPercent({}, series[:2], [series[2]])[0]
+        self.assertEqual(perc[:2], [0.0, 100.0])
+
+        perc = functions.asPercent({}, series[:2], 12)[0]
+        self.assertEqual(perc[:2], [0.0, 8.333333333333332])
+
+    def test_divide_series(self):
+        series = self._generate_series_list()
+        div = functions.divideSeries({}, [series[0]], [series[1]])[0]
+        self.assertEqual(div[:3], [0, 1/3., 0.5])
+
+        with self.assertRaises(ValueError):
+            functions.divideSeries({}, [series[0]], [1, 2])
+
+    def test_multiply_series(self):
+        series = self._generate_series_list()
+        mul = functions.multiplySeries({}, series[:2])[0]
+        self.assertEqual(mul[:3], [0, 3, 8])
+
+        mul = functions.multiplySeries({}, series[:1])[0]
+        self.assertEqual(mul[:3], [0, 1, 2])
+
+    def test_weighted_average(self):
+        series = self._generate_series_list()
+        weight = functions.weightedAverage({}, [series[0]], [series[1]], 0)
+        self.assertEqual(weight[:3], [0, 1, 2])

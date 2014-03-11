@@ -52,9 +52,9 @@ def safeSum(values):
 
 
 def safeDiff(values):
-    safeValues = filter(not_none, values)
+    safeValues = list(filter(not_none, values))
     if safeValues:
-        values = map(lambda x: -x, safeValues[1:])
+        values = list(map(lambda x: -x, safeValues[1:]))
         values.insert(0, safeValues[0])
         return sum(values)
 
@@ -266,7 +266,7 @@ def averageSeriesWithWildcards(requestContext, seriesList, *positions):
 
 def diffSeries(requestContext, *seriesLists):
     """
-    Can take two or more metrics, or a single metric and a constant.
+    Can take two or more metrics.
     Subtracts parameters 2 through n from parameter 1.
 
     Example:
@@ -275,7 +275,6 @@ def diffSeries(requestContext, *seriesLists):
 
         &target=diffSeries(service.connections.total,
                            service.connections.failed)
-        &target=diffSeries(service.connections.total,5)
 
     """
     seriesList, start, end, step = normalize(seriesLists)
@@ -402,11 +401,10 @@ def percentileOfSeries(requestContext, seriesList, n, interpolate=False):
             'The requested percent is required to be greater than 0')
 
     name = 'percentilesOfSeries(%s,%g)' % (seriesList[0].pathExpression, n)
-    (start, end, step) = normalize([seriesList])[1:]
+    start, end, step = normalize([seriesList])[1:]
     values = [_getPercentile(row, n, interpolate) for row in zip(*seriesList)]
     resultSeries = TimeSeries(name, start, end, step, values)
     resultSeries.pathExpression = name
-
     return [resultSeries]
 
 
@@ -598,18 +596,16 @@ def weightedAverage(requestContext, seriesListAvg, seriesListWeight, node):
 
     for seriesAvg, seriesWeight in zip(seriesListAvg, seriesListWeight):
         key = seriesAvg.name.split(".")[node]
-        if key not in sortedSeries:
-            sortedSeries[key] = {}
-
+        sortedSeries.setdefault(key, {})
         sortedSeries[key]['avg'] = seriesAvg
+
         key = seriesWeight.name.split(".")[node]
-        if key not in sortedSeries:
-            sortedSeries[key] = {}
+        sortedSeries.setdefault(key, {})
         sortedSeries[key]['weight'] = seriesWeight
 
     productList = []
 
-    for key in sortedSeries.keys():
+    for key in sortedSeries:
         if 'weight' not in sortedSeries[key]:
             continue
         if 'avg' not in sortedSeries[key]:

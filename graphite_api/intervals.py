@@ -42,7 +42,7 @@ class IntervalSet(object):
     def intersect(self, other):
         # XXX The last major bottleneck. Factorial-time hell.
         # Then again, this function is entirely unused...
-        if (not self) or (not other):
+        if not self or not other:
             return IntervalSet([])
 
         intersections = [x for x in (i.intersect(j)
