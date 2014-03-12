@@ -179,7 +179,9 @@ def prune_datapoints(series, max_datapoints, start, end):
     time_range = end - start
     points = time_range // series.step
     if max_datapoints < points:
-        values_per_point = int(math.ceil(float(points) / float(max_datapoints)))
+        values_per_point = int(
+            math.ceil(float(points) / float(max_datapoints))
+        )
         seconds_per_point = values_per_point * series.step
         nudge = (
             seconds_per_point
