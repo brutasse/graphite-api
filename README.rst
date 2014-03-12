@@ -77,7 +77,7 @@ virtualenv.
 Configuration
 -------------
 
-The default config file path is ``/etc/graphite-api.conf``. The format is
+The default config file path is ``/etc/graphite-api.yaml``. The format is
 YAML.
 
 .. code-block:: yaml
