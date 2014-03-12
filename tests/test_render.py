@@ -33,3 +33,9 @@ class RenderTest(TestCase):
         end = data[0]['datapoints'][-4:]
         self.assertEqual(
             end, [[None, ts - 3], [0.5, ts - 2], [0.4, ts - 1], [0.6, ts]])
+
+        response = self.app.get(url, query_string={'target': 'test',
+                                                   'maxDataPoints': 2,
+                                                   'format': 'json'})
+        data = json.loads(response.data.decode('utf-8'))
+        self.assertEqual(len(data[0]['datapoints']), 2)
