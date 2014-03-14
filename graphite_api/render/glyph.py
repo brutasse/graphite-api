@@ -1892,7 +1892,7 @@ class PieGraph(Graph):
                 'name': name,
                 'value': value,
                 'percent': value / self.total,
-                'color': self.colors.next(),
+                'color': next(self.colors),
             })
 
         titleSize = self.defaultFontParams['size'] + math.floor(

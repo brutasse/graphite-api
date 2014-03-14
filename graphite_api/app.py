@@ -3,6 +3,7 @@ import json
 import math
 import pytz
 import shutil
+import six
 import tempfile
 
 from collections import defaultdict
@@ -122,22 +123,22 @@ def metrics_find():
             200,
             {'Content-Type': 'application/json'}
         )
-    elif format == 'completer':
-        results = []
-        for node in matches:
-            node_info = {
-                'path': node.path,
-                'name': node.name,
-                'is_leaf': int(node.is_leaf),  # XXX Y was this cast to str
-            }
-            if not node.is_leaf:
-                node_info['path'] += '.'
-            results.append(node_info)
 
-        if len(results) > 1 and wildcards:
-            results.append({'name': '*'})
+    results = []
+    for node in matches:
+        node_info = {
+            'path': node.path,
+            'name': node.name,
+            'is_leaf': int(node.is_leaf),  # XXX Y was this cast to str
+        }
+        if not node.is_leaf:
+            node_info['path'] += '.'
+        results.append(node_info)
 
-        return jsonify({'metrics': results})
+    if len(results) > 1 and wildcards:
+        results.append({'name': '*'})
+
+    return jsonify({'metrics': results})
 
 
 @app.route('/metrics/expand', methods=methods)
@@ -238,7 +239,7 @@ def render():
     except KeyError:
         errors['graphType'] = (
             "Invalid graphType '{0}', must be one of '{1}'.".format(
-                graph_type, "', '".join(GraphTypes.keys())))
+                graph_type, "', '".join(sorted(GraphTypes.keys()))))
     request_options['pieMode'] = RequestParams.get('pieMode', 'average')
     targets = RequestParams.getlist('target')
     if not len(targets):
@@ -329,7 +330,10 @@ def render():
                     context['data'].append((series.name,
                                             func(context, series) or 0))
 
-    elif request_options['graphType'] == 'line':
+        if errors:
+            return jsonify({'errors': errors}), 400
+
+    else:  # graphType == 'line'
         for target in request_options['targets']:
             if not target.strip():
                 continue
@@ -339,7 +343,7 @@ def render():
         request_options['format'] = request_options.get('format')
 
         if request_options['format'] == 'csv':
-            response = StringIO()
+            response = BytesIO() if six.PY2 else StringIO()
             writer = csv.writer(response, dialect='excel')
             for series in context['data']:
                 for index, value in enumerate(series):
@@ -383,10 +387,10 @@ def render():
         if request_options['format'] == 'raw':
             response = StringIO()
             for series in context['data']:
-                response.write("%s,%d,%d,%d|" % (
+                response.write(u"%s,%d,%d,%d|" % (
                     series.name, series.start, series.end, series.step))
-                response.write(','.join(map(str, series)))
-                response.write('\n')
+                response.write(u','.join(map(str, series)))
+                response.write(u'\n')
             response.seek(0)
             headers['Content-Type'] = 'text/plain'
             return response.read(), 200, headers
@@ -401,7 +405,8 @@ def render():
 
     if use_svg and 'jsonp' in request_options:
         headers['Content-Type'] = 'text/javascript'
-        return ('{0}({1})'.format(request_options['jsonp'], json.dumps(image)),
+        return ('{0}({1})'.format(request_options['jsonp'],
+                                  json.dumps(image.decode('utf-8'))),
                 200, headers)
     else:
         ctype = 'image/svg+xml' if use_svg else 'image/png'
@@ -413,11 +418,10 @@ def evaluateTarget(requestContext, target):
     tokens = grammar.parseString(target)
     result = evaluateTokens(requestContext, tokens)
 
-    if type(result) is TimeSeries:
+    if isinstance(result, TimeSeries):
         return [result]  # we have to return a list of TimeSeries objects
 
-    else:
-        return result
+    return result
 
 
 def evaluateTokens(requestContext, tokens):

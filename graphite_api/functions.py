@@ -3172,10 +3172,12 @@ def sinFunction(requestContext, name, amplitude=1):
         values.append(math.sin(time.mktime(when.timetuple()))*amplitude)
         when += delta
 
-    return [TimeSeries(
+    series = TimeSeries(
         name, int(time.mktime(requestContext["startTime"].timetuple())),
         int(time.mktime(requestContext["endTime"].timetuple())),
-        step, values)]
+        step, values)
+    series.pathExpression = 'sin({0})'.format(name)
+    return [series]
 
 
 def randomWalkFunction(requestContext, name):
