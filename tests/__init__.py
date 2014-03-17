@@ -2,6 +2,7 @@ import json
 import os
 import shutil
 import sys
+import whisper
 
 os.environ.setdefault('GRAPHITE_API_CONFIG',
                       os.path.join(os.path.dirname(__file__), 'conf.yaml'))
@@ -65,3 +66,16 @@ class TestCase(unittest.TestCase):
     def assertJSON(self, response, data, status_code=200):
         self.assertEqual(response.status_code, status_code)
         self.assertEqual(json.loads(response.data.decode('utf-8')), data)
+
+    def write_series(self, series):
+        file_name = os.path.join(
+            WHISPER_DIR,
+            '{0}.wsp'.format(series.pathExpression.replace('.', os.sep)))
+        os.makedirs(os.path.dirname(file_name))
+        whisper.create(file_name, [(1, 180)])
+        data = []
+        for index, value in enumerate(series):
+            if value is None:
+                continue
+            data.append((series.start + index * series.step, value))
+        whisper.update_many(file_name, data)

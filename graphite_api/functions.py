@@ -672,7 +672,7 @@ def movingMedian(requestContext, seriesList, windowSize):
 
     for bootstrap, series in zip(bootstrapList, seriesList):
         if windowInterval:
-            windowPoints = windowInterval / series.step
+            windowPoints = windowInterval // series.step
         else:
             windowPoints = int(windowSize)
 
@@ -689,7 +689,7 @@ def movingMedian(requestContext, seriesList, windowSize):
             window = bootstrap[i + offset - windowPoints:i + offset]
             nonNull = [v for v in window if v is not None]
             if nonNull:
-                m_index = len(nonNull) / 2
+                m_index = len(nonNull) // 2
                 newSeries.append(sorted(nonNull)[m_index])
             else:
                 newSeries.append(None)
@@ -870,7 +870,7 @@ def movingAverage(requestContext, seriesList, windowSize):
 
     for bootstrap, series in zip(bootstrapList, seriesList):
         if windowInterval:
-            windowPoints = windowInterval / series.step
+            windowPoints = windowInterval // series.step
         else:
             windowPoints = int(windowSize)
 
@@ -892,7 +892,7 @@ def movingAverage(requestContext, seriesList, windowSize):
     return result
 
 
-def cumulative(requestContext, seriesList, consolidationFunc='sum'):
+def cumulative(requestContext, seriesList):
     """
     Takes one metric or a wildcard seriesList, and an optional function.
 
@@ -1163,8 +1163,7 @@ def areaBetween(requestContext, seriesList):
     """
     assert len(seriesList) == 2, ("areaBetween series argument must reference "
                                   "*exactly* 2 series")
-    lower = seriesList[0]
-    upper = seriesList[1]
+    lower, upper = seriesList
 
     lower.options['stacked'] = True
     lower.options['invisible'] = True

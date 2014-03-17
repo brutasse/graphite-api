@@ -1,8 +1,12 @@
 import copy
+import pytz
+import time
+
 from mock import patch, call, MagicMock
 
 from graphite_api import functions
 from graphite_api.app import app
+from graphite_api.render.attime import parseATTime
 from graphite_api.render.datalib import TimeSeries
 
 from . import TestCase
@@ -98,15 +102,18 @@ class FunctionsTest(TestCase):
         self.assertEqual(1111, functions.safeSum(result[0]))
         self.assertEqual(1110, functions.safeSum(result[1]))
 
-    def _generate_series_list(self):
+    def _generate_series_list(self, config=(
+        range(101),
+        range(2, 103),
+        [1] * 2 + [None] * 90 + [1] * 2 + [None] * 7
+    )):
         seriesList = []
-        config = [range(101),
-                  range(2, 103),
-                  [1] * 2 + [None] * 90 + [1] * 2 + [None] * 7]
+
+        now = int(time.time())
 
         for i, c in enumerate(config):
             name = "collectd.test-db{0}.load.value".format(i + 1)
-            series = TimeSeries(name, 0, 101, 1, c)
+            series = TimeSeries(name, now - 101, now, 1, c)
             series.pathExpression = name
             seriesList.append(series)
         return seriesList
@@ -416,3 +423,126 @@ class FunctionsTest(TestCase):
         series = self._generate_series_list()
         weight = functions.weightedAverage({}, [series[0]], [series[1]], 0)
         self.assertEqual(weight[:3], [0, 1, 2])
+
+    def test_moving_median(self):
+        series = self._generate_series_list()
+        for s in series:
+            self.write_series(s)
+        tzinfo = pytz.timezone(app.config['TIME_ZONE'])
+        median = functions.movingMedian({
+            'startTime': parseATTime('-100s', tzinfo=tzinfo)
+        }, series, '5s')[0]
+        self.assertEqual(median[:4], [1, 0, 1, 1])
+
+        median = functions.movingMedian({
+            'startTime': parseATTime('-100s', tzinfo=tzinfo)
+        }, series, 5)[0]
+        self.assertEqual(median[:4], [1, 0, 1, 1])
+
+    def test_invert(self):
+        series = self._generate_series_list()
+        invert = functions.invert({}, series)[0]
+        self.assertEqual(invert[:5], [None, 1, 1/2., 1/3., 1/4.])
+
+    def test_scale_to_seconds(self):
+        series = self._generate_series_list()
+        scaled = functions.scaleToSeconds({}, series, 10)[0]
+        self.assertEqual(scaled[:3], [0, 10, 20])
+
+    def test_absolute(self):
+        series = self._generate_series_list(config=[range(-50, 50)])
+        absolute = functions.absolute({}, series)[0]
+        self.assertEqual(absolute[:3], [50, 49, 48])
+
+    def test_offset(self):
+        series = self._generate_series_list(config=[[None] + list(range(99))])
+        offset = functions.offset({}, series, -50)[0]
+        self.assertEqual(offset[:3], [None, -50, -49])
+
+    def test_offset_to_zero(self):
+        series = self._generate_series_list(
+            config=[[None] + list(range(10, 110))])
+        offset = functions.offsetToZero({}, series)[0]
+        self.assertEqual(offset[:3], [None, 0, 1])
+
+    def test_moving_average(self):
+        series = self._generate_series_list()
+        for s in series:
+            self.write_series(s)
+        tzinfo = pytz.timezone(app.config['TIME_ZONE'])
+        average = functions.movingAverage({
+            'startTime': parseATTime('-100s', tzinfo=tzinfo)
+        }, series, '5s')[0]
+        self.assertEqual(list(average)[:4], [0.5, 1/3., 0.5, 0.8])
+
+        average = functions.movingAverage({
+            'startTime': parseATTime('-100s', tzinfo=tzinfo)
+        }, series, 5)[0]
+        self.assertEqual(average[:4], [0.5, 1/3., 0.5, 0.8])
+
+    def test_cumulative(self):
+        series = self._generate_series_list(config=[range(100)])
+        series[0].consolidate(2)
+        cumul = functions.cumulative({}, series)[0]
+        self.assertEqual(list(cumul)[:3], [1, 5, 9])
+
+    def consolidate_by(self):
+        series = self._generate_series_list(config=[range(100)])
+        series[0].consolidate(2)
+        min_ = functions.consolidateBy({}, series, 'min')
+        self.assertEqual(list(min_)[:3], [0, 2, 4])
+
+        max_ = functions.consolidateBy({}, series, 'max')
+        self.assertEqual(list(max_)[:3], [1, 3, 5])
+
+        avg_ = functions.consolidateBy({}, series, 'average')
+        self.assertEqual(list(avg_)[:3], [0.5, 2.3, 4.5])
+
+    def test_derivative(self):
+        series = self._generate_series_list(config=[range(100)])
+        der = functions.derivative({}, series)[0]
+        self.assertEqual(der[:3], [None, 1, 1])
+
+    def test_per_second(self):
+        series = self._generate_series_list(config=[range(100)])
+        series[0].step = 0.1
+        per_sec = functions.perSecond({}, series)[0]
+        self.assertEqual(per_sec[:3], [None, 10, 10])
+
+        series = self._generate_series_list(config=[reversed(range(100))])
+        series[0].step = 0.1
+        per_sec = functions.perSecond({}, series, maxValue=20)[0]
+        self.assertEqual(per_sec[:3], [None, None, None])
+
+    def test_integral(self):
+        series = self._generate_series_list(
+            config=[list(range(1, 10)) * 9 + [None] * 10])
+        integral = functions.integral({}, series)[0]
+        self.assertEqual(integral[:3], [1, 3, 6])
+        self.assertEqual(integral[-11:], [405] + [None] * 10)
+
+    def test_non_negative_derivative(self):
+        series = self._generate_series_list(config=[list(range(10)) * 10])
+        der = functions.nonNegativeDerivative({}, series)[0]
+        self.assertEqual(list(der),
+                         [1 if i % 10 else None for i in range(100)])
+
+        series = self._generate_series_list(
+            config=[list(reversed(range(10))) * 10])
+        der = functions.nonNegativeDerivative({}, series, maxValue=10)[0]
+        self.assertEqual(list(der),
+                         [None] + [10 if i % 10 else 9 for i in range(1, 100)])
+
+    def test_stacked(self):
+        series = self._generate_series_list(
+            config=[[None] + list(range(99)), range(50, 150)])
+        stacked = functions.stacked({}, series)[1]
+        self.assertEqual(stacked[:3], [50, 51, 53])
+
+        stacked = functions.stacked({'totalStack': {}}, series)[1]
+        self.assertEqual(stacked[:3], [50, 51, 53])
+        self.assertEqual(stacked.name, 'stacked(collectd.test-db2.load.value)')
+
+        stacked = functions.stacked({}, series, 'tx')[1]
+        self.assertEqual(stacked[:3], [50, 51, 53])
+        self.assertEqual(stacked.name, series[1].name)
