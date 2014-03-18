@@ -11,6 +11,7 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License."""
+import pytz
 
 from datetime import datetime, timedelta
 from time import daylight
@@ -22,8 +23,8 @@ weekdays = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
 
 def parseATTime(s, tzinfo=None):
     if tzinfo is None:
-        # TODO settigns time zone
-        assert False
+        from ..app import app
+        tzinfo = pytz.timezone(app.config['TIME_ZONE'])
     s = s.strip().lower().replace('_', '').replace(',', '').replace(' ', '')
     if s.isdigit():
         if (

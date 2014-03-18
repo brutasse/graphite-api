@@ -52,3 +52,7 @@ class RequestParams(object):
             return request.form.getlist(key)
         return request.args.getlist(key)
 RequestParams = RequestParams()
+
+
+def to_seconds(delta):
+    return abs(delta.seconds + delta.days * 86400)

@@ -26,6 +26,7 @@ from six.moves import range
 from six.moves.urllib.parse import unquote_plus
 
 from .datalib import TimeSeries
+from ..utils import to_seconds
 
 
 INFINITY = float('inf')
@@ -1743,7 +1744,7 @@ class LineGraph(Graph):
         while dt < self.end_dt:
             label = dt.strftime(xFormat)
             x = self.area['xmin'] + (
-                toSeconds(dt - self.start_dt) * self.xScaleFactor)
+                to_seconds(dt - self.start_dt) * self.xScaleFactor)
             y = self.area['ymax'] + self.getExtents()['maxAscent']
             self.drawText(label, x, y, align='center', valign='top')
             dt += x_label_delta
@@ -1839,7 +1840,7 @@ class LineGraph(Graph):
 
         while dt < self.end_dt:
             x = self.area['xmin'] + (
-                toSeconds(dt - self.start_dt) * self.xScaleFactor)
+                to_seconds(dt - self.start_dt) * self.xScaleFactor)
 
             if x < self.area['xmax']:
                 self.ctx.move_to(x, bottom)
@@ -1858,7 +1859,7 @@ class LineGraph(Graph):
 
         while dt < self.end_dt:
             x = self.area['xmin'] + (
-                toSeconds(dt - self.start_dt) * self.xScaleFactor)
+                to_seconds(dt - self.start_dt) * self.xScaleFactor)
 
             if x < self.area['xmax']:
                 self.ctx.move_to(x, bottom)
@@ -1994,10 +1995,6 @@ def frange(start, end, step):
         if f == start:
             yield end
             return
-
-
-def toSeconds(t):
-    return (t.days * 86400) + t.seconds
 
 
 def safeMin(args):

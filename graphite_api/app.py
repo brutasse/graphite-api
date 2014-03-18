@@ -220,6 +220,7 @@ def build_index():
     with tempfile.NamedTemporaryFile(delete=False) as index_file:
         index_file.write('\n'.join(sorted(index)).encode('utf-8'))
     shutil.move(index_file.name, app.searcher.index_path)
+    app.searcher.reload()
     return jsonify({'success': True, 'entries': len(index)}), 200
 
 

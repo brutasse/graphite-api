@@ -67,12 +67,14 @@ class TestCase(unittest.TestCase):
         self.assertEqual(response.status_code, status_code)
         self.assertEqual(json.loads(response.data.decode('utf-8')), data)
 
-    def write_series(self, series):
+    def write_series(self, series, retentions=[(1, 180)]):
         file_name = os.path.join(
             WHISPER_DIR,
             '{0}.wsp'.format(series.pathExpression.replace('.', os.sep)))
-        os.makedirs(os.path.dirname(file_name))
-        whisper.create(file_name, [(1, 180)])
+        dir_name = os.path.dirname(file_name)
+        if not os.path.isdir(dir_name):
+            os.makedirs(dir_name)
+        whisper.create(file_name, retentions)
         data = []
         for index, value in enumerate(series):
             if value is None:
