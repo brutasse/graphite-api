@@ -1,4 +1,5 @@
 # coding: utf-8
+import os
 import sys
 
 from setuptools import setup, find_packages
@@ -13,6 +14,9 @@ install_requires = [
     'structlog',
     'whisper',
 ]
+
+if 'READTHEDOCS' in os.environ:
+    install_requires.remove('cairocffi')
 
 if sys.version_info < (2, 7):
     install_requires.append('importlib')
