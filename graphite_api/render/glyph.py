@@ -313,6 +313,12 @@ UnitSystems = {
 }
 
 
+def force_text(value):
+    if not isinstance(value, six.string_types):
+        value = six.text_type(value)
+    return value
+
+
 class GraphError(Exception):
     pass
 
@@ -338,7 +344,7 @@ class Graph(object):
         if self.logBase:
             if self.logBase == 'e':
                 self.logBase = math.e
-            elif self.logBase < 1:
+            elif self.logBase <= 1:
                 self.logBase = None
                 params['logBase'] = None
             else:
@@ -388,16 +394,14 @@ class Graph(object):
         self.ctx = cairo.Context(self.surface)
 
     def setColor(self, value, alpha=1.0, forceAlpha=False):
-        if type(value) is tuple and len(value) == 3:
+        if isinstance(value, tuple) and len(value) == 3:
             r, g, b = value
         elif value in colorAliases:
             r, g, b = colorAliases[value]
         elif isinstance(value, six.string_types) and len(value) >= 6:
             s = value
-            if s[0] == '#':
+            if s.startswith('#'):
                 s = s[1:]
-            if s[0:3] == '%23':
-                s = s[3:]
             r, g, b = (int(s[0:2], base=16), int(s[2:4], base=16),
                        int(s[4:6], base=16))
             if len(s) == 8 and not forceAlpha:
@@ -414,9 +418,7 @@ class Graph(object):
         self.ctx.select_font_face(p['name'], p['italic'], p['bold'])
         self.ctx.set_font_size(float(p['size']))
 
-    def getExtents(self, text=None, fontOptions={}):
-        if fontOptions:
-            self.setFont(**fontOptions)
+    def getExtents(self, text=None):
         F = self.ctx.font_extents()
         extents = {'maxHeight': F[2], 'maxAscent': F[0], 'maxDescent': F[1]}
         if text:
@@ -425,7 +427,7 @@ class Graph(object):
             extents['height'] = T[3]
         return extents
 
-    def drawRectangle(self, x, y, w, h, fill=True, dash=False):
+    def drawRectangle(self, x, y, w, h, fill=True):
         if not fill:
             # offset for borders so they are drawn as lines would be
             o = self.ctx.get_line_width() / 2.0
@@ -437,18 +439,10 @@ class Graph(object):
         if fill:
             self.ctx.fill()
         else:
-            if dash:
-                self.ctx.set_dash(dash, 1)
-            else:
-                self.ctx.set_dash([], 0)
+            self.ctx.set_dash([], 0)
             self.ctx.stroke()
 
-    def drawText(self, text, x, y, font={}, color={}, align='left',
-                 valign='top', border=False, rotate=0):
-        if font:
-            self.setFont(**font)
-        if color:
-            self.setColor(**color)
+    def drawText(self, text, x, y, align='left', valign='top', rotate=0):
         extents = self.getExtents(text)
         angle = math.radians(rotate)
         origMatrix = self.ctx.get_matrix()
@@ -474,11 +468,7 @@ class Graph(object):
         by -= extents['maxAscent']
         self.ctx.text_path(text)
         self.ctx.fill()
-        if border:
-            self.drawRectangle(bx, by, extents['width'],
-                               extents['maxHeight'], fill=False)
-        else:
-            self.ctx.set_matrix(origMatrix)
+        self.ctx.set_matrix(origMatrix)
 
     def drawTitle(self, text):
         self.encodeHeader('title')
@@ -520,7 +510,7 @@ class Graph(object):
         if testWidth + 50 < self.width:
             rightSideLabels = True
 
-        if(self.secondYAxis and rightSideLabels):
+        if self.secondYAxis and rightSideLabels:
             extents = self.getExtents(longestName)
             padding = 5
             boxSize = extents['maxHeight'] - 1
@@ -532,8 +522,7 @@ class Graph(object):
                             if rightSide])
             numberOfLines = max(len(elements) - numRight, numRight)
             columns = math.floor(columns / 2.0)
-            if columns < 1:
-                columns = 1
+            columns = max(columns, 1)
             legendHeight = max(
                 1, (numberOfLines / columns)) * (lineHeight + padding)
             # scoot the drawing area up to fit the legend
@@ -578,8 +567,7 @@ class Graph(object):
             lineHeight = extents['maxHeight'] + 1
             labelWidth = extents['width'] + 2 * (boxSize + padding)
             columns = math.floor(self.width / labelWidth)
-            if columns < 1:
-                columns = 1
+            columns = max(columns, 1)
             numberOfLines = math.ceil(float(len(elements)) / columns)
             legendHeight = numberOfLines * (lineHeight + padding)
             # scoot the drawing area up to fit the legend
@@ -846,9 +834,9 @@ class LineGraph(Graph):
         self.setColor(self.foregroundColor)
 
         if params.get('title'):
-            self.drawTitle(str(params['title']))
+            self.drawTitle(force_text(params['title']))
         if params.get('vtitle'):
-            self.drawVTitle(str(params['vtitle']))
+            self.drawVTitle(force_text(params['vtitle']))
         if self.secondYAxis and params.get('vtitleRight'):
             self.drawVTitle(str(params['vtitleRight']), rightAlign=True)
         self.setFont()
@@ -1043,7 +1031,6 @@ class LineGraph(Graph):
                 alpha = float(self.params['areaAlpha'])
             except ValueError:
                 alpha = 0.5
-                pass
 
             strokeSeries = []
             for series in self.data:
@@ -1149,7 +1136,7 @@ class LineGraph(Graph):
                     if y is None:
                         value = None
                     elif y < 0:
-                            y = 0
+                        y = 0
 
                     if 'drawAsInfinite' in series.options and value > 0:
                         self.ctx.move_to(x, self.area['ymax'])
@@ -1397,7 +1384,7 @@ class LineGraph(Graph):
                 elif yValue < 1.0:
                     return "%.2f %s" % (float(yValue), prefix)
                 if ySpan > 10 or spanPrefix != prefix:
-                    if type(yValue) is float:
+                    if isinstance(yValue, float):
                         return "%.1f %s" % (float(yValue), prefix)
                     else:
                         return "%d %s " % (int(yValue), prefix)
@@ -1616,7 +1603,7 @@ class LineGraph(Graph):
             elif yValue < 1.0:
                 return "%.2f %s" % (float(yValue), prefix)
             if ySpan > 10 or spanPrefix != prefix:
-                if type(yValue) is float:
+                if isinstance(yValue, float):
                     return "%.1f %s " % (float(yValue), prefix)
                 else:
                     return "%d %s " % (int(yValue), prefix)
@@ -1700,9 +1687,9 @@ class LineGraph(Graph):
 
                     y = self.getYCoord(value)
                     if y is None:
-                            value = None
+                        value = None
                     elif y < 0:
-                            y = 0
+                        y = 0
 
                     if self.params.get('yAxisSide') == 'left':
                         self.drawText(label, x, y, align='right',
@@ -1820,7 +1807,7 @@ class LineGraph(Graph):
                     else:
                         y = self.getYCoord(value)
                     if y is None or y < 0:
-                            continue
+                        continue
 
                     self.ctx.move_to(leftSide, y)
                     self.ctx.line_to(rightSide, y)

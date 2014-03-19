@@ -16,11 +16,15 @@ class IntervalSet(object):
     def __repr__(self):
         return repr(self.intervals)
 
+    def __eq__(self, other):
+        return self.intervals == other.intervals
+
     def __iter__(self):
         return iter(self.intervals)
 
-    def __nonzero__(self):
+    def __bool__(self):
         return self.size != 0
+    __nonzero__ = __bool__  # python 2
 
     def __sub__(self, other):
         return self.intersect(other.complement())
@@ -80,15 +84,16 @@ class Interval(object):
     def __hash__(self):
         return hash(self.tuple)
 
-    def __cmp__(self, other):
-        return (self.start > other.start) - (self.start < other.start)
+    def __lt__(self, other):
+        return (self.start < other.start) - (self.start > other.start)
 
     def __len__(self):
         raise TypeError("len() doesn't support infinite values, use the "
                         "'size' attribute instead")
 
-    def __nonzero__(self):
+    def __bool__(self):
         return self.size != 0
+    __nonzero__ = __bool__  # python 2
 
     def __repr__(self):
         return '<Interval: %s>' % str(self.tuple)

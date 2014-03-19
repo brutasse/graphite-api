@@ -92,10 +92,10 @@ def parseTimeReference(ref):
             y += 100
         refDate = refDate.replace(year=y)
 
-        try:  # Fix for Bug #551771
+        try:
             refDate = refDate.replace(month=m)
             refDate = refDate.replace(day=d)
-        except:
+        except ValueError:  # day out of range for month, or vice versa
             refDate = refDate.replace(day=d)
             refDate = refDate.replace(month=m)
 
@@ -105,7 +105,7 @@ def parseTimeReference(ref):
         try:  # Fix for Bug #551771
             refDate = refDate.replace(month=int(ref[4:6]))
             refDate = refDate.replace(day=int(ref[6:8]))
-        except:
+        except ValueError:  # day out of range for month, or vice versa
             refDate = refDate.replace(day=int(ref[6:8]))
             refDate = refDate.replace(month=int(ref[4:6]))
 

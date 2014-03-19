@@ -8,6 +8,7 @@ class MetricsTests(TestCase):
     def _create_dbs(self):
         for db in (
             ('test', 'foo.wsp'),
+            ('test', 'wat', 'welp.wsp'),
             ('test', 'bar', 'baz.wsp'),
         ):
             db_path = os.path.join(WHISPER_DIR, *db)
@@ -38,6 +39,12 @@ class MetricsTests(TestCase):
             'leaf': 0,
             'text': 'bar',
         }, {
+            'allowChildren': 1,
+            'expandable': 1,
+            'id': 'test.wat',
+            'leaf': 0,
+            'text': 'wat',
+        }, {
             'allowChildren': 0,
             'expandable': 0,
             'id': 'test.foo',
@@ -61,6 +68,12 @@ class MetricsTests(TestCase):
             'leaf': 0,
             'text': 'bar',
         }, {
+            'allowChildren': 1,
+            'expandable': 1,
+            'id': 'test.wat',
+            'leaf': 0,
+            'text': 'wat',
+        }, {
             'allowChildren': 0,
             'expandable': 0,
             'id': 'test.foo',
@@ -78,6 +91,10 @@ class MetricsTests(TestCase):
             'is_leaf': 1,
             'name': 'foo',
             'path': 'test.foo',
+        }, {
+            'is_leaf': 0,
+            'name': 'wat',
+            'path': 'test.wat.',
         }]})
 
         response = self.app.get(url, query_string={'query': 'test.*',
@@ -91,6 +108,10 @@ class MetricsTests(TestCase):
             'is_leaf': 1,
             'name': 'foo',
             'path': 'test.foo',
+        }, {
+            'is_leaf': 0,
+            'name': 'wat',
+            'path': 'test.wat.',
         }, {
             'name': '*',
         }]})
@@ -132,7 +153,8 @@ class MetricsTests(TestCase):
         self.assertJSON(response, {'results': ['test']})
 
         response = self.app.get(url, query_string={'query': 'test.*'})
-        self.assertJSON(response, {'results': ['test.bar', 'test.foo']})
+        self.assertJSON(response, {'results': ['test.bar', 'test.foo',
+                                               'test.wat']})
 
         response = self.app.get(url, query_string={'query': 'test.*',
                                                    'leavesOnly': 1})
@@ -141,7 +163,8 @@ class MetricsTests(TestCase):
         response = self.app.get(url, query_string={'query': 'test.*',
                                                    'groupByExpr': 1})
         self.assertJSON(response, {'results': {'test.*': ['test.bar',
-                                                          'test.foo']}})
+                                                          'test.foo',
+                                                          'test.wat']}})
 
     def test_expand_validation(self):
         url = '/metrics/expand'
