@@ -1,0 +1,6 @@
+Flask
+pyparsing
+pytz
+six
+structlog
+whisper
