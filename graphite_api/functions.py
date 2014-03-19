@@ -181,9 +181,7 @@ def sumSeries(requestContext, *seriesLists):
     This will add metrics together and return the sum at each datapoint. (See
     integral for a sum over time)
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=sum(company.server.application*.requestsHandled)
 
@@ -270,9 +268,7 @@ def diffSeries(requestContext, *seriesLists):
     Can take two or more metrics.
     Subtracts parameters 2 through n from parameter 1.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=diffSeries(service.connections.total,
                            service.connections.failed)
@@ -293,9 +289,7 @@ def averageSeries(requestContext, *seriesLists):
     Takes one metric or a wildcard seriesList.
     Draws the average value of all metrics passed at each time.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=averageSeries(company.server.*.threads.busy)
 
@@ -314,9 +308,7 @@ def stddevSeries(requestContext, *seriesLists):
     Takes one metric or a wildcard seriesList.
     Draws the standard deviation of all metrics passed at each time.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=stddevSeries(company.server.*.threads.busy)
 
@@ -335,9 +327,7 @@ def minSeries(requestContext, *seriesLists):
     For each datapoint from each metric passed in, pick the minimum value and
     graph it.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=minSeries(Server*.connections.total)
     """
@@ -354,9 +344,7 @@ def maxSeries(requestContext, *seriesLists):
     Takes one metric or a wildcard seriesList. For each datapoint from each
     metric passed in, pick the maximum value and graph it.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=maxSeries(Server*.connections.total)
 
@@ -370,24 +358,22 @@ def maxSeries(requestContext, *seriesLists):
 
 
 def rangeOfSeries(requestContext, *seriesLists):
-        """
-        Takes a wildcard seriesList.
-        Distills down a set of inputs into the range of the series
+    """
+    Takes a wildcard seriesList.
+    Distills down a set of inputs into the range of the series
 
-        Example:
+    Example::
 
-        .. code-block:: none
+        &target=rangeOfSeries(Server*.connections.total)
 
-                &target=rangeOfSeries(Server*.connections.total)
-
-        """
-        seriesList, start, end, step = normalize(seriesLists)
-        name = "rangeOfSeries(%s)" % formatPathExpressions(seriesList)
-        values = (safeSubtract(max(row),
-                               min(row)) for row in zip(*seriesList))
-        series = TimeSeries(name, start, end, step, values)
-        series.pathExpression = name
-        return [series]
+    """
+    seriesList, start, end, step = normalize(seriesLists)
+    name = "rangeOfSeries(%s)" % formatPathExpressions(seriesList)
+    values = (safeSubtract(max(row),
+                           min(row)) for row in zip(*seriesList))
+    series = TimeSeries(name, start, end, step, values)
+    series.pathExpression = name
+    return [series]
 
 
 def percentileOfSeries(requestContext, seriesList, n, interpolate=False):
@@ -416,9 +402,7 @@ def keepLastValue(requestContext, seriesList, limit=INF):
     received value when gaps ('None' values) appear in your data, rather than
     breaking your line.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=keepLastValue(Server01.connections.handled)
         &target=keepLastValue(Server01.connections.handled, 10)
@@ -514,9 +498,7 @@ def divideSeries(requestContext, dividendSeriesList, divisorSeriesList):
     function (which is essentially a multiplication operation) and use the
     inverse of the dividend. (Division by 8 = multiplication by 1/8 or 0.125)
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=divideSeries(Series.dividends,Series.divisors)
 
@@ -556,9 +538,7 @@ def multiplySeries(requestContext, *seriesLists):
     Takes two or more series and multiplies their points. A constant may not be
     used. To multiply by a constant, use the scale() function.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=multiplySeries(Series.dividends,Series.divisors)
 
@@ -585,9 +565,7 @@ def weightedAverage(requestContext, seriesListAvg, seriesListWeight, node):
     The corresponding values should share a node as defined
     by the node parameter, 0-indexed.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=weightedAverage(*.transactions.mean,*.transactions.count,0)
 
@@ -649,9 +627,7 @@ def movingMedian(requestContext, seriesList, windowSize):
     graph. All previous datapoints are set to None at the beginning of the
     graph.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=movingMedian(Server.instance01.threads.busy,10)
         &target=movingMedian(Server.instance*.threads.idle,'5min')
@@ -723,9 +699,7 @@ def invert(requestContext, seriesList):
     Takes one metric or a wildcard seriesList, and inverts each datapoint
     (i.e. 1/x).
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=invert(Server.instance01.threads.busy)
 
@@ -760,9 +734,7 @@ def absolute(requestContext, seriesList):
     Takes one metric or a wildcard seriesList and applies the mathematical abs
     function to each datapoint transforming it to its absolute value.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=absolute(Server.instance01.threads.busy)
         &target=absolute(Server.instance*.threads.busy)
@@ -780,9 +752,7 @@ def offset(requestContext, seriesList, factor):
     Takes one metric or a wildcard seriesList followed by a constant, and adds
     the constant to each datapoint.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=offset(Server.instance01.threads.busy,10)
 
@@ -818,9 +788,7 @@ def offsetToZero(requestContext, seriesList):
     fastest the device can respond, of course the more datapoints that
     are in the series the more accurate this assumption is.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=offsetToZero(Server.instance01.responseTime)
         &target=offsetToZero(Server.instance*.responseTime)
@@ -847,9 +815,7 @@ def movingAverage(requestContext, seriesList, windowSize):
     graph. All previous datapoints are set to None at the beginning of the
     graph.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=movingAverage(Server.instance01.threads.busy,10)
         &target=movingAverage(Server.instance*.threads.idle,'5min')
@@ -904,7 +870,7 @@ def cumulative(requestContext, seriesList):
     Alias for :func:`consolidateBy(series, 'sum')
     <graphite.render.functions.consolidateBy>`
 
-    .. code-block:: none
+    Example::
 
         &target=cumulative(Sales.widgets.largeBlue)
 
@@ -927,7 +893,7 @@ def consolidateBy(requestContext, seriesList, consolidationFunc):
     fractional values make no sense and a 'sum' of consolidated values is
     appropriate.
 
-    .. code-block:: none
+    Example::
 
         &target=consolidateBy(Sales.widgets.largeBlue, 'sum')
         &target=consolidateBy(Servers.web01.sda1.free_space, 'max')
@@ -953,9 +919,7 @@ def derivative(requestContext, seriesList):
     would. Instead see the perSecond() function to calculate a rate of change
     over time.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=derivative(company.server.application01.ifconfig.TXPackets)
 
@@ -989,9 +953,7 @@ def perSecond(requestContext, seriesList, maxValue=None):
     This is useful for taking a running total metric and showing how many
     requests per second were handled.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=perSecond(company.server.application01.ifconfig.TXPackets)
 
@@ -1034,9 +996,7 @@ def integral(requestContext, seriesList):
     function. Useful for finding totals or trends in metrics that are
     collected per minute.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=integral(company.sales.perMinute)
 
@@ -1069,9 +1029,7 @@ def nonNegativeDerivative(requestContext, seriesList, maxValue=None):
     reset. (Such as if a network interface is destroyed and recreated by
     unloading and re-loading a kernel module, common with USB / WiFi cards.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=nonNegativederivative(
             company.server.application01.ifconfig.TXPackets)
@@ -1118,9 +1076,7 @@ def stacked(requestContext, seriesLists, stackName='__DEFAULT__'):
     It can also take an optional argument with a name of the stack, in case
     there is more than one, e.g. for input and output metrics.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=stacked(company.server.application01.ifconfig.TXPackets, 'tx')
 
@@ -1178,7 +1134,7 @@ def aliasSub(requestContext, seriesList, search, replace):
     """
     Runs series names through a regex search/replace.
 
-    .. code-block:: none
+   Example::
 
         &target=aliasSub(ip.*TCP*,"^.*TCP(\d+)","\\1")
     """
@@ -1195,7 +1151,7 @@ def alias(requestContext, seriesList, newName):
     Takes one metric or a wildcard seriesList and a string in quotes.
     Prints the string instead of the metric name in the legend.
 
-    .. code-block:: none
+    Example::
 
         &target=alias(Sales.widgets.largeBlue,"Large Blue Widgets")
 
@@ -1216,7 +1172,7 @@ def cactiStyle(requestContext, seriesList, system=None):
     Y-axis.
     NOTE: column alignment only works with monospace fonts such as terminus.
 
-    .. code-block:: none
+    Example::
 
         &target=cactiStyle(ganglia.*.net.bytes_out,"si")
 
@@ -1261,7 +1217,7 @@ def aliasByNode(requestContext, seriesList, *nodes):
     Takes a seriesList and applies an alias derived from one or more "node"
     portion/s of the target name. Node indices are 0 indexed.
 
-    .. code-block:: none
+    Example::
 
         &target=aliasByNode(ganglia.*.cpu.load5,1)
 
@@ -1277,7 +1233,7 @@ def aliasByMetric(requestContext, seriesList):
     """
     Takes a seriesList and applies an alias derived from the base metric name.
 
-    .. code-block:: none
+    Example::
 
         &target=aliasByMetric(carbon.agents.graphite.creates)
 
@@ -1295,9 +1251,9 @@ def legendValue(requestContext, seriesList, *valueTypes):
     (default) or `binary`, in that case values will be formatted in the
     corresponding system.
 
-    .. code-block:: none
+    Example::
 
-    &target=legendValue(Sales.widgets.largeBlue, 'avg', 'max', 'si')
+        &target=legendValue(Sales.widgets.largeBlue, 'avg', 'max', 'si')
 
     """
     valueFuncs = {
@@ -1342,9 +1298,7 @@ def color(requestContext, seriesList, theColor):
     """
     Assigns the given color to the seriesList
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=color(collectd.hostname.cpu.0.user, 'green')
         &target=color(collectd.hostname.cpu.0.system, 'ff0000')
@@ -1366,9 +1320,7 @@ def substr(requestContext, seriesList, start=0, stop=0):
     m are passed). The list starts with element 0 and ends with element
     (length - 1).
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=substr(carbon.agents.hostname.avgUpdateTime,2,4)
 
@@ -1396,9 +1348,7 @@ def logarithm(requestContext, seriesList, base=10):
     Takes one metric or a wildcard seriesList, a base, and draws the y-axis in
     logarithmic format. If base is omitted, the function defaults to base 10.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=log(carbon.agents.hostname.avgUpdateTime,2)
 
@@ -1426,9 +1376,7 @@ def maximumAbove(requestContext, seriesList, n):
     Takes one metric or a wildcard seriesList followed by a constant n.
     Draws only the metrics with a maximum value above n.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=maximumAbove(system.interface.eth*.packetsSent,1000)
 
@@ -1446,9 +1394,7 @@ def minimumAbove(requestContext, seriesList, n):
     Takes one metric or a wildcard seriesList followed by a constant n.
     Draws only the metrics with a minimum value above n.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=minimumAbove(system.interface.eth*.packetsSent,1000)
 
@@ -1466,9 +1412,7 @@ def maximumBelow(requestContext, seriesList, n):
     Takes one metric or a wildcard seriesList followed by a constant n.
     Draws only the metrics with a maximum value below n.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=maximumBelow(system.interface.eth*.packetsSent,1000)
 
@@ -1488,9 +1432,7 @@ def highestCurrent(requestContext, seriesList, n=1):
     Out of all metrics passed, draws only the N metrics with the highest value
     at the end of the time period specified.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=highestCurrent(server*.instance*.threads.busy,5)
 
@@ -1507,9 +1449,7 @@ def highestMax(requestContext, seriesList, n=1):
     Out of all metrics passed, draws only the N metrics with the highest
     maximum value in the time period specified.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=highestMax(server*.instance*.threads.busy,5)
 
@@ -1527,9 +1467,7 @@ def lowestCurrent(requestContext, seriesList, n=1):
     Out of all metrics passed, draws only the N metrics with the lowest value
     at the end of the time period specified.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=lowestCurrent(server*.instance*.threads.busy,5)
 
@@ -1545,9 +1483,7 @@ def currentAbove(requestContext, seriesList, n):
     Out of all metrics passed, draws only the metrics whose value is above N
     at the end of the time period specified.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=currentAbove(server*.instance*.threads.busy,50)
 
@@ -1563,9 +1499,7 @@ def currentBelow(requestContext, seriesList, n):
     Out of all metrics passed, draws only the    metrics whose value is below N
     at the end of the time period specified.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=currentBelow(server*.instance*.threads.busy,3)
 
@@ -1581,9 +1515,7 @@ def highestAverage(requestContext, seriesList, n=1):
     Out of all metrics passed, draws only the top N metrics with the highest
     average value for the time period specified.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=highestAverage(server*.instance*.threads.busy,5)
 
@@ -1599,9 +1531,7 @@ def lowestAverage(requestContext, seriesList, n=1):
     Out of all metrics passed, draws only the bottom N metrics with the lowest
     average value for the time period specified.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=lowestAverage(server*.instance*.threads.busy,5)
 
@@ -1617,9 +1547,7 @@ def averageAbove(requestContext, seriesList, n):
     Out of all metrics passed, draws only the metrics with an average value
     above N for the time period specified.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=averageAbove(server*.instance*.threads.busy,25)
 
@@ -1635,9 +1563,7 @@ def averageBelow(requestContext, seriesList, n):
     Out of all metrics passed, draws only the metrics with an average value
     below N for the time period specified.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=averageBelow(server*.instance*.threads.busy,25)
 
@@ -1813,9 +1739,7 @@ def limit(requestContext, seriesList, n):
     Only draw the first N metrics.    Useful when testing a wildcard in a
     metric.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=limit(server*.instance*.memory.free,5)
 
@@ -1852,9 +1776,7 @@ def sortByMaxima(requestContext, seriesList):
     specified.    Useful with the &areaMode=all parameter, to keep the
     lowest value lines visible.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=sortByMaxima(server*.instance*.memory.free)
 
@@ -1869,9 +1791,7 @@ def sortByMinima(requestContext, seriesList):
     Sorts the list of metrics by the lowest value across the time period
     specified.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=sortByMinima(server*.instance*.memory.free)
 
@@ -1889,7 +1809,7 @@ def useSeriesAbove(requestContext, seriesList, value, search, replace):
     the response time metric will be plotted only when the maximum value of the
     corresponding request/s metric is > 10
 
-    .. code-block:: none
+    Example::
 
         &target=useSeriesAbove(ganglia.metric1.reqs,10,"reqs","time")
     """
@@ -1913,9 +1833,7 @@ def mostDeviant(requestContext, seriesList, n):
     To find the deviants, the standard deviation (sigma) of each series
     is taken and ranked. The top N standard deviations are returned.
 
-        Example:
-
-    .. code-block:: none
+    Example::
 
         &target=mostDeviant(server*.instance*.memory.free, 5)
 
@@ -1948,9 +1866,7 @@ def stdev(requestContext, seriesList, points, windowTolerance=0.1):
     is set to 0.0, it will cause large gaps in the output anywhere a single
     point is missing.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=stdev(server*.instance*.threads.busy,30)
         &target=stdev(server*.instance*.cpu.system,30,0.0)
@@ -2292,9 +2208,7 @@ def drawAsInfinite(requestContext, seriesList):
     Useful for displaying on/off metrics, such as exit codes. (0 = success,
     anything else = failure.)
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         drawAsInfinite(Testing.script.exitCode)
 
@@ -2315,9 +2229,7 @@ def lineWidth(requestContext, seriesList, width):
     Useful for highlighting a single metric out of many, or having multiple
     line widths in one graph.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=lineWidth(server01.instance01.memory.free,5)
 
@@ -2334,9 +2246,7 @@ def dashed(requestContext, seriesList, dashLength=5):
     Draw the selected metrics with a dotted line with segments of length F
     If omitted, the default length of the segments is 5.0
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=dashed(server01.instance01.memory.free,2.5)
 
@@ -2415,9 +2325,7 @@ def timeShift(requestContext, seriesList, timeShift, resetEnd=True):
     Useful for comparing a metric against itself at a past periods or
     correcting data stored at an offset.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=timeShift(Sales.widgets.largeBlue,"7d")
         &target=timeShift(Sales.widgets.largeBlue,"-7d")
@@ -2460,9 +2368,7 @@ def constantLine(requestContext, value):
 
     Draws a horizontal line at value F across the graph.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=constantLine(123.456)
 
@@ -2487,9 +2393,7 @@ def aggregateLine(requestContext, seriesList, func='avg'):
     proper data points are retained and the graph should line up
     correctly.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=aggregateLineSeries(server.connections.total, 'avg')
 
@@ -2517,9 +2421,7 @@ def threshold(requestContext, value, label=None, color=None):
 
     Draws a horizontal line at value F across the graph.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=threshold(123.456, "omgwtfbbq", red)
 
@@ -2541,9 +2443,7 @@ def transformNull(requestContext, seriesList, default=0):
     drawNullAsZero flag in graphical mode but also works in text only
     mode.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=transformNull(webapp.pages.*.views,-1)
 
@@ -2572,9 +2472,7 @@ def isNonNull(requestContext, seriesList):
     which metrics have data at a given point in time (ie, to count
     which servers are alive).
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=isNonNull(webapp.pages.*.views)
 
@@ -2604,9 +2502,7 @@ def identity(requestContext, name):
     Useful when you have another series where the value is a timestamp, and
     you want to compare it to the time of the datapoint, to render an age
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=identity("The.time.series")
 
@@ -2628,7 +2524,7 @@ def countSeries(requestContext, *seriesLists):
     Draws a horizontal line representing the number of nodes found in the
     seriesList.
 
-    .. code-block:: none
+    Example::
 
         &target=countSeries(carbon.agents.*.*)
 
@@ -2659,9 +2555,8 @@ def mapSeries(requestContext, seriesList, mapNode):
     Takes a seriesList and maps it to a list of sub-seriesList. Each
     sub-seriesList has the given mapNode in common.
 
-    Example:
+    Example::
 
-    .. code-block:: none
         map(servers.*.cpu.*,1) =>
             [
                 servers.server1.cpu.*,
@@ -2693,9 +2588,7 @@ def reduceSeries(requestContext, seriesLists, reduceFunction, reduceNode,
     reduceFunction as arguments in the order given by reduceMatchers. The
     reduceFunction should yield a single series.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         reduce(map(servers.*.disk.*,1),3,"asPercent",
                "bytes_used","total_bytes") =>
@@ -2710,9 +2603,7 @@ def reduceSeries(requestContext, seriesLists, reduceFunction, reduceNode,
 
     The resulting list of series are aliased so that they can easily be nested
     in other functions. In the above example, the resulting series names would
-    become:
-
-    .. code-block:: none
+    become::
 
         servers.server1.disk.reduce.asPercent,
         servers.server2.disk.reduce.asPercent,
@@ -2746,7 +2637,7 @@ def groupByNode(requestContext, seriesList, nodeNum, callback):
     Takes a serieslist and maps a callback to subgroups within as defined by a
     common node.
 
-    .. code-block:: none
+    Example::
 
         &target=groupByNode(ganglia.by-function.*.*.cpu.load5,2,"sumSeries")
 
@@ -2780,9 +2671,7 @@ def exclude(requestContext, seriesList, pattern):
     Takes a metric or a wildcard seriesList, followed by a regular expression
     in double quotes.    Excludes metrics that match the regular expression.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=exclude(servers*.instance*.threads.busy,"server02")
     """
@@ -2796,9 +2685,7 @@ def grep(requestContext, seriesList, pattern):
     in double quotes. Excludes metrics that don't match the regular
     expression.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=grep(servers*.instance*.threads.busy,"server02")
     """
@@ -2907,9 +2794,7 @@ def summarize(requestContext, seriesList, intervalString, func='sum',
     time. In this case, the bucket for 22:32 depends on the from time. If
     from=6:30 then the 1hour bucket for 22:32 is 22:30-23:30.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         # total errors per hour
         &target=summarize(counter.errors, "1hour")
@@ -3092,9 +2977,7 @@ def sinFunction(requestContext, name, amplitude=1):
     Just returns the sine of the current time. The optional amplitude parameter
     changes the amplitude of the wave.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=sin("The.time.series", 2)
 
@@ -3124,9 +3007,7 @@ def randomWalkFunction(requestContext, name):
     Returns a random walk starting at 0. This is great for testing when there
     is no real data in whisper.
 
-    Example:
-
-    .. code-block:: none
+    Example::
 
         &target=randomWalk("The.time.series")
 

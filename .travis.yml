@@ -7,6 +7,7 @@ env:
   - TOXENV=py33
   - TOXENV=coverage
   - TOXENV=lint
+  - TOXENV=docs
 
 before_install:
   - sudo apt-get -y install libcairo2-dev

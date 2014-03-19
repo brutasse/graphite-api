@@ -842,7 +842,6 @@ class LineGraph(Graph):
         self.setFont()
 
         if not params.get('hideLegend', len(self.data) > 10):
-            # TODO LEGEND_MAX_ITEMS
             elements = [
                 (series.name, series.color,
                  series.options.get('secondYAxis')) for series in self.data
