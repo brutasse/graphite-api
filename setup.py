@@ -19,6 +19,9 @@ if sys.version_info < (2, 7):
     install_requires.append('logutils')
     install_requires.append('ordereddict')
 
+with open('README.rst') as f:
+    long_description = f.read()
+
 setup(
     name='graphite-api',
     version='0.1.0',
@@ -28,7 +31,7 @@ setup(
     license='Apache Software License 2.0',
     description=('Graphite-web, without the interface. '
                  'Just the rendering HTTP API.'),
-    long_description=open('README.rst').read(),
+    long_description=long_description,
     packages=find_packages(exclude=['tests']),
     include_package_data=True,
     install_requires=install_requires,
