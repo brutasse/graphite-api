@@ -17,7 +17,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 project = 'Graphite-API'
-copyright = '2014, Bruno Renié'
+copyright = u'2014, Bruno Renié'
 
 version = '1.0'
 release = '1.0'
