@@ -23,7 +23,7 @@ with open('README.rst') as f:
 
 setup(
     name='graphite-api',
-    version='0.1.0',
+    version='1.0.0',
     url='https://github.com/brutasse/graphite-api',
     author="Bruno Renié, based on Chris Davis's graphite-web",
     author_email='bruno@renie.fr',
@@ -41,6 +41,9 @@ setup(
     zip_safe=False,
     platforms='any',
     classifiers=(
+        'Development Status :: 4 - Beta',
+        'Environment :: Web Environment',
+        'Framework :: Flask',
         'Intended Audience :: Developers',
         'Intended Audience :: System Administrators',
         'License :: OSI Approved :: Apache Software License',
@@ -52,6 +55,8 @@ setup(
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.2',
         'Programming Language :: Python :: 3.3',
+        'Topic :: Scientific/Engineering :: Information Analysis',
+        'Topic :: Scientific/Engineering :: Visualization',
         'Topic :: System :: Monitoring',
     ),
     test_suite='tests',

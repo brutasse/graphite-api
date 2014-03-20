@@ -60,14 +60,7 @@ Contents
    functions
    finders
    custom-functions
-
-Releases
---------
-
-.. toctree::
-   :maxdepth: 1
-
-   releases/1.0
+   releases
 
 Indices and tables
 ==================

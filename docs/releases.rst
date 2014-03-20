@@ -1,7 +1,8 @@
-Graphite-API 1.0
-================
+Graphite-API releases
+=====================
 
-*Not released yet!*
+1.0 -- 2014-03-20
+-----------------
 
 Version 1.0 is based on the master branch of Graphite-web, mid-March 2014,
 with the following modifications:
