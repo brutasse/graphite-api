@@ -3,3 +3,5 @@
 .coverage
 htmlcov
 docs/_build
+dist
+build
