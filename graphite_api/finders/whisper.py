@@ -3,10 +3,10 @@ from __future__ import absolute_import
 import gzip
 import os.path
 import time
-import whisper
 
 from ..intervals import Interval, IntervalSet
 from ..node import BranchNode, LeafNode
+from .._vendor import whisper
 
 from . import fs_to_metric, get_real_metric_path, match_entries
 

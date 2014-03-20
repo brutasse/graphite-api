@@ -2,7 +2,6 @@ import json
 import os
 import shutil
 import sys
-import whisper
 
 os.environ.setdefault('GRAPHITE_API_CONFIG',
                       os.path.join(os.path.dirname(__file__), 'conf.yaml'))
@@ -16,6 +15,7 @@ from graphite_api.app import app
 from graphite_api.finders.whisper import WhisperFinder
 from graphite_api.search import IndexSearcher
 from graphite_api.storage import Store
+from graphite_api._vendor import whisper
 
 
 DATA_DIR = '/tmp/graphite-api-data.{0}'.format(os.getpid())

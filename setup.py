@@ -11,7 +11,6 @@ install_requires = [
     'pyyaml',
     'six',
     'structlog',
-    'whisper',
 ]
 
 if sys.version_info < (2, 7):

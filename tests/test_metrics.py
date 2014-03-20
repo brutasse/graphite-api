@@ -1,5 +1,5 @@
 import os.path
-import whisper
+from graphite_api._vendor import whisper
 
 from . import TestCase, WHISPER_DIR
 
