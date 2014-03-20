@@ -1,9 +1,145 @@
-=================
-The Rendering API
-=================
+========
+HTTP API
+========
+
+Here is the general behavior of the API:
+
+* When parameters are missing or wrong, an HTTP 400 response is returned with
+  the detailed errors in the response body.
+
+* Request parameters can be passed via:
+
+  * JSON data in the request body (``application/json`` content-type).
+
+  * Form data in the request body (``application/www-form-urlencoded``
+    content-type).
+
+  * Querystring parameters.
+
+  You can pass some parameters by querystring and others by json/form data if
+  you want to. Parameters are looked up in the order above, meaning that if a
+  parameter is present in both the form data and the querystring, only the one
+  from the querystring is taken into account.
+
+* URLs are given without a trailing slash but adding a trailing slash is fine
+  for all API calls.
+
+* Parameters are case-sensitive.
+
+.. _metrics:
+
+The Metrics API
+===============
+
+These API endpoints are useful for finding and listing metrics available in
+the system.
+
+``/metrics/find``
+-----------------
+
+Finds metrics under a given path.
+
+Example::
+
+    GET /metrics/find?query=collectd.*
+
+    {"metrics": [{
+        "is_leaf": 0,
+        "name": "db01",
+        "path": "collectd.db01."
+    }, {
+        "is_leaf": 1,
+        "name": "foo",
+        "path": "collectd.foo"
+    }]}
+
+Parameters:
+
+*query* (mandatory)
+  The query to search for.
+
+*format*
+  The output format to use. Can be ``completer`` (default) or ``treejson``.
+
+*wildcards* (0 or 1)
+  Whether to add a wildcard result at the end or no. Default: 0.
+
+*from*
+  Epoch timestamp from which to consider metrics.
+
+*until*
+  Epoch timestamp until which to consider metrics.
+
+``/metrics/expand``
+-------------------
+
+Expands the given query with matching paths.
+
+Parameters:
+
+*query* (mandatory)
+  The metrics query. Can be specified multiple times.
+
+*groupByExpr* (0 or 1)
+  Whether to return a flat list of results or group them by query. Default: 0.
+
+*leavesOnly* (0 or 1)
+  Whether to only return leaves or both branches and leaves. Default: 0
+
+``/metrics/search``
+-------------------
+
+Searches for metrics using the search index.
+
+*query* (mandatory)
+  The metrics query.
+
+*max_results*
+  The maximum number of results to return. Default: 25.
+
+.. note::
+
+    ``/metrics/search`` requires the search index to be up to date. See
+    :ref:`/index` below.
+
+Example::
+
+    GET /metrics/search?query=collectd.*
+
+    {
+        "metrics": [
+            {"is_leaf": false, "path": null},
+            {"is_leaf": true, "path": "collectd.foo"},
+            {"is_leaf": true, "path": "collectd.bar"}
+        ]
+    }
+
+.. _/index:
+
+``/index``
+----------
+
+Rebuilds the search index by recursively querying the storage finders for
+available paths.
+
+Example::
+
+    POST /index
+
+    {
+        "success": true,
+        "entries": 854
+    }
+
+``POST`` or ``PUT`` are supported.
+
+.. _render:
+
+The Render API -- ``/render``
+=============================
 
 Graphite-API provides a ``/render`` endpoint for generating graphs
-and retreiving raw data. This endpoint accepts various arguments via query
+and retrieving raw data. This endpoint accepts various arguments via query
 string parameters, form data or JSON data.
 
 To verify that the api is running and able to generate images, open
@@ -33,13 +169,13 @@ data. For example::
   The correct parameter in this case is ``&lineWidth=2``
 
 Graphing Metrics
-================
+----------------
 
 To begin graphing specific metrics, pass one or more target_ parameters and
 specify a time window for the graph via `from / until`_.
 
 target
-------
+``````
 
 The ``target`` parameter specifies a path identifying one or metrics,
 optionally with functions acting on those metrics. Paths are documented below,
@@ -133,7 +269,7 @@ The target param can also be repeated to graph multiple related metrics::
   hideLegend_ parameter for details.
 
 from / until
-------------
+````````````
 
 These are optional parameters that specify the relative or absolute time
 period to graph ``from`` specifies the beginning, ``until`` specifies the end.
@@ -200,14 +336,14 @@ Examples::
   (show data since the previous monday)
 
 Data Display Formats
-====================
+--------------------
 
 Along with rendering an image, the api can also generate `SVG
 <http://www.w3.org/Graphics/SVG/>`_ with embedded metadata or return the raw
 data in various formats for external graphing, analysis or monitoring.
 
 format
-------
+``````
 
 Controls the format of data returned Affects all ``&targets`` passed in the
 URL.
@@ -324,7 +460,7 @@ variable ``metadata`` being set to an object describing the graph.
   </script>
 
 rawData
--------
+```````
 
 .. deprecated:: 0.9.9
 
@@ -344,12 +480,12 @@ Returns the following text::
 .. _graph-parameters :
 
 Graph Parameters
-================
+----------------
 
 .. _param-areaAlpha:
 
 areaAlpha
----------
+`````````
 
 *Default: 1.0*
 
@@ -359,7 +495,7 @@ Takes a floating point number between 0.0 and 1.0 Sets the alpha
 .. _param-areaMode:
 
 areaMode
---------
+````````
 
 *Default: none*
 
@@ -385,7 +521,7 @@ mode to use:
 .. _param-bgcolor:
   
 bgcolor
--------
+```````
 
 *Default: white*
 
@@ -426,7 +562,7 @@ Examples::
   &bgcolor=#2222FF
 
 colorList
----------
+`````````
 
 *Default: blue,green,red,purple,brown,yellow,aqua,grey,magenta,pink,gold,rose*
 
@@ -442,7 +578,7 @@ Example::
 .. _param-drawNullAsZero:
 
 drawNullAsZero
---------------
+``````````````
 
 *Default: false*
 
@@ -452,7 +588,7 @@ time.
 .. _param-fgcolor: 
 
 fgcolor
--------
+```````
 
 *Default: black*
 
@@ -468,7 +604,7 @@ parameter.
 .. _param-fontBold:
 
 fontBold
---------
+````````
 
 *Default: false*
 
@@ -481,7 +617,7 @@ Example::
 .. _param-fontItalic:
 
 fontItalic
-----------
+``````````
 
 *Default: false*
 
@@ -494,7 +630,7 @@ Example::
 .. _param-fontName:
 
 fontName
---------
+````````
 
 *Default: 'Sans'*
 
@@ -508,7 +644,7 @@ Example::
 .. _param-fontSize:
 
 fontSize
---------
+````````
 
 *Default: 10*
 
@@ -520,26 +656,26 @@ Example::
   &fontSize=8
 
 format
-------
+``````
 
 See: `Data Display Formats`_
 
 from
-----
+````
 
 See: `from / until`_
 
 .. _param-graphOnly:
 
 graphOnly
----------
+`````````
 
 *Default: false*
 
 Display only the graph area with no grid lines, axes, or legend.
 
 graphType
----------
+`````````
 
 *Default: line*
 
@@ -556,7 +692,7 @@ types:
 .. _param-hideLegend:
 
 hideLegend
-----------
+``````````
 
 *Default: <unset>*
 
@@ -576,7 +712,7 @@ Example::
 .. _param-hideAxes:
 
 hideAxes
---------
+````````
 
 *Default: false*
 
@@ -589,7 +725,7 @@ Example::
 .. _param-hideYAxis:
 
 hideYAxis
----------
+`````````
 
 *Default: false*
 
@@ -598,7 +734,7 @@ If set to ``true`` the Y Axis will not be rendered.
 .. _param-hideGrid:
 
 hideGrid
---------
+````````
 
 *Default: false*
 
@@ -609,7 +745,7 @@ Example::
   &hideGrid=true
 
 height
-------
+``````
 
 *Default: 300*
 
@@ -622,7 +758,7 @@ Example::
   &width=650&height=250
 
 jsonp
------
+`````
 
 *Default: <unset>*
 
@@ -630,7 +766,7 @@ If set and combined with ``format=json``, wraps the JSON response in a
 function call named by the parameter specified.
 
 leftColor
----------
+`````````
 
 *Default: color chosen from* colorList_.
 
@@ -638,7 +774,7 @@ In dual Y-axis mode, sets the color of all metrics associated with the left
 Y-axis.
 
 leftDashed
-----------
+``````````
 
 *Default: false*
 
@@ -646,7 +782,7 @@ In dual Y-axis mode, draws all metrics associated with the left Y-axis using
 dashed lines.
 
 leftWidth
----------
+`````````
 
 *Default: value of the parameter* lineWidth_
 
@@ -656,7 +792,7 @@ left Y-axis.
 .. _param-lineMode:
 
 lineMode
---------
+````````
 
 *Default: slope*
 
@@ -681,7 +817,7 @@ Example::
 .. _param-lineWidth:
 
 lineWidth
----------
+`````````
 
 *Default: 1.2*
 
@@ -695,7 +831,7 @@ Example::
 .. _param-logBase:
 
 logBase
--------
+```````
 
 *Default: <unset>*
 
@@ -703,7 +839,7 @@ If set, draws the graph with a logarithmic scale of the specified base (e.g.
 10 for common logarithm).
 
 majorGridLineColor
-------------------
+``````````````````
 
 *Default: rose*
 
@@ -717,7 +853,7 @@ Example::
   &majorGridLineColor=#FF22FF
 
 margin
-------
+``````
 
 *Default: 10*
 
@@ -728,13 +864,13 @@ Example::
   &margin=20
 
 max
----
+```
 
 .. deprecated:: 0.9.0
    See yMax_
 
 maxDataPoints
--------------
+`````````````
 
 Set the maximum numbers of datapoints returned when using json content. 
 
@@ -744,7 +880,7 @@ value then the datapoints over the whole period are consolidated.
 .. _param-minorGridLineColor:
 
 minorGridLineColor
-------------------
+``````````````````
 
 *Default: grey*
 
@@ -759,7 +895,7 @@ Example::
 .. _param-minorY:
 
 minorY
-------
+``````
 
 Sets the number of minor grid lines per major line on the y-axis.
 
@@ -768,7 +904,7 @@ Example::
   &minorY=3
 
 min
----
+```
 
 .. deprecated:: 0.9.0
   See yMin_
@@ -776,7 +912,7 @@ min
 .. _param-minXStep:
 
 minXStep
---------
+````````
 
 *Default: 1*
 
@@ -791,7 +927,7 @@ there will be a good deal of line overlap. In response, one may use lineWidth_
 to compensate for this.
 
 pieMode
--------
+```````
 
 *Default: average*
 
@@ -808,7 +944,7 @@ The type of aggregation to use to calculate slices of a pie when
   The minimum of non-null points in the series.
 
 rightColor
-----------
+``````````
 
 *Default: color chosen from* colorList_
 
@@ -816,7 +952,7 @@ In dual Y-axis mode, sets the color of all metrics associated with the right
 Y-axis.
 
 rightDashed
------------
+```````````
 
 *Default: false*
 
@@ -824,7 +960,7 @@ In dual Y-axis mode, draws all metrics associated with the right Y-axis using
 dashed lines.
 
 rightWidth
-----------
+``````````
 
 *Default: value of the parameter* lineWidth_
 
@@ -834,7 +970,7 @@ right Y-axis.
 .. _param-template:
 
 template
---------
+````````
 
 *Default: default*
 
@@ -846,7 +982,7 @@ Example::
   &template=plain
 
 thickness
----------
+`````````
 
 .. deprecated:: 0.9.0
   See: lineWidth_
@@ -854,7 +990,7 @@ thickness
 .. _param-title:
 
 title
------
+`````
 
 *Default: <unset>*
 
@@ -868,7 +1004,7 @@ Example::
 .. _param-tz:
   
 tz
---
+``
 
 *Default: The timezone specified in the graphite-api configuration*
 
@@ -882,21 +1018,21 @@ Examples::
 .. _param-uniqueLegend:
 
 uniqueLegend
-------------
+````````````
 
 *Default: false*
 
 Display only unique legend items, removing any duplicates.
 
 until
------
+`````
 
 See: `from / until`_
 
 .. _param-vtitle:
 
 vtitle
-------
+``````
 
 *Default: <unset>*
 
@@ -907,14 +1043,14 @@ Example::
   &vtitle=Threads
 
 vtitleRight
------------
+```````````
 
 *Default: <unset>*
 
 In dual Y-axis mode, sets the title of the right Y-Axis (see: vtitle_).
 
 width
------
+`````
 
 *Default: 330*
 
@@ -929,7 +1065,7 @@ Example::
 .. _param-xFormat:
 
 xFormat
--------
+```````
 
 *Default: Determined automatically based on the time-width of the X axis*
 
@@ -941,7 +1077,7 @@ format specification details.
 .. _param-yAxisSide:
   
 yAxisSide
----------
+`````````
 
 *Default: left*
 
@@ -951,7 +1087,7 @@ Sets the side of the graph on which to render the Y-axis. Accepts values of
 .. _param-yDivisor:
   
 yDivisor
---------
+````````
 
 *Default: 4,5,6*
 
@@ -961,21 +1097,21 @@ what values (and how many) to display based on a set of 'pretty' values. To
 explicitly set the Y-axis values, see `yStep`_.
 
 yLimit
-------
+``````
 
 *Reserved for future use*
 
 See: yMax_
 
 yLimitLeft
-----------
+``````````
 
 *Reserved for future use*
 
 See: yMaxLeft_
 
 yLimitRight
------------
+```````````
 
 *Reserved for future use*
 
@@ -984,7 +1120,7 @@ See: yMaxRight_
 .. _param-yMin:
 
 yMin
-----
+````
 
 *Default: The lowest value of any of the series displayed*
 
@@ -998,7 +1134,7 @@ Example::
 .. _param-yMax:
 
 yMax
-----
+````
 
 *Default: The highest value of any of the series displayed*
 
@@ -1010,42 +1146,42 @@ Example::
   &yMax=0.2345
 
 yMaxLeft
---------
+````````
 
 In dual Y-axis mode, sets the upper bound of the left Y-Axis (see: `yMax`_).
 
 yMaxRight
----------
+`````````
 
 In dual Y-axis mode, sets the upper bound of the right Y-Axis (see: `yMax`_).
 
 yMinLeft
---------
+````````
 
 In dual Y-axis mode, sets the lower bound of the left Y-Axis (see: `yMin`_).
 
 yMinRight
----------
+`````````
 
 In dual Y-axis mode, sets the lower bound of the right Y-Axis (see: `yMin`_).
 
 .. _param-yStep:
   
 yStep
------
+`````
 
 *Default: Calculated automatically*
 
 Manually set the value step between Y-axis labels and grid lines.
 
 yStepLeft
----------
+`````````
 
 In dual Y-axis mode, Manually set the value step between the left Y-axis
 labels and grid lines (see: `yStep`_).
 
 yStepRight
-----------
+``````````
 
 In dual Y-axis mode, Manually set the value step between the right Y-axis
 labels and grid lines (see: `yStep`_).
@@ -1053,7 +1189,7 @@ labels and grid lines (see: `yStep`_).
 .. _param-yUnitSystem:
 
 yUnitSystem
------------
+```````````
 
 *Default: si*
 

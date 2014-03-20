@@ -1,0 +1,20 @@
+Graphite-API 1.0
+================
+
+*Not released yet!*
+
+Version 1.0 is based on the master branch of Graphite-web, mid-March 2014,
+with the following modifications:
+
+* New ``/index`` API endpoint for re-building the index (replaces the
+  build-index command-line script from graphite-web).
+
+* Removal of memcache integration.
+
+* Removal of Pickle integration.
+
+* Removal of remote rendering.
+
+* Support for Python 3.
+
+* A lot more tests and test coverage.

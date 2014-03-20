@@ -3,7 +3,7 @@ Built-in functions
 
 Functions are used to transform, combine, and perform computations on series
 data. They are applied by manipulating the ``target`` parameters in the
-:doc:`Render API <render>`.
+:ref:`Render API <render>`.
 
 Usage
 -----

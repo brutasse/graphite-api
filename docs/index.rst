@@ -1,18 +1,73 @@
 Graphite-API documentation
 ==========================
 
+Graphite-API is an alternative to Graphite-web, without any built-in
+dashboard. Its role is solely to fetch metrics from a time-series database
+(whisper, cyanite, etc) and rendering graphs or JSON data out of these
+time series. It is meant to be consumed by any of the numerous Graphite
+dashboard applications.
+
+Graphite-API is a fork of Graphite-web and couldn't have existed without the
+fantastic prior work done by the Graphite team.
+
+Why should I use it?
+--------------------
+
+Graphite-API offers a number of improvements over Graphite-web that you might
+find useful. Namely:
+
+* The Graphite-API application is completely stateless and doesn't need a SQL
+  database. It only needs to talk to a time series database.
+
+* Python 2 and 3 are both supported.
+
+* The HTTP API accepts JSON data additionnaly to form data and querystring
+  parameters.
+
+* The application is extremely simple to :doc:`install <installation>` and
+  :doc:`configure <configuration>`.
+
+* The architecture has been drastically simplified and there are much less
+  moving parts than in graphite-web:
+
+  * No memcache integration -- rendering is live.
+
+  * No support for the Pickle format.
+
+  * Plugin architecture for :doc:`integrating with time series databases
+    <finders>` or :doc:`adding more analysis functions <custom-functions>`.
+
+* The codebase has been thoroughly updated with a focus on test coverage and
+  code quality.
+
+.. note::
+
+    Graphite-API does **not** provide any web/graphical interface. If you
+    currently rely on the built-in Graphite composer, Graphite-API might not
+    be for you. However, if you're using a third-party dashboard interface,
+    Graphite-API will do just fine.
+
+Contents
+--------
+
 .. toctree::
    :maxdepth: 2
 
    installation
    configuration
    deployment
-   metrics
-   render
+   api
    functions
-   extension
+   finders
+   custom-functions
 
+Releases
+--------
 
+.. toctree::
+   :maxdepth: 1
+
+   releases/1.0
 
 Indices and tables
 ==================
@@ -20,4 +75,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
