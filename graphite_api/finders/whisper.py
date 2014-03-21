@@ -20,6 +20,8 @@ class WhisperFinder(object):
         pattern_parts = clean_pattern.split('.')
 
         for root_dir in self.directories:
+            if not os.path.isdir(root_dir):
+                os.makedirs(root_dir)
             for absolute_path in self._find_paths(root_dir, pattern_parts):
                 if os.path.basename(absolute_path).startswith('.'):
                     continue

@@ -6,6 +6,9 @@ Graphite-API releases
 
 * ``time_zone`` set to UTC by default instead of Europe/Berlin.
 * Properly log app exceptions.
+* Fix constantLine for python 3, make it work even when there are no other
+  targets.
+* Create whisper directories if they don't exist.
 
 1.0.0 -- 2014-03-20
 -------------------
