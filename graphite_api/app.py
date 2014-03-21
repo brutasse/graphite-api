@@ -11,6 +11,7 @@ from datetime import datetime
 from io import StringIO, BytesIO
 
 from flask import Flask, jsonify
+from structlog import get_logger
 
 from .config import configure
 from .encoders import JSONEncoder
@@ -19,6 +20,8 @@ from .render.datalib import fetchData, TimeSeries
 from .render.glyph import GraphTypes
 from .render.grammar import grammar
 from .utils import RequestParams
+
+logger = get_logger()
 
 
 class Graphite(Flask):
@@ -33,6 +36,12 @@ class Graphite(Flask):
     @property
     def functions(self):
         return self.config['GRAPHITE']['functions']
+
+    @property
+    def logger(self):
+        # Flask has its own logger that doesn't get any handler if we use
+        # dictconfig(). Replace it with our structlog logger.
+        return logger
 
 
 app = Graphite(__name__)

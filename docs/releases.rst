@@ -5,6 +5,7 @@ Graphite-API releases
 ----------------------------
 
 * ``time_zone`` set to UTC by default instead of Europe/Berlin.
+* Properly log app exceptions.
 
 1.0.0 -- 2014-03-20
 -------------------
