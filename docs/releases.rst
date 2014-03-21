@@ -1,8 +1,8 @@
 Graphite-API releases
 =====================
 
-1.0.1 -- *not released yet!*
-----------------------------
+1.0.1 -- 2014-03-21
+-------------------
 
 * ``time_zone`` set to UTC by default instead of Europe/Berlin.
 * Properly log app exceptions.
