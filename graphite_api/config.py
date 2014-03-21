@@ -39,7 +39,7 @@ default_conf = {
             '/srv/graphite/whisper',
         ],
     },
-    'time_zone': 'Europe/Berlin',
+    'time_zone': 'UTC',
 }
 
 
