@@ -21,7 +21,7 @@ Default values
       - graphite_api.functions.SeriesFunctions
       - graphite_api.functions.PieFunctions
     whisper:
-      - directories:
+      directories:
         - /srv/graphite/whisper
     time_zone: Europe/Berlin
 
