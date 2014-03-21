@@ -9,8 +9,12 @@ Installing Graphite-API requires:
 * Python 2 (2.6 and above) or 3 (3.3 and above), with development files. On
   debian/ubuntu, you'll want to install ``python-dev``.
 
+* ``gcc``. On debian/ubuntu, install ``build-essential``.
+
 * Cairo, including development files. On debian/ubuntu, install the
   ``libcairo2-dev`` package.
+
+* ``libffi`` with development files, ``libffi-dev`` on debian/ubuntu.
 
 * Pip, the Python package manager. On debian/ubuntu, install ``python-pip``.
 
