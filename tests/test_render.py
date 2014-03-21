@@ -55,6 +55,18 @@ class RenderTest(TestCase):
         data = json.loads(response.data.decode('utf-8'))
         self.assertEqual(len(data[0]['datapoints']), 60)
 
+    def test_render_constant_line(self):
+        response = self.app.get(self.url, query_string={
+            'target': 'constantLine(12)'})
+        self.assertEqual(response.headers['Content-Type'], 'image/png')
+
+        response = self.app.get(self.url, query_string={
+            'target': 'constantLine(12)', 'format': 'json'})
+        data = json.loads(response.data.decode('utf-8'))[0]['datapoints']
+        self.assertEqual(len(data), 2)
+        for point, ts in data:
+            self.assertEqual(point, 12)
+
     def test_render_options(self):
         self.create_db()
         db2 = os.path.join(WHISPER_DIR, 'foo.wsp')

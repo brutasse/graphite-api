@@ -378,7 +378,8 @@ def render():
                         start_time, end_time))
             else:
                 for series in context['data']:
-                    timestamps = range(series.start, series.end, series.step)
+                    timestamps = range(series.start, series.end + series.step,
+                                       series.step)
                     datapoints = zip(series, timestamps)
                     series_data.append({'target': series.name,
                                         'datapoints': datapoints})

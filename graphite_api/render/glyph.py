@@ -854,7 +854,10 @@ class LineGraph(Graph):
             self.area['ymax'] -= self.getExtents()['maxAscent'] * 2
 
         self.startTime = min([series.start for series in self.data])
-        if self.lineMode == 'staircase':
+        if (
+            self.lineMode == 'staircase' or
+            set([len(series) for series in self.data]) == set([2])
+        ):
             self.endTime = max([series.end for series in self.data])
         else:
             self.endTime = max([

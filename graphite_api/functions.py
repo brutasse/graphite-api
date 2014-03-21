@@ -2373,9 +2373,9 @@ def constantLine(requestContext, value):
         &target=constantLine(123.456)
 
     """
-    start = timestamp(requestContext['startTime'])
-    end = timestamp(requestContext['endTime'])
-    step = (end - start) / 1.0
+    start = int(timestamp(requestContext['startTime']))
+    end = int(timestamp(requestContext['endTime']))
+    step = end - start
     series = TimeSeries(str(value), start, end, step, [value, value])
     return [series]
 
