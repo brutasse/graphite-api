@@ -36,6 +36,8 @@ you can install it in a virtualenv.
     $ virtualenv /usr/share/python/graphite
     $ /usr/share/python/graphite/bin/pip install graphite-api
 
+.. _extras:
+
 Extra dependencies
 ------------------
 

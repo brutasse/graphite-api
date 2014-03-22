@@ -50,8 +50,6 @@ Default sections
 
   The time zone to use when generating graphs.
 
-.. _extras:
-
 Extra sections
 ^^^^^^^^^^^^^^
 
