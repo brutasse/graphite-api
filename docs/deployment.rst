@@ -1,7 +1,7 @@
 Deployment
 ==========
 
-There are several options available, depending on your web server.
+There are several options available, depending on your setup.
 
 Gunicorn + nginx
 ----------------
@@ -79,6 +79,32 @@ Enable the vhost and restart nginx::
 
     $ ln -s /etc/nginx/sites-available/graphite.conf /etc/nginx/sites-enabled
     $ service nginx restart
+
+Docker
+------
+
+Create a ``graphite-api.yaml`` configuration file with your desired config.
+
+Create a ``Dockerfile``::
+
+    FROM brutasse/graphite-api
+
+Build your container::
+
+    docker build -t graphite-api .
+
+Run it::
+
+    docker run -t -i -p 8000:8000 graphite-api
+
+``/srv/graphite`` is a docker ``VOLUME``. You can use that to provide whisper
+data from the host (or from another docker container) to the graphite-api
+container::
+
+    docker run -t -i -v /path/to/graphite:/srv/graphite -p 8000:8000 graphite-api
+
+This container has all the :ref:`extra packages <extras>` included. Cyanite
+backend and Sentry integration are available.
 
 Other deployment methods
 ------------------------
