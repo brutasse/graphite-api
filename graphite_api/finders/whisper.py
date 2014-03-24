@@ -98,7 +98,7 @@ class WhisperReader(object):
 
         time_info, values = data
         start, end, step = time_info
-        return (time_info, values)
+        return time_info, values
 
 
 class GzippedWhisperReader(WhisperReader):
