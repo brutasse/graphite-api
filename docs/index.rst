@@ -4,11 +4,11 @@ Graphite-API documentation
 .. raw:: html
 
    <p>
-   <a class="reference external image-reference" href="https://github.com/brutasse/graphite-api"><img alt="GitHub project" src="https://img.shields.io/badge/GitHub-graphite--api-green.svg" height="18"></a>
+   <a class="reference external image-reference" href="https://github.com/brutasse/graphite-api"><img alt="GitHub project" src="https://img.shields.io/badge/GitHub-graphite--api-green.svg" style="height: 18px !important; width: auto !important;"></a>
 
-   <a class="reference external image-reference" href="https://travis-ci.org/brutasse/graphite-api"><img alt="Build Status" src="https://travis-ci.org/brutasse/graphite-api.svg?branch=master" height="18"></a>
+   <a class="reference external image-reference" href="https://travis-ci.org/brutasse/graphite-api"><img alt="Build Status" src="https://travis-ci.org/brutasse/graphite-api.svg?branch=master" style="height: 18px !important; width: auto !important;"></a>
 
-   <a class="reference external image-reference" href="https://pypi.python.org/pypi/graphite-api"><img alt="PyPI version" src="https://img.shields.io/pypi/v/graphite-api.svg" height="18"></a>
+   <a class="reference external image-reference" href="https://pypi.python.org/pypi/graphite-api"><img alt="PyPI version" src="https://img.shields.io/pypi/v/graphite-api.svg" style="height: 18px !important; width: auto !important;"></a>
    </p>
 
 Graphite-API is an alternative to Graphite-web, without any built-in
