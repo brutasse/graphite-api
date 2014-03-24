@@ -1,11 +1,11 @@
 Graphite-API
 ============
 
-.. image:: https://travis-ci.org/brutasse/graphite-api.png?branch=master
+.. image:: https://travis-ci.org/brutasse/graphite-api.svg?branch=master
    :alt: Build Status
    :target: https://travis-ci.org/brutasse/graphite-api
 
-.. image:: https://coveralls.io/repos/brutasse/graphite-api/badge.png?branch=master
+.. image:: https://img.shields.io/coveralls/brutasse/graphite-api/master.svg
    :alt: Coverage Status
    :target: https://coveralls.io/r/brutasse/graphite-api?branch=master
 

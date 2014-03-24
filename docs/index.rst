@@ -1,6 +1,18 @@
 Graphite-API documentation
 ==========================
 
+.. image:: https://img.shields.io/badge/GitHub-graphite--api-green.svg
+   :alt: GitHub project
+   :target: https://github.com/brutasse/graphite-api
+
+.. image:: https://travis-ci.org/brutasse/graphite-api.svg?branch=master
+   :alt: Build Status
+   :target: https://travis-ci.org/brutasse/graphite-api
+
+.. image:: http://img.shields.io/pypi/v/graphite-api.svg
+   :alt: PyPI version
+   :target: https://pypi.python.org/pypi/graphite-api
+
 Graphite-API is an alternative to Graphite-web, without any built-in
 dashboard. Its role is solely to fetch metrics from a time-series database
 (whisper, cyanite, etc) and rendering graphs or JSON data out of these
