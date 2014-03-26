@@ -90,6 +90,33 @@ class RenderTest(TestCase):
         data = json.loads(response.data.decode('utf-8'))[0]['datapoints']
         self.assertEqual([d[0] for d in data], [17, 17])
 
+    def test_sumseries(self):
+        response = self.app.get(self.url, query_string={
+            'target': ['sumSeries(sin("foo"), sin("bar", 2))',
+                       'sin("baz", 3)'],
+            'format': 'json',
+        })
+        data = json.loads(response.data.decode('utf-8'))
+        agg = {}
+        for series in data:
+            agg[series['target']] = series['datapoints']
+        for index, value in enumerate(agg['baz']):
+            self.assertEqual(value, agg['sumSeries(sin(bar),sin(foo))'][index])
+
+        response = self.app.get(self.url, query_string={
+            'target': ['sumSeries(sin("foo"), sin("bar", 2))',
+                       'sin("baz", 3)'],
+            'format': 'json',
+            'maxDataPoints': 100,
+        })
+        data = json.loads(response.data.decode('utf-8'))
+        agg = {}
+        for series in data:
+            self.assertTrue(len(series['datapoints']) <= 100)
+            agg[series['target']] = series['datapoints']
+        for index, value in enumerate(agg['baz']):
+            self.assertEqual(value, agg['sumSeries(sin(bar),sin(foo))'][index])
+
     def test_correct_timezone(self):
         response = self.app.get(self.url, query_string={
             'target': 'constantLine(12)',
