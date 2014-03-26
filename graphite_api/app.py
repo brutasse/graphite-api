@@ -75,7 +75,7 @@ def metrics_search():
         max_results = int(RequestParams.get('max_results', 25))
     except ValueError:
         errors['max_results'] = 'must be an integer.'
-    if not 'query' in RequestParams:
+    if 'query' not in RequestParams:
         errors['query'] = 'this parameter is required.'
     if errors:
         return jsonify({'errors': errors}), 400
@@ -108,10 +108,10 @@ def metrics_find():
         errors['until'] = 'must be an epoch timestamp.'
 
     format = RequestParams.get('format', 'treejson')
-    if not format in ['treejson', 'completer']:
+    if format not in ['treejson', 'completer']:
         errors['format'] = 'unrecognized format: "{0}".'.format(format)
 
-    if not 'query' in RequestParams:
+    if 'query' not in RequestParams:
         errors['query'] = 'this parameter is required.'
 
     if errors:
@@ -162,7 +162,7 @@ def metrics_expand():
     except ValueError:
         errors['leavesOnly'] = 'must be 0 or 1.'
 
-    if not 'query' in RequestParams:
+    if 'query' not in RequestParams:
         errors['query'] = 'this parameter is required.'
     if errors:
         return jsonify({'errors': errors}), 400

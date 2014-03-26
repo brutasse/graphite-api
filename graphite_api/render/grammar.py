@@ -41,7 +41,7 @@ boolean = Group(
 argname = Word(alphas + '_', alphanums + '_')('argname')
 funcname = Word(alphas + '_', alphanums + '_')('funcname')
 
-## Symbols
+# Symbols
 leftParen = Literal('(').suppress()
 rightParen = Literal(')').suppress()
 comma = Literal(',').suppress()
@@ -49,7 +49,7 @@ equal = Literal('=').suppress()
 
 # Function calls
 
-## Symbols
+# Symbols
 leftBrace = Literal('{')
 rightBrace = Literal('}')
 leftParen = Literal('(').suppress()

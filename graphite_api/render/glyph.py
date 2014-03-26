@@ -82,7 +82,7 @@ YEAR = DAY * 365
 
 # Set a flag to indicate whether the '%l' option can be used safely.
 # On Windows, in particular the %l option in strftime is not supported.
-#(It is not one of the documented Python formatters).
+# (It is not one of the documented Python formatters).
 try:
     datetime.now().strftime("%a %l%p")
     percent_l_supported = True
@@ -746,7 +746,7 @@ class LineGraph(Graph):
         if len(self.dataRight) > 0:
             self.secondYAxis = True
 
-        #API compatibilty hacks
+        # API compatibilty hacks
         if params.get('graphOnly', False):
             params['hideLegend'] = True
             params['hideGrid'] = True
@@ -1410,8 +1410,9 @@ class LineGraph(Graph):
                     xMin = self.margin + (self.yLabelWidth * 1.02)
                     if self.area['xmin'] < xMin:
                         self.area['xmin'] = xMin
-                else:  # scoot the graph over to the right just enough to fit
-                       # the y-labels
+                else:
+                    # scoot the graph over to the right just enough to fit
+                    # # the y-labels
                     xMin = 0
                     xMax = self.margin - (self.yLabelWidth * 1.02)
                     if self.area['xmax'] >= xMax:
@@ -1594,7 +1595,7 @@ class LineGraph(Graph):
         self.yScaleFactorL = float(self.graphHeight) / float(self.ySpanL)
         self.yScaleFactorR = float(self.graphHeight) / float(self.ySpanR)
 
-        #Create and measure the Y-labels
+        # Create and measure the Y-labels
         def makeLabel(yValue, yStep=None, ySpan=None):
             yValue, prefix = format_units(
                 yValue, yStep, system=self.params.get('yUnitSystem'))
@@ -1728,7 +1729,7 @@ class LineGraph(Graph):
                                          self.xConf['labelUnit'],
                                          self.xConf['labelStep'])
 
-        #Draw the X-labels
+        # Draw the X-labels
         xFormat = self.params.get('xFormat', self.xConf['format'])
         while dt < self.end_dt:
             label = dt.strftime(xFormat)
@@ -1742,7 +1743,7 @@ class LineGraph(Graph):
         # Not sure how to handle this for 2 y-axes
         # Just using the left side info for the grid.
 
-        #Horizontal grid lines
+        # Horizontal grid lines
         leftSide = self.area['xmin']
         rightSide = self.area['xmax']
         labels = []
@@ -1815,7 +1816,7 @@ class LineGraph(Graph):
                     self.ctx.line_to(rightSide, y)
                     self.ctx.stroke()
 
-        #Vertical grid lines
+        # Vertical grid lines
         top = self.area['ymin']
         bottom = self.area['ymax']
 
@@ -1857,7 +1858,7 @@ class LineGraph(Graph):
 
             dt += x_major_delta
 
-        #Draw side borders for our graph area
+        # Draw side borders for our graph area
         self.ctx.set_line_width(0.5)
         self.ctx.move_to(self.area['xmax'], bottom)
         self.ctx.line_to(self.area['xmax'], top)

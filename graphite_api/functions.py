@@ -162,10 +162,10 @@ def formatPathExpressions(seriesList):
 
 # Series Functions
 
-#NOTE: Some of the functions below use izip, which may be problematic.
-#izip stops when it hits the end of the shortest series
-#in practice this *shouldn't* matter because all series will cover
-#the same interval, despite having possibly different steps...
+# NOTE: Some of the functions below use izip, which may be problematic.
+# izip stops when it hits the end of the shortest series
+# in practice this *shouldn't* matter because all series will cover
+# the same interval, despite having possibly different steps...
 
 
 def sumSeries(requestContext, *seriesLists):
