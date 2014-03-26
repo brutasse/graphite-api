@@ -2371,6 +2371,7 @@ def constantLine(requestContext, value):
     end = int(epoch(requestContext['endTime']))
     step = end - start
     series = TimeSeries(str(value), start, end, step, [value, value])
+    series.pathExpression = 'constantLine({0})'.format(value)
     return [series]
 
 

@@ -82,6 +82,14 @@ class RenderTest(TestCase):
         data = json.loads(response.data.decode('utf-8'))[0]['datapoints']
         self.assertEqual(len(data), 5)
 
+    def test_constantline_pathexpr(self):
+        response = self.app.get(self.url, query_string={
+            'target': 'sumSeries(constantLine(12), constantLine(5))',
+            'format': 'json',
+        })
+        data = json.loads(response.data.decode('utf-8'))[0]['datapoints']
+        self.assertEqual([d[0] for d in data], [17, 17])
+
     def test_correct_timezone(self):
         response = self.app.get(self.url, query_string={
             'target': 'constantLine(12)',
