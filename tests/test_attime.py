@@ -34,6 +34,7 @@ class AtTestCase(TestCase):
             'fri',
             'sat',
             'sun',
+            '10:00',
         ]:
             self.assertIsInstance(parseATTime(value), datetime.datetime)
 
