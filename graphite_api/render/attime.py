@@ -52,7 +52,7 @@ def parseATTime(s, tzinfo=None):
 
 def parseTimeReference(ref):
     if not ref or ref == 'now':
-        return datetime.now()
+        return datetime.utcnow()
 
     # Time-of-day reference
     i = ref.find(':')
@@ -76,7 +76,7 @@ def parseTimeReference(ref):
         hour, min = 16, 0
         ref = ref[7:]
 
-    refDate = datetime.now().replace(hour=hour, minute=min, second=0)
+    refDate = datetime.utcnow().replace(hour=hour, minute=min, second=0)
 
     # Day reference
     if ref in ('yesterday', 'today', 'tomorrow'):  # yesterday, today, tomorrow

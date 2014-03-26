@@ -11,10 +11,9 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License."""
-
-import time
-
 from structlog import get_logger
+
+from ..utils import epoch
 
 logger = get_logger()
 
@@ -83,8 +82,8 @@ def fetchData(requestContext, pathExpr):
     from ..app import app
 
     seriesList = []
-    startTime = int(time.mktime(requestContext['startTime'].timetuple()))
-    endTime = int(time.mktime(requestContext['endTime'].timetuple()))
+    startTime = int(epoch(requestContext['startTime']))
+    endTime = int(epoch(requestContext['endTime']))
 
     def _fetchData(pathExpr, startTime, endTime, requestContext, seriesList):
         matching_nodes = app.store.find(pathExpr, startTime, endTime)

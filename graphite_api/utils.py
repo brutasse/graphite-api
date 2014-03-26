@@ -11,6 +11,8 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License."""
+import calendar
+import pytz
 
 from flask import request
 
@@ -56,3 +58,10 @@ RequestParams = RequestParams()
 
 def to_seconds(delta):
     return abs(delta.seconds + delta.days * 86400)
+
+
+def epoch(dt):
+    """
+    Returns the epoch timestamp of a timezone-aware datetime object.
+    """
+    return calendar.timegm(dt.astimezone(pytz.utc).timetuple())

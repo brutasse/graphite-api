@@ -1,6 +1,12 @@
 Graphite-API releases
 =====================
 
+1.0.2 -- **in development**
+---------------------------
+
+* Proper timezone handling of ``from`` and ``until`` with client-supplied
+  timezones (`Graphite-web issue #639 <https://github.com/graphite-project/graphite-web/issues/639>`_).
+
 1.0.1 -- 2014-03-21
 -------------------
 

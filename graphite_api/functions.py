@@ -30,7 +30,7 @@ from six.moves import zip, map, reduce
 from .render.attime import parseTimeOffset
 from .render.glyph import format_units
 from .render.datalib import TimeSeries
-from .utils import to_seconds
+from .utils import to_seconds, epoch
 
 NAN = float('NaN')
 INF = float('inf')
@@ -40,11 +40,6 @@ DAY = HOUR * 24
 
 
 # Utility functions
-def timestamp(datetime):
-    "Convert a datetime object into epoch time"
-    return time.mktime(datetime.timetuple())
-
-
 not_none = partial(is_not, None)
 
 
@@ -1736,7 +1731,7 @@ def limit(requestContext, seriesList, n):
     """
     Takes one metric or a wildcard seriesList followed by an integer N.
 
-    Only draw the first N metrics.    Useful when testing a wildcard in a
+    Only draw the first N metrics. Useful when testing a wildcard in a
     metric.
 
     Example::
@@ -2373,8 +2368,8 @@ def constantLine(requestContext, value):
         &target=constantLine(123.456)
 
     """
-    start = int(timestamp(requestContext['startTime']))
-    end = int(timestamp(requestContext['endTime']))
+    start = int(epoch(requestContext['startTime']))
+    end = int(epoch(requestContext['endTime']))
     step = end - start
     series = TimeSeries(str(value), start, end, step, [value, value])
     return [series]
@@ -2510,8 +2505,8 @@ def identity(requestContext, name):
     where x(t) == t.
     """
     step = 60
-    start = int(time.mktime(requestContext["startTime"].timetuple()))
-    end = int(time.mktime(requestContext["endTime"].timetuple()))
+    start = int(epoch(requestContext["startTime"]))
+    end = int(epoch(requestContext["endTime"]))
     values = range(start, end, step)
     series = TimeSeries(name, start, end, step, values)
     series.pathExpression = 'identity("%s")' % name
@@ -2989,12 +2984,12 @@ def sinFunction(requestContext, name, amplitude=1):
     values = []
 
     while when < requestContext["endTime"]:
-        values.append(math.sin(time.mktime(when.timetuple()))*amplitude)
+        values.append(math.sin(epoch(when))*amplitude)
         when += delta
 
     series = TimeSeries(
-        name, int(time.mktime(requestContext["startTime"].timetuple())),
-        int(time.mktime(requestContext["endTime"].timetuple())),
+        name, int(epoch(requestContext["startTime"])),
+        int(epoch(requestContext["endTime"])),
         step, values)
     series.pathExpression = 'sin({0})'.format(name)
     return [series]
@@ -3025,8 +3020,8 @@ def randomWalkFunction(requestContext, name):
         when += delta
 
     return [TimeSeries(
-        name, int(time.mktime(requestContext["startTime"].timetuple())),
-        int(time.mktime(requestContext["endTime"].timetuple())),
+        name, int(epoch(requestContext["startTime"])),
+        int(epoch(requestContext["endTime"])),
         step, values)]
 
 
