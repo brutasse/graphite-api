@@ -251,7 +251,7 @@ def averageSeriesWithWildcards(requestContext, seriesList, *positions):
         matchedList[newname].append(series)
     result = []
     for name in matchedList:
-        series = averageSeries(requestContext, (matchedList[name]))[0]
+        [series] = averageSeries(requestContext, (matchedList[name]))
         series.name = name
         result.append(series)
     return result
@@ -502,7 +502,7 @@ def divideSeries(requestContext, dividendSeriesList, divisorSeriesList):
         raise ValueError(
             "divideSeries second argument must reference exactly 1 series")
 
-    divisorSeries = divisorSeriesList[0]
+    [divisorSeries] = divisorSeriesList
     results = []
 
     for dividendSeries in dividendSeriesList:
@@ -595,8 +595,8 @@ def weightedAverage(requestContext, seriesListAvg, seriesListWeight, node):
         productSeries.pathExpression = name
         productList.append(productSeries)
 
-    sumProducts = sumSeries(requestContext, productList)[0]
-    sumWeights = sumSeries(requestContext, seriesListWeight)[0]
+    [sumProducts] = sumSeries(requestContext, productList)
+    [sumWeights] = sumSeries(requestContext, seriesListWeight)
 
     resultValues = [safeDiv(val1, val2)
                     for val1, val2 in zip(sumProducts, sumWeights)]
@@ -2402,7 +2402,7 @@ def aggregateLine(requestContext, seriesList, func='avg'):
         value = t_funcs[func](series)
         name = 'aggregateLine(%s,%d)' % (series.pathExpression, value)
 
-        series = constantLine(requestContext, value)[0]
+        [series] = constantLine(requestContext, value)
         series.name = name
         results.append(series)
     return results
@@ -2421,7 +2421,7 @@ def threshold(requestContext, value, label=None, color=None):
 
     """
 
-    series = constantLine(requestContext, value)[0]
+    [series] = constantLine(requestContext, value)
     if label:
         series.name = label
     if color:
