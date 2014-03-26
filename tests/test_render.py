@@ -67,6 +67,14 @@ class RenderTest(TestCase):
         for point, ts in data:
             self.assertEqual(point, 12)
 
+        response = self.app.get(self.url, query_string={
+            'target': 'constantLine(12)', 'format': 'json',
+            'maxDataPoints': 12})
+        data = json.loads(response.data.decode('utf-8'))[0]['datapoints']
+        self.assertEqual(len(data), 2)
+        for point, ts in data:
+            self.assertEqual(point, 12)
+
     def test_correct_timezone(self):
         response = self.app.get(self.url, query_string={
             'target': 'constantLine(12)',
