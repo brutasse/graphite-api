@@ -23,7 +23,6 @@ import math
 import re
 import random
 import six
-import time
 
 from six.moves import zip, map, reduce
 
