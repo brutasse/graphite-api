@@ -4,17 +4,26 @@ Graphite-API releases
 1.0.2 -- **in development**
 ---------------------------
 
-* Proper timezone handling of ``from`` and ``until`` with client-supplied
-  timezones (`Graphite-web issue #639 <https://github.com/graphite-project/graphite-web/issues/639>`_).
+* Fixes for the following graphite-web issues:
+
+  * `#639 <https://github.com/graphite-project/graphite-web/issues/639>`_ --
+    proper timezone handling of ``from`` and ``until`` with client-supplied
+    timezones.
+  * `#540 <https://github.com/graphite-project/graphite-web/issues/540>`_ --
+    provide the last data point when rendering to JSON format.
 
 1.0.1 -- 2014-03-21
 -------------------
 
 * ``time_zone`` set to UTC by default instead of Europe/Berlin.
 * Properly log app exceptions.
-* Fix constantLine for python 3, make it work even when there are no other
-  targets.
+* Fix constantLine for python 3.
 * Create whisper directories if they don't exist.
+* Fixes for the following graphite-web issues:
+
+  * `#645 <https://github.com/graphite-project/graphite-web/pull/645>`_, `#625
+    <https://github.com/graphite-project/graphite-web/issues/625>`_ -- allow
+    ``constantLine`` to work even if there are no other targets in the graph.
 
 1.0.0 -- 2014-03-20
 -------------------
@@ -37,4 +46,13 @@ with the following modifications:
 
 * Fixes for the following graphite-web issues:
 
-  * `#658 <https://github.com/graphite-project/graphite-web/issues/658>`_
+  * (meta) `#647 <https://github.com/graphite-project/graphite-web/issues/647>`_
+    -- strip out the API from graphite-web.
+  * `#665 <https://github.com/graphite-project/graphite-web/pull/665>`_ --
+    address some DeprecationWarnings.
+  * `#658 <https://github.com/graphite-project/graphite-web/issues/658>`_ --
+    accept a float value in ``maxDataPoints``.
+  * `#654 <https://github.com/graphite-project/graphite-web/pull/654>`_ --
+    ignore invalid ``logBase`` values (<=1).
+  * `#591 <https://github.com/graphite-project/graphite-web/issues/591>`_ --
+    accept JSON data additionaly to querystring params or form data.
