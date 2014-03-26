@@ -146,7 +146,7 @@ def normalize(seriesLists):
     seriesList = reduce(lambda L1, L2: L1+L2, seriesLists)
     step = reduce(lcm, [s.step for s in seriesList])
     for s in seriesList:
-        s.consolidate(step / s.step)
+        s.consolidate(step // s.step)
     start = min([s.start for s in seriesList])
     end = max([s.end for s in seriesList])
     end -= (end - start) % step
