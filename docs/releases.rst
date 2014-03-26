@@ -34,3 +34,7 @@ with the following modifications:
 * Support for Python 3.
 
 * A lot more tests and test coverage.
+
+* Fixes for the following graphite-web issues:
+
+  * `#658 <https://github.com/graphite-project/graphite-web/issues/658>`_

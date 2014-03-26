@@ -75,6 +75,13 @@ class RenderTest(TestCase):
         for point, ts in data:
             self.assertEqual(point, 12)
 
+    def test_float_maxdatapoints(self):
+        response = self.app.get(self.url, query_string={
+            'target': 'sin("foo")', 'format': 'json',
+            'maxDataPoints': 5.5})  # rounded to int
+        data = json.loads(response.data.decode('utf-8'))[0]['datapoints']
+        self.assertEqual(len(data), 5)
+
     def test_correct_timezone(self):
         response = self.app.get(self.url, query_string={
             'target': 'constantLine(12)',
