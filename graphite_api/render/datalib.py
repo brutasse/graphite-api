@@ -114,7 +114,7 @@ def fetchData(requestContext, pathExpr):
         names = set([s.name for s in seriesList])
         for name in names:
             series_with_duplicate_names = [
-                s for s in seriesList if series.name == name]
+                s for s in seriesList if s.name == name]
             empty_duplicates = [
                 s for s in series_with_duplicate_names
                 if not nonempty(series)]
