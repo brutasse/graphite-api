@@ -1845,9 +1845,9 @@ def mostDeviant(requestContext, seriesList, n):
         if sigma is None:
             continue
         deviants.append((sigma, series))
-    return [series for sigma, series in sorted(deviants,  # sort by sigma
-                                               key=itemgetter(0),
-                                               reverse=True)][:n]
+    return [series for sig, series in sorted(deviants,  # sort by sigma
+                                             key=itemgetter(0),
+                                             reverse=True)][:n]
 
 
 def stdev(requestContext, seriesList, points, windowTolerance=0.1):
@@ -2569,7 +2569,7 @@ def mapSeries(requestContext, seriesList, mapNode):
             keys.append(key)
         else:
             metaSeries[key].append(series)
-    return [metaSeries[key] for key in keys]
+    return [metaSeries[k] for k in keys]
 
 
 def reduceSeries(requestContext, seriesLists, reduceFunction, reduceNode,

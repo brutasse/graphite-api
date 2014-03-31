@@ -111,12 +111,12 @@ def fetchData(requestContext, pathExpr):
 
         # Prune empty series with duplicate metric paths to avoid showing
         # empty graph elements for old whisper data
-        names = set([series.name for series in seriesList])
+        names = set([s.name for s in seriesList])
         for name in names:
             series_with_duplicate_names = [
-                series for series in seriesList if series.name == name]
+                s for s in seriesList if series.name == name]
             empty_duplicates = [
-                series for series in series_with_duplicate_names
+                s for s in series_with_duplicate_names
                 if not nonempty(series)]
 
             if (
