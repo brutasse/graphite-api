@@ -91,32 +91,21 @@ def parseTimeReference(ref):
         if y < 1970:
             y += 100
         refDate = refDate.replace(year=y)
-
-        try:
-            refDate = refDate.replace(month=m)
-            refDate = refDate.replace(day=d)
-        except ValueError:  # day out of range for month, or vice versa
-            refDate = refDate.replace(day=d)
-            refDate = refDate.replace(month=m)
+        refDate = replace_date(refDate, m, d)
 
     elif len(ref) == 8 and ref.isdigit():  # YYYYMMDD
         refDate = refDate.replace(year=int(ref[:4]))
-
-        try:  # Fix for Bug #551771
-            refDate = refDate.replace(month=int(ref[4:6]))
-            refDate = refDate.replace(day=int(ref[6:8]))
-        except ValueError:  # day out of range for month, or vice versa
-            refDate = refDate.replace(day=int(ref[6:8]))
-            refDate = refDate.replace(month=int(ref[4:6]))
+        refDate = replace_date(refDate, int(ref[4:6]), int(ref[6:8]))
 
     elif ref[:3] in months:  # MonthName DayOfMonth
-        refDate = refDate.replace(month=months.index(ref[:3]) + 1)
+        month = months.index(ref[:3]) + 1
         if ref[-2:].isdigit():
-            refDate = refDate.replace(day=int(ref[-2:]))
+            day = int(ref[-2])
         elif ref[-1:].isdigit():
-            refDate = refDate.replace(day=int(ref[-1:]))
+            day = int(ref[-1:])
         else:
             raise Exception("Day of month required after month name")
+        refDate = replace_date(refDate, month, day)
     elif ref[:3] in weekdays:  # DayOfWeek (Monday, etc)
         todayDayName = refDate.strftime("%a").lower()[:3]
         today = weekdays.index(todayDayName)
@@ -128,6 +117,16 @@ def parseTimeReference(ref):
     elif ref:
         raise Exception("Unknown day reference")
     return refDate
+
+
+def replace_date(date, month, day):
+    try:
+        date = date.replace(month=month)
+        date = date.replace(day=day)
+    except ValueError:  # day out of range for month, or vice versa
+        date = date.replace(day=day)
+        date = date.replace(month=month)
+    return date
 
 
 def parseTimeOffset(offset):

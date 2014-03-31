@@ -4,6 +4,8 @@ Graphite-API releases
 1.0.2 -- **in development**
 ---------------------------
 
+* Fix parsing dates such as "feb27" during month days > 28.
+
 * Fixes for the following graphite-web issues:
 
   * `#639 <https://github.com/graphite-project/graphite-web/issues/639>`_ --
