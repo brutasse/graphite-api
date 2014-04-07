@@ -45,7 +45,12 @@ class Graphite(Flask):
 
 
 app = Graphite(__name__)
-configure(app)
+try:
+    configure(app)
+except Exception:
+    import traceback
+    print(traceback.format_exc())
+    raise
 
 methods = ('GET', 'POST')
 
