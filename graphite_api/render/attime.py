@@ -36,7 +36,7 @@ def parseATTime(s, tzinfo=None):
             pass  # Fall back because its not a timestamp, its YYYYMMDD form
         else:
             return datetime.fromtimestamp(int(s), tzinfo)
-    elif ':' in s and len(s) == 11:
+    elif ':' in s and len(s) == 13:
         return tzinfo.localize(datetime.strptime(s, '%H:%M%Y%m%d'), daylight)
     if '+' in s:
         ref, offset = s.split('+', 1)
@@ -46,13 +46,13 @@ def parseATTime(s, tzinfo=None):
         offset = '-' + offset
     else:
         ref, offset = s, ''
-    return tzinfo.localize(parseTimeReference(ref),
-                           daylight) + parseTimeOffset(offset)
+    return (parseTimeReference(ref) +
+            parseTimeOffset(offset)).astimezone(tzinfo)
 
 
 def parseTimeReference(ref):
     if not ref or ref == 'now':
-        return datetime.utcnow()
+        return datetime.utcnow().replace(tzinfo=pytz.utc)
 
     # Time-of-day reference
     i = ref.find(':')
@@ -76,7 +76,8 @@ def parseTimeReference(ref):
         hour, min = 16, 0
         ref = ref[7:]
 
-    refDate = datetime.utcnow().replace(hour=hour, minute=min, second=0)
+    refDate = datetime.utcnow().replace(hour=hour, minute=min, second=0,
+                                        tzinfo=pytz.utc)
 
     # Day reference
     if ref in ('yesterday', 'today', 'tomorrow'):  # yesterday, today, tomorrow

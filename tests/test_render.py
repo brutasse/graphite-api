@@ -231,8 +231,8 @@ class RenderTest(TestCase):
             'maxDataPoints': 'Must be an integer.'}}, status_code=400)
 
         response = self.app.get(self.url, query_string={
-            'from': '21:20_140313',
-            'until': '21:20_140313',
+            'from': '21:2020140313',
+            'until': '21:2020140313',
             'target': 'test'})
         self.assertJSON(response, {'errors': {
             'from': 'Invalid empty time range',
