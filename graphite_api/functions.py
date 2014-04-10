@@ -1108,20 +1108,32 @@ def stacked(requestContext, seriesLists, stackName='__DEFAULT__'):
     return results
 
 
-def areaBetween(requestContext, seriesList):
+def areaBetween(requestContext, *seriesLists):
     """
-    Draws the area in between the two series in seriesList
-    """
-    assert len(seriesList) == 2, ("areaBetween series argument must reference "
-                                  "*exactly* 2 series")
-    lower, upper = seriesList
+    Draws the area in between the two series in seriesList.
 
+    Examples::
+
+        &target=areaBetween(collectd.db1.load.load-relative.shortterm,
+                            collectd.db2.load.load-relative.shortterm)
+
+        &target=areaBetween(collectd.db*.load.load-relative.shortterm)
+    """
+    if len(seriesLists) == 1:
+        [seriesLists] = seriesLists
+    assert len(seriesLists) == 2, ("areaBetween series argument must "
+                                   "reference *exactly* 2 series")
+    lower, upper = seriesLists
+    if len(lower) == 1:
+        [lower] = lower
+    if len(upper) == 1:
+        [upper] = upper
     lower.options['stacked'] = True
     lower.options['invisible'] = True
 
     upper.options['stacked'] = True
     lower.name = upper.name = "areaBetween(%s)" % upper.pathExpression
-    return seriesList
+    return [lower, upper]
 
 
 def aliasSub(requestContext, seriesList, search, replace):

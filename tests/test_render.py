@@ -90,6 +90,14 @@ class RenderTest(TestCase):
         data = json.loads(response.data.decode('utf-8'))[0]['datapoints']
         self.assertEqual([d[0] for d in data], [17, 17])
 
+    def test_area_between(self):
+        response = self.app.get(self.url, query_string={
+            'target': ['areaBetween(sin("foo"), sin("bar", 2))'],
+            'format': 'json',
+        })
+        data = json.loads(response.data.decode('utf-8'))
+        self.assertEqual(len(data), 2)
+
     def test_sumseries(self):
         response = self.app.get(self.url, query_string={
             'target': ['sumSeries(sin("foo"), sin("bar", 2))',

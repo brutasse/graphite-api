@@ -13,6 +13,9 @@ Graphite-API releases
     timezones.
   * `#540 <https://github.com/graphite-project/graphite-web/issues/540>`_ --
     provide the last data point when rendering to JSON format.
+  * `#381 <https://github.com/graphite-project/graphite-web/issues/381>`_ --
+    make ``areaBetween()`` work either when passed 2 arguments or a single
+    wildcard series of length 2.
 
 1.0.1 -- 2014-03-21
 -------------------

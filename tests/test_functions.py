@@ -545,7 +545,7 @@ class FunctionsTest(TestCase):
 
     def test_area_between(self):
         series = self._generate_series_list()
-        lower, upper = functions.areaBetween({}, series[:2])
+        lower, upper = functions.areaBetween({}, series[0], series[1])
         self.assertEqual(lower.options, {'stacked': True, 'invisible': True})
         self.assertEqual(upper.options, {'stacked': True})
 
