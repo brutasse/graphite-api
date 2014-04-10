@@ -1,5 +1,7 @@
 import time
 
+from collections import defaultdict
+
 from .utils import is_pattern
 from .node import LeafNode
 from .intervals import Interval
@@ -21,11 +23,8 @@ class Store(object):
                 matching_nodes.add(node)
 
         # Group matching nodes by their path
-        nodes_by_path = {}
+        nodes_by_path = defaultdict(list)
         for node in matching_nodes:
-            if node.path not in nodes_by_path:
-                nodes_by_path[node.path] = []
-
             nodes_by_path[node.path].append(node)
 
         # Reduce matching nodes for each path to a minimal set
