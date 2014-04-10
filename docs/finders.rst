@@ -102,7 +102,7 @@ in three steps:
   The string ``'custom'`` is used to identify backends and needs to be unique
   per-backend.
 
-* Add the ``__fetch_multi__`` to your finder class::
+* Add the ``__fetch_multi__`` attribute to your finder class::
 
       class CustomFinder(objects):
           __fetch_multi__ = 'custom'
