@@ -4,6 +4,10 @@ Graphite-API releases
 1.0.2 -- **in development**
 ---------------------------
 
+* Add support for ``fetch_multi()`` in storage finders. This is useful for
+  database-backed finders such as Cyanite because it allows fetching all time
+  series at once instead of sequentially.
+
 * Fix parsing dates such as "feb27" during month days > 28.
 
 * Fixes for the following graphite-web issues:

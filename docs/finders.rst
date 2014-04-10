@@ -86,6 +86,38 @@ the database has gaps: gaps can be filled with ``None`` values.
 available for this given metric in the database. It must return an
 ``IntervalSet`` of one or more ``Interval`` objects.
 
+Fetching multiple paths at once
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If your storage backend allows it, fetching multiple paths at once is useful
+to avoid sequential fetches and save time and resources. This can be achieved
+in three steps:
+
+* Subclass ``LeafNode`` and add a ``__fetch_multi__`` class attribute to your
+  subclass::
+
+      class CustomLeafNode(LeafNode):
+          __fetch_multi__ = 'custom'
+
+  The string ``'custom'`` is used to identify backends and needs to be unique
+  per-backend.
+
+* Add the ``__fetch_multi__`` to your finder class::
+
+      class CustomFinder(objects):
+          __fetch_multi__ = 'custom'
+
+* Implement a ``fetch_multi()`` method on your finder::
+
+      class CustomFinder(objects):
+          def fetch_multi(self, nodes, start_time, end_time):
+              paths = [node.path for node in nodes]
+              # fetch paths
+              return time_info, series
+
+  ``time_info`` is the same structure as the one returned by ``fetch()``.
+  ``series`` is a dictionnary with paths as keys and datapoints as values.
+
 Installing custom finders
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 

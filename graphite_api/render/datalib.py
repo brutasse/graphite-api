@@ -11,6 +11,7 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License."""
+from collections import defaultdict
 from structlog import get_logger
 
 from ..utils import epoch
@@ -87,9 +88,33 @@ def fetchData(requestContext, pathExpr):
 
     def _fetchData(pathExpr, startTime, endTime, requestContext, seriesList):
         matching_nodes = app.store.find(pathExpr, startTime, endTime)
+
+        # Group nodes that support multiple fetches
+        multi_nodes = defaultdict(list)
+        single_nodes = []
+        for node in matching_nodes:
+            if not node.is_leaf:
+                continue
+            if hasattr(node, '__fetch_multi__'):
+                multi_nodes[node.__fetch_multi__].append(node)
+            else:
+                single_nodes.append(node)
+
         fetches = [
-            (node, node.fetch(startTime, endTime)) for node in matching_nodes
-            if node.is_leaf]
+            (node, node.fetch(startTime, endTime)) for node in single_nodes]
+
+        for finder in app.store.finders:
+            if not hasattr(finder, '__fetch_multi__'):
+                continue
+            nodes = multi_nodes[finder.__fetch_multi__]
+            if not nodes:
+                continue
+            time_info, series = finder.fetch_multi(nodes, startTime, endTime)
+            start, end, step = time_info
+            for path, values in series.items():
+                series = TimeSeries(path, start, end, step, values)
+                series.pathExpression = pathExpr
+                seriesList.append(series)
 
         for node, results in fetches:
             if not results:
