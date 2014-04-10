@@ -49,7 +49,10 @@ class RequestParams(object):
 
     def getlist(self, key):
         if request.json and key in request.json:
-            return self[key]
+            value = self[key]
+            if not isinstance(value, list):
+                value = [value]
+            return value
         if key in request.form:
             return request.form.getlist(key)
         return request.args.getlist(key)
