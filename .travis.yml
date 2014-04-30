@@ -1,11 +1,11 @@
 language: python
-python: 3.3
+python: 3.4
 
 env:
   - TOXENV=py26
   - TOXENV=py27
   - TOXENV=py33
-  #- TOXENV=py34
+  - TOXENV=py34
   - TOXENV=coverage
   - TOXENV=lint
   - TOXENV=docs
