@@ -34,7 +34,7 @@ Default sections
 *search_index*
 
   The location of the search index used for searching metrics. Note that it
-  needs to be writable by the graphite-api process.
+  needs to be a file that is writable by the graphite-api process.
 
 *finders*
 
