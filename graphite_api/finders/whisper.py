@@ -19,7 +19,7 @@ class WhisperFinder(object):
         self.directories = config['whisper']['directories']
 
     def find_nodes(self, query):
-        self.log.debug("find_nodes", start=query.startTime, end=query.endTime, rangeInMins=(end-start)/60, pattern=query.pattern)
+        self.log.debug("find_nodes", start=query.startTime, end=query.endTime, rangeInMins=(query.endTime-query.startTime)/60, pattern=query.pattern)
         clean_pattern = query.pattern.replace('\\', '')
         pattern_parts = clean_pattern.split('.')
 
