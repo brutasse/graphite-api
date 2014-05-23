@@ -28,14 +28,14 @@ of choice.
 
     respawn
 
-    exec gunicorn -w2 graphite_api.app:app
+    exec gunicorn -w2 graphite_api.app:app -b 0.0.0.0:8888
 
 *Supervisor*
 
 ::
 
     [program:graphite-api]
-    command = gunicorn -w2 graphite_api.app:app
+    command = gunicorn -w2 graphite_api.app:app -b 0.0.0.0:8888
     autostart = true
     autorestart = true
 
@@ -46,8 +46,7 @@ of choice.
     ``/usr/share/python/graphite/bin/gunicorn`` (assuming your virtualenv is
     at ``/usr/share/python/graphite``).
 
-By default, Gunicorn serves Graphite-API on ``127.0.0.1:8000``. See the
-`Gunicorn docs`_ for configuration options.
+See the `Gunicorn docs`_ for configuration options and command-line flags.
 
 .. _Gunicorn docs: http://docs.gunicorn.org/en/latest/
 
@@ -58,7 +57,7 @@ Finally, configure the nginx vhost:
     # /etc/nginx/sites-available/graphite.conf
 
     upstream graphite {
-        server 127.0.0.1:8000 fail_timeout=0;
+        server 127.0.0.0:8888 fail_timeout=0;
     }
 
     server {
@@ -95,13 +94,13 @@ Build your container::
 
 Run it::
 
-    docker run -t -i -p 8000:8000 graphite-api
+    docker run -t -i -p 8888:8888 graphite-api
 
 ``/srv/graphite`` is a docker ``VOLUME``. You can use that to provide whisper
 data from the host (or from another docker container) to the graphite-api
 container::
 
-    docker run -t -i -v /path/to/graphite:/srv/graphite -p 8000:8000 graphite-api
+    docker run -t -i -v /path/to/graphite:/srv/graphite -p 8888:8888 graphite-api
 
 This container has all the :ref:`extra packages <extras>` included. Cyanite
 backend and Sentry integration are available.
