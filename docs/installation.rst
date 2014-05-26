@@ -13,7 +13,7 @@ repository`_ which provides a self-contained build of graphite-api.
 
 First, add packagecloud's APT key::
 
-    sudo curl https://packagecloud.io/gpg.key | apt-key add -
+    curl https://packagecloud.io/gpg.key | sudo apt-key add -
 
 Then, create ``/etc/apt/sources.list.d/exoscale_community.list`` with the
 following content.
