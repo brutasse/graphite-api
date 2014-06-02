@@ -1,4 +1,4 @@
-FROM stackbrew/ubuntu:12.04
+FROM stackbrew/ubuntu:14.04
 
 MAINTAINER Bruno Renié <bruno@renie.fr>
 
