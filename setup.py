@@ -39,6 +39,7 @@ setup(
         'sentry': ['raven[flask]'],
         'cyanite': ['cyanite'],
         'cache': ['Flask-Cache'],
+        'statsd': ['statsd'],
     },
     zip_safe=False,
     platforms='any',

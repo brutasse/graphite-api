@@ -94,6 +94,18 @@ def configure(app):
     for functions in config['functions']:
         loaded_config['functions'].update(load_by_path(functions))
 
+    app.statsd = None
+    if 'statsd' in config:
+        try:
+            from statsd import StatsClient
+        except ImportError:
+            warnings.warn("'statsd' is provided in the configuration but "
+                          "the statsd client is not installed. Please `pip "
+                          "install statsd`.")
+        else:
+            c = config['statsd']
+            app.statsd = StatsClient(c['host'], c.get('port', 8125))
+
     finders = []
     for finder in config['finders']:
         finders.append(load_by_path(finder)(config))
