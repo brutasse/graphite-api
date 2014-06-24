@@ -94,6 +94,25 @@ Extra sections
 .. _Flask-Cache: http://pythonhosted.org/Flask-Cache/
 .. _Graphite-Influxdb: https://github.com/vimeo/graphite-influxdb
 
+*statsd*
+  Attaches a statsd object to the application, which can be used for
+  instrumentation. Currently graphite-api itself doesn't use this,
+  but some backends do, like `Graphite-Influxdb`_.
+
+  Example::
+
+      statsd:
+          host: 'statsd_host'
+          port: 8125  # not needed if default
+
+  .. note::
+
+        This requires the statsd module.
+
+            $ pip install statsd
+
+.. _Graphite-Influxdb: https://github.com/vimeo/graphite-influxdb
+
 *allowed_origins*
 
   Allows you to do cross-domain (CORS) requests to the Graphite API. Say you

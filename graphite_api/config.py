@@ -97,6 +97,11 @@ def configure(app):
         cache.init_app(app)
         app.cache = cache
 
+    if 'statsd' in config:
+        from statsd import StatsClient
+        c = config['statsd']
+        app.statsd = StatsClient(c['host'], c.get('port', 8125))
+
     finders = []
     for finder in config['finders']:
         finders.append(load_by_path(finder)(config))
