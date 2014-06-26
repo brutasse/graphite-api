@@ -5,5 +5,3 @@ htmlcov
 docs/_build
 dist
 build
-/nbproject/private/
-nbproject
