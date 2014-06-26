@@ -8,7 +8,7 @@ install_requires = [
     'cairocffi',
     'pyparsing',
     'pytz',
-	'tzlocal',
+    'tzlocal',
     'PyYAML',
     'six',
     'structlog',
