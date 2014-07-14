@@ -108,7 +108,6 @@ Finally, configure the apache vhost:
 
     Listen 8013
     <VirtualHost *:8013>
-        Header set Access-Control-Allow-Origin "*"
 
         WSGIDaemonProcess graphite-api processes=5 threads=5 display-name='%{GROUP}' inactivity-timeout=120
         WSGIProcessGroup graphite-api
