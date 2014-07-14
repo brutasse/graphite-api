@@ -84,7 +84,7 @@ Apache + mod_wsgi
 
 First, you need to install mod_wsgi.
 
-See the `mod_wsgi InstallationInstructions`_ for deployment.
+See the `mod_wsgi InstallationInstructions`_ for installation instructions.
 
 .. _mod_wsgi InstallationInstructions: https://code.google.com/p/modwsgi/wiki/InstallationInstructions
 
