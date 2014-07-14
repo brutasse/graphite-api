@@ -123,7 +123,7 @@ Finally, configure the apache vhost:
         </Directory>
 	</VirtualHost>
 
-Adapt the mod_wsgi configuration to your requierments.
+Adapt the mod_wsgi configuration to your requirements.
 
 See the `mod_wsgi QuickConfigurationGuide`_ for an overview of configurations and `mod_wsgi ConfigurationDirectives`_ to see all configuration directives
 
