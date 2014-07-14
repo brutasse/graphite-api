@@ -125,7 +125,7 @@ Finally, configure the apache vhost:
 
 Adapt the mod_wsgi configuration to your requierments.
 
-See the `mod_wsgi QuickConfigurationGuide`_ for an overview of configurations and `mod_wsgi ConfigurationDirectives`_ to see all configuration directives
+See the `mod_wsgi ConfigurationDirectives`_ for an overview of configurations and `mod_wsgi ConfigurationDirectives`_ to see all configuration directives
 
 .. _mod_wsgi QuickConfigurationGuide: https://code.google.com/p/modwsgi/wiki/QuickConfigurationGuide
 
