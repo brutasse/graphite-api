@@ -79,6 +79,62 @@ Enable the vhost and restart nginx::
     $ ln -s /etc/nginx/sites-available/graphite.conf /etc/nginx/sites-enabled
     $ service nginx restart
 
+Apache + mod_wsgi
+-----------------
+
+First, you need to install mod_wsgi.
+
+See the `mod_wsgi InstallationInstructions`_ for deployment.
+
+.. _mod_wsgi InstallationInstructions: https://code.google.com/p/modwsgi/wiki/InstallationInstructions
+
+Then create the graphite-api.wsgi:
+
+.. code-block:: bash
+
+    # /var/www/wsgi-scripts/graphite-api.wsgi
+
+    from graphite_api.app import app as application
+
+Finally, configure the apache vhost:
+
+.. code-block:: apache
+
+    # /etc/httpd/conf.d/graphite.conf
+
+    LoadModule wsgi_module modules/mod_wsgi.so
+
+    WSGISocketPrefix /var/run/wsgi
+
+    Listen 8013
+    <VirtualHost *:8013>
+        Header set Access-Control-Allow-Origin "*"
+
+        WSGIDaemonProcess graphite-api processes=5 threads=5 display-name='%{GROUP}' inactivity-timeout=120
+        WSGIProcessGroup graphite-api
+        WSGIApplicationGroup %{GLOBAL}
+        WSGIImportScript /var/www/wsgi-scripts/graphite-api.wsgi process-group=graphite-api application-group=%{GLOBAL}
+
+        WSGIScriptAlias / /var/www/wsgi-scripts/graphite-api.wsgi
+
+        <Directory /var/www/wsgi-scripts/>
+            Order deny,allow
+            Allow from all
+        </Directory>
+	</VirtualHost>
+
+Adapt the mod_wsgi configuration to your requierments.
+
+See the `mod_wsgi ConfigurationDirectives`_ for an overview of configurations and `mod_wsgi ConfigurationDirectives`_ to see all configuration directives
+
+.. _mod_wsgi QuickConfigurationGuide: https://code.google.com/p/modwsgi/wiki/QuickConfigurationGuide
+
+.. _mod_wsgi ConfigurationDirectives: https://code.google.com/p/modwsgi/wiki/ConfigurationDirectives
+
+Restart apache::
+
+    $ service httpd restart
+
 Docker
 ------
 
@@ -110,8 +166,6 @@ Other deployment methods
 
 They currently aren't described here but there are several other ways to serve
 Graphite-API:
-
-* Apache + ``mod_wsgi``
 
 * nginx + uwsgi
 
