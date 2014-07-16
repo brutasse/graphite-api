@@ -8,6 +8,10 @@ The configuration file for Graphite-API lives at ``/etc/graphite-api.yaml``
 and uses the YAML format. Creating the configuration file is optional: if
 Graphite-API doesn't find the file, sane defaults are used. They are described
 below.
+You can also set a custom location using the
+``GRAPHITE_API_CONFIG`` environment variable::
+
+    export GRAPHITE_API_CONFIG=/var/lib/graphite/config.yaml
 
 Default values
 ``````````````
@@ -124,11 +128,14 @@ Extra sections
 
   You can specify as many origins as you want.
 
-Custom location
----------------
 
-If you need the Graphite-API config file to be stored in another place than
-``/etc/graphite-api.yaml``, you can set a custom location using the
-``GRAPHITE_API_CONFIG`` environment variable::
+/etc/graphTemplates.conf
+------------------------
+The configuration file for templates lives at ``/etc/graphTemplates.conf``
+and uses the ini format like Graphite. Creating the configuration file is optional: if
+Graphite-API doesn't find the file, sane defaults are used.
 
-    export GRAPHITE_API_CONFIG=/var/lib/graphite/config.yaml
+You can also set a custom location using the
+``GRAPHITE_API_TEMPLATES_CONFIG`` environment variable::
+
+    export GRAPHITE_API_TEMPLATES_CONFIG=/var/lib/graphite/graphTemplates.conf
