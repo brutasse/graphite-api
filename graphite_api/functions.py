@@ -186,7 +186,8 @@ def sumSeries(requestContext, *seriesLists):
     rates.
 
     """
-
+    if not seriesLists or seriesLists == ([],):
+        return []
     seriesList, start, end, step = normalize(seriesLists)
     name = "sumSeries(%s)" % formatPathExpressions(seriesList)
     values = (safeSum(row) for row in zip(*seriesList))
@@ -268,6 +269,8 @@ def diffSeries(requestContext, *seriesLists):
                            service.connections.failed)
 
     """
+    if not seriesLists or seriesLists == ([],):
+        return []
     seriesList, start, end, step = normalize(seriesLists)
     name = "diffSeries(%s)" % formatPathExpressions(seriesList)
     values = (safeDiff(row) for row in zip(*seriesList))
@@ -288,6 +291,8 @@ def averageSeries(requestContext, *seriesLists):
         &target=averageSeries(company.server.*.threads.busy)
 
     """
+    if not seriesLists or seriesLists == ([],):
+        return []
     seriesList, start, end, step = normalize(seriesLists)
     name = "averageSeries(%s)" % formatPathExpressions(seriesList)
     values = (safeDiv(safeSum(row), safeLen(row)) for row in zip(*seriesList))
@@ -307,6 +312,8 @@ def stddevSeries(requestContext, *seriesLists):
         &target=stddevSeries(company.server.*.threads.busy)
 
     """
+    if not seriesLists or seriesLists == ([],):
+        return []
     seriesList, start, end, step = normalize(seriesLists)
     name = "stddevSeries(%s)" % formatPathExpressions(seriesList)
     values = (safeStdDev(row) for row in zip(*seriesList))
@@ -325,6 +332,8 @@ def minSeries(requestContext, *seriesLists):
 
         &target=minSeries(Server*.connections.total)
     """
+    if not seriesLists or seriesLists == ([],):
+        return []
     seriesList, start, end, step = normalize(seriesLists)
     name = "minSeries(%s)" % formatPathExpressions(seriesList)
     values = (safeMin(row) for row in zip(*seriesList))
@@ -343,6 +352,8 @@ def maxSeries(requestContext, *seriesLists):
         &target=maxSeries(Server*.connections.total)
 
     """
+    if not seriesLists or seriesLists == ([],):
+        return []
     seriesList, start, end, step = normalize(seriesLists)
     name = "maxSeries(%s)" % formatPathExpressions(seriesList)
     values = (safeMax(row) for row in zip(*seriesList))
@@ -361,6 +372,8 @@ def rangeOfSeries(requestContext, *seriesLists):
         &target=rangeOfSeries(Server*.connections.total)
 
     """
+    if not seriesLists or seriesLists == ([],):
+        return []
     seriesList, start, end, step = normalize(seriesLists)
     name = "rangeOfSeries(%s)" % formatPathExpressions(seriesList)
     values = (safeSubtract(max(row),
@@ -381,6 +394,8 @@ def percentileOfSeries(requestContext, seriesList, n, interpolate=False):
         raise ValueError(
             'The requested percent is required to be greater than 0')
 
+    if not seriesList:
+        return []
     name = 'percentilesOfSeries(%s,%g)' % (seriesList[0].pathExpression, n)
     start, end, step = normalize([seriesList])[1:]
     values = [_getPercentile(row, n, interpolate) for row in zip(*seriesList)]
@@ -453,7 +468,8 @@ def asPercent(requestContext, seriesList, total=None):
         &target=asPercent(Server01.cpu.*.jiffies)
 
     """
-
+    if not seriesList:
+        return []
     normalize([seriesList])
 
     if total is None:
@@ -539,6 +555,8 @@ def multiplySeries(requestContext, *seriesLists):
 
     """
 
+    if not seriesLists or seriesLists == ([],):
+        return []
     seriesList, start, end, step = normalize(seriesLists)
 
     if len(seriesList) == 1:
@@ -815,6 +833,8 @@ def movingAverage(requestContext, seriesList, windowSize):
         &target=movingAverage(Server.instance*.threads.idle,'5min')
 
     """
+    if not seriesList:
+        return []
     windowInterval = None
     if isinstance(windowSize, six.string_types):
         delta = parseTimeOffset(windowSize)
@@ -2536,6 +2556,8 @@ def countSeries(requestContext, *seriesLists):
         &target=countSeries(carbon.agents.*.*)
 
     """
+    if not seriesLists or seriesLists == ([],):
+        return []
     seriesList, start, end, step = normalize(seriesLists)
     name = "countSeries(%s)" % formatPathExpressions(seriesList)
     values = (int(len(row)) for row in zip(*seriesList))
