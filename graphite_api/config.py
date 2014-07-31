@@ -92,6 +92,17 @@ def configure(app):
     for functions in config['functions']:
         loaded_config['functions'].update(load_by_path(functions))
 
+    if 'cache' in config:
+        from flask.ext.cache import Cache
+        cache = Cache(config=config['cache'])
+        cache.init_app(app)
+        app.cache = cache
+
+    if 'statsd' in config:
+        from statsd import StatsClient
+        c = config['statsd']
+        app.statsd = StatsClient(c['host'], c.get('port', 8125))
+
     finders = []
     for finder in config['finders']:
         finders.append(load_by_path(finder)(config))

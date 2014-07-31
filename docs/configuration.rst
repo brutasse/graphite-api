@@ -8,6 +8,10 @@ The configuration file for Graphite-API lives at ``/etc/graphite-api.yaml``
 and uses the YAML format. Creating the configuration file is optional: if
 Graphite-API doesn't find the file, sane defaults are used. They are described
 below.
+You can also set a custom location using the
+``GRAPHITE_API_CONFIG`` environment variable::
+
+    export GRAPHITE_API_CONFIG=/var/lib/graphite/config.yaml
 
 Default values
 ``````````````
@@ -71,6 +75,48 @@ Extra sections
 
 .. _Sentry: http://sentry.readthedocs.org/en/latest/
 
+*cache*
+  Attaches a cache object to the application, using `Flask-Cache`_.
+  Currently, it is not yet used for caching of http responses or internal
+  data.  However, this can be useful for certain
+  backends like `Graphite-Influxdb`_.
+  The options are simply the same options as Flask-Cache expects.
+
+  Example::
+
+      cache:
+          CACHE_TYPE: 'memcached'
+          CACHE_KEY_PREFIX: 'graphite_api'
+
+  .. note::
+
+        This requires flask-cache and potentially other modules depending on which backend you choose.
+        See the Flask-Cache docs.
+
+            $ pip install Flask-Cache
+
+.. _Flask-Cache: http://pythonhosted.org/Flask-Cache/
+.. _Graphite-Influxdb: https://github.com/vimeo/graphite-influxdb
+
+*statsd*
+  Attaches a statsd object to the application, which can be used for
+  instrumentation. Currently graphite-api itself doesn't use this,
+  but some backends do, like `Graphite-Influxdb`_.
+
+  Example::
+
+      statsd:
+          host: 'statsd_host'
+          port: 8125  # not needed if default
+
+  .. note::
+
+        This requires the statsd module.
+
+            $ pip install statsd
+
+.. _Graphite-Influxdb: https://github.com/vimeo/graphite-influxdb
+
 *allowed_origins*
 
   Allows you to do cross-domain (CORS) requests to the Graphite API. Say you
@@ -82,11 +128,14 @@ Extra sections
 
   You can specify as many origins as you want.
 
-Custom location
----------------
 
-If you need the Graphite-API config file to be stored in another place than
-``/etc/graphite-api.yaml``, you can set a custom location using the
-``GRAPHITE_API_CONFIG`` environment variable::
+/etc/graphTemplates.conf
+------------------------
+The configuration file for templates lives at ``/etc/graphTemplates.conf``
+and uses the ini format like Graphite. Creating the configuration file is optional: if
+Graphite-API doesn't find the file, sane defaults are used.
 
-    export GRAPHITE_API_CONFIG=/var/lib/graphite/config.yaml
+You can also set a custom location using the
+``GRAPHITE_API_TEMPLATES_CONFIG`` environment variable::
+
+    export GRAPHITE_API_TEMPLATES_CONFIG=/var/lib/graphite/graphTemplates.conf
