@@ -24,6 +24,12 @@ from .utils import RequestParams, hash_request
 logger = get_logger()
 
 
+def jsonify_status(content, status):
+    resp = jsonify(content)
+    resp.status_code = status
+    return resp
+
+
 class Graphite(Flask):
     @property
     def store(self):
@@ -63,8 +69,8 @@ def dashboard_find():
 
 @app.route('/dashboard/load/<name>', methods=methods)
 def dashboard_load(name):
-    return jsonify(
-        {'error': "Dashboard '{0}' does not exist.".format(name)}), 404
+    return jsonify_status(
+        {'error': "Dashboard '{0}' does not exist.".format(name)}, 404)
 
 
 @app.route('/events/get_data', methods=methods)
@@ -83,7 +89,7 @@ def metrics_search():
     if 'query' not in RequestParams:
         errors['query'] = 'this parameter is required.'
     if errors:
-        return jsonify({'errors': errors}), 400
+        return jsonify_status({'errors': errors}, 400)
     results = sorted(app.searcher.search(
         query=RequestParams['query'],
         max_results=max_results,
@@ -120,7 +126,7 @@ def metrics_find():
         errors['query'] = 'this parameter is required.'
 
     if errors:
-        return jsonify({'errors': errors}), 400
+        return jsonify_status({'errors': errors}, 400)
 
     query = RequestParams['query']
     matches = sorted(
@@ -170,7 +176,7 @@ def metrics_expand():
     if 'query' not in RequestParams:
         errors['query'] = 'this parameter is required.'
     if errors:
-        return jsonify({'errors': errors}), 400
+        return jsonify_status({'errors': errors}, 400)
 
     results = defaultdict(set)
     for query in RequestParams.getlist('query'):
@@ -235,7 +241,7 @@ def build_index():
         index_file.write('\n'.join(sorted(index)).encode('utf-8'))
     shutil.move(index_file.name, app.searcher.index_path)
     app.searcher.reload()
-    return jsonify({'success': True, 'entries': len(index)}), 200
+    return jsonify_status({'success': True, 'entries': len(index)}, 200)
 
 
 @app.route('/render', methods=methods)
@@ -275,7 +281,7 @@ def render():
             errors['maxDataPoints'] = 'Must be an integer.'
 
     if errors:
-        return jsonify({'errors': errors}), 400
+        return jsonify_status({'errors': errors}, 400)
 
     for opt in graph_class.customizable:
         if opt in RequestParams:
@@ -318,7 +324,7 @@ def render():
         cache_timeout = int(cache_timeout)
 
     if errors:
-        return jsonify({'errors': errors}), 400
+        return jsonify_status({'errors': errors}, 400)
 
     # Done with options.
 
@@ -357,7 +363,7 @@ def render():
                                             func(context, series) or 0))
 
         if errors:
-            return jsonify({'errors': errors}), 400
+            return jsonify_status({'errors': errors}, 400)
 
     else:  # graphType == 'line'
         for target in request_options['targets']:
