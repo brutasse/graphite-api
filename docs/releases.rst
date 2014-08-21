@@ -20,6 +20,8 @@ Graphite-API releases
   * `#381 <https://github.com/graphite-project/graphite-web/issues/381>`_ --
     make ``areaBetween()`` work either when passed 2 arguments or a single
     wildcard series of length 2.
+  * `#702 <https://github.com/graphite-project/graphite-web/pull/702>`_ --
+    handle backslash as path separator on windows.
 
 1.0.1 -- 2014-03-21
 -------------------

@@ -26,7 +26,7 @@ class WhisperFinder(object):
                 if os.path.basename(absolute_path).startswith('.'):
                     continue
 
-                relative_path = absolute_path[len(root_dir):].lstrip('/')
+                relative_path = absolute_path[len(root_dir):].lstrip(os.sep)
                 metric_path = fs_to_metric(relative_path)
                 real_metric_path = get_real_metric_path(absolute_path,
                                                         metric_path)
