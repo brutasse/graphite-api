@@ -103,8 +103,8 @@ def configure(app):
         try:
             from raven.contrib.flask import Sentry
         except ImportError:
-            warnings.warn("'sentry_dsn' is provided in the configuration the "
-                          "sentry client is not installed. Please `pip "
+            warnings.warn("'sentry_dsn' is provided in the configuration but "
+                          "the sentry client is not installed. Please `pip "
                           "install raven[flask]`.")
         else:
             Sentry(app, dsn=config['sentry_dsn'])
