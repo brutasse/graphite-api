@@ -405,7 +405,7 @@ def render():
             for series in context['data']:
                 response.write(u"%s,%d,%d,%d|" % (
                     series.name, series.start, series.end, series.step))
-                response.write(u','.join(map(str, series)))
+                response.write(u','.join(map(repr, series)))
                 response.write(u'\n')
             response.seek(0)
             headers['Content-Type'] = 'text/plain'
