@@ -1,0 +1,9 @@
+#! /usr/bin/env bash
+set -e
+
+find /usr/share/python/graphite/lib -iname *.pyc -exec rm {} \;
+find /usr/share/python/graphite/lib -iname *.pyo -exec rm {} \;
+
+if [ -x "/etc/init.d/graphite-api" ]; then
+	invoke-rc.d graphite-api stop || exit $?
+fi

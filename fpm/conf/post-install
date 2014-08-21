@@ -1,0 +1,28 @@
+#! /usr/bin/env bash
+
+set -e
+
+# Create bytecode
+python -m compileall /usr/share/python/graphite/lib > /dev/null
+python -O -m compileall /usr/share/python/graphite/lib > /dev/null
+
+# Create user if it doesn't exist
+if ! id graphite > /dev/null 2>&1 ; then
+	adduser --system --home /usr/share/python/graphite --no-create-home \
+		--ingroup nogroup --disabled-password --shell /bin/false \
+		--gecos 'Graphite API' \
+		graphite
+fi
+
+# Create path if it doesn't exist
+if ! test -d /srv/graphite ; then
+	mkdir -p /srv/graphite
+	chown graphite:nogroup /srv/graphite
+	chmod -R 750 /srv/graphite
+fi
+
+# Register service
+if [ -x "/etc/init.d/graphite-api" ]; then
+	update-rc.d graphite-api start 50 2 3 4 5 . stop 50 0 1 6 . >/dev/null
+	invoke-rc.d graphite-api start || exit $?
+fi
