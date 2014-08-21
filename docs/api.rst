@@ -562,6 +562,14 @@ Examples::
   &bgcolor=blue
   &bgcolor=#2222FF
 
+.. _param-cachetimeout:
+
+cacheTimeout
+````````````
+
+Default: the value of ``cache.default_timeout`` in your configuration file. By
+default, 60 seconds.
+
 colorList
 `````````
 
@@ -926,6 +934,15 @@ note that series with more points than there are pixels in the graph area
 (e.g. a few month's worth of per-minute data) will look very 'smooshed' as
 there will be a good deal of line overlap. In response, one may use lineWidth_
 to compensate for this.
+
+.. _param-nocache:
+
+noCache
+```````
+
+*Default: False*
+
+Set it to disable caching in rendered graphs.
 
 pieMode
 ```````

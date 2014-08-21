@@ -4,6 +4,9 @@ Graphite-API releases
 1.0.2 -- **in development**
 ---------------------------
 
+* Add support for configuring a cache backend and the ``noCache`` and
+  ``cacheTimeout`` API options.
+
 * Add support for ``fetch_multi()`` in storage finders. This is useful for
   database-backed finders such as Cyanite because it allows fetching all time
   series at once instead of sequentially.

@@ -19,7 +19,7 @@ from .render.attime import parseATTime
 from .render.datalib import fetchData, TimeSeries
 from .render.glyph import GraphTypes
 from .render.grammar import grammar
-from .utils import RequestParams
+from .utils import RequestParams, hash_request
 
 logger = get_logger()
 
@@ -312,10 +312,21 @@ def render():
     request_options['startTime'] = start_time
     request_options['endTime'] = end_time
 
+    use_cache = app.cache is not None and 'noCache' not in RequestParams
+    cache_timeout = RequestParams.get('cacheTimeout')
+    if cache_timeout is not None:
+        cache_timeout = int(cache_timeout)
+
     if errors:
         return jsonify({'errors': errors}), 400
 
     # Done with options.
+
+    if use_cache:
+        request_key = hash_request()
+        response = app.cache.get(request_key)
+        if response is not None:
+            return response
 
     headers = {
         'Pragma': 'no-cache',
@@ -421,13 +432,17 @@ def render():
 
     if use_svg and 'jsonp' in request_options:
         headers['Content-Type'] = 'text/javascript'
-        return ('{0}({1})'.format(request_options['jsonp'],
-                                  json.dumps(image.decode('utf-8'))),
-                200, headers)
+        response = ('{0}({1})'.format(request_options['jsonp'],
+                                      json.dumps(image.decode('utf-8'))),
+                    200, headers)
     else:
         ctype = 'image/svg+xml' if use_svg else 'image/png'
         headers['Content-Type'] = ctype
-        return image, 200, headers
+        response = image, 200, headers
+
+    if use_cache:
+        app.cache.add(request_key, response, cache_timeout)
+    return response
 
 
 def evaluateTarget(requestContext, target):

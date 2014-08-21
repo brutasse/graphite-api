@@ -112,6 +112,21 @@ def configure(app):
                           "install raven[flask]`.")
         else:
             Sentry(app, dsn=config['sentry_dsn'])
+
+    app.cache = None
+    if 'cache' in config:
+        try:
+            from flask.ext.cache import Cache
+        except ImportError:
+            warnings.warn("'cache' is provided in the configuration but "
+                          "Flask-Cache is not installed. Please `pip install "
+                          "Flask-Cache`.")
+        else:
+            cache_conf = {'CACHE_DEFAULT_TIMEOUT': 60,
+                          'CACHE_KEY_PREFIX': 'graphite-api:'}
+            for key, value in config['cache'].items():
+                cache_conf['CACHE_{0}'.format(key.upper())] = value
+            app.cache = Cache(app, config=cache_conf)
     app.wsgi_app = TrailingSlash(CORS(app.wsgi_app,
                                       config.get('allowed_origins')))
 

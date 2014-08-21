@@ -197,6 +197,9 @@ class RenderTest(TestCase):
             {'graphType': 'pie', 'pieMode': 'average',
              'valueLabels': 'number'},
             {'graphType': 'pie', 'pieMode': 'average', 'pieLabels': 'rotated'},
+            {'noCache': 'true'},
+            {'cacheTimeout': 5},
+            {'cacheTimeout': 5},  # cache hit
         ]:
             if qs.setdefault('target', ['foo', 'test']) == ['foo', 'test']:
                 if '_expr' in qs:
