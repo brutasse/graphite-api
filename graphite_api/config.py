@@ -42,6 +42,8 @@ default_conf = {
     },
     'time_zone': get_localzone().zone,
 }
+if default_conf['time_zone'] == 'local':  # tzlocal didn't find anything
+    default_conf['time_zone'] = 'UTC'
 
 
 # attributes of a classical log record
