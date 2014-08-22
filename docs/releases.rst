@@ -7,6 +7,9 @@ Graphite-API releases
 * Add support for configuring a cache backend and the ``noCache`` and
   ``cacheTimeout`` API options.
 
+* When no timezone is provided in the configuration file, try to guess from
+  the system's timezone with a fallback to UTC.
+
 * Add support for ``fetch_multi()`` in storage finders. This is useful for
   database-backed finders such as Cyanite because it allows fetching all time
   series at once instead of sequentially.
