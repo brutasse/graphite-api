@@ -5,13 +5,13 @@ from setuptools import setup, find_packages
 
 install_requires = [
     'Flask',
+    'PyYAML',
     'cairocffi',
     'pyparsing',
     'pytz',
-    'tzlocal',
-    'PyYAML',
     'six',
     'structlog',
+    'tzlocal',
 ]
 
 if sys.version_info < (2, 7):

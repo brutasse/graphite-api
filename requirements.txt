@@ -7,3 +7,4 @@ pyyaml
 raven[flask]
 six
 structlog
+tzlocal
