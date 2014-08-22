@@ -6,6 +6,9 @@ env:
   - TOXENV=py27
   - TOXENV=py33
   - TOXENV=py34
+  - TOXENV=pyparsing1
+  - TOXENV=flask08
+  - TOXENV=flask09
   - TOXENV=coverage
   - TOXENV=lint
   - TOXENV=docs

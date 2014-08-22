@@ -10,6 +10,8 @@ Graphite-API releases
 * When no timezone is provided in the configuration file, try to guess from
   the system's timezone with a fallback to UTC.
 
+* Now supporting Flask >= 0.8 and Pyparsing >= 1.5.7.
+
 * Add support for ``fetch_multi()`` in storage finders. This is useful for
   database-backed finders such as Cyanite because it allows fetching all time
   series at once instead of sequentially.
