@@ -1,7 +1,9 @@
+from distutils.version import StrictVersion
 from pyparsing import (
     ParserElement, Forward, Combine, Optional, Word, Literal, CaselessKeyword,
     CaselessLiteral, Group, FollowedBy, LineEnd, OneOrMore, ZeroOrMore,
     nums, alphas, alphanums, printables, delimitedList, quotedString,
+    __version__
 )
 
 ParserElement.enablePackrat()
@@ -101,5 +103,9 @@ pathElement = Combine(
 pathExpression = delimitedList(pathElement,
                                delim='.', combine=True)('pathExpression')
 
-expression <<= Group(call | pathExpression)('expression')
-grammar <<= expression
+if StrictVersion(__version__) >= StrictVersion('2.0.0'):
+    expression <<= Group(call | pathExpression)('expression')
+    grammar <<= expression
+else:
+    expression << (Group(call | pathExpression)('expression'))
+    grammar << expression
