@@ -30,7 +30,7 @@ sudo fpm \
 	--config-files /etc/init.d/graphite-api \
 	--config-files /etc/default/graphite-api \
 	-d libcairo2 \
-	-d libffi6 \
+	-d "libffi5 | libffi6" \
 	--after-install conf/post-install \
 	--before-remove conf/pre-remove \
 	--after-remove conf/post-remove \
