@@ -648,6 +648,13 @@ class FunctionsTest(TestCase):
         max_below = functions.maximumBelow({}, series, 100)
         self.assertEqual(max_below, series)
 
+    def test_min_below(self):
+        series = self._generate_series_list(config=[range(100)])
+        min_below = functions.minimumBelow({}, series, -1)
+        self.assertEqual(min_below, [])
+        min_below = functions.minimumBelow({}, series, 0)
+        self.assertEqual(min_below, series)
+
     def test_highest_current(self):
         series = self._generate_series_list(config=[range(100),
                                                     range(10, 110),

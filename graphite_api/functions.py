@@ -1406,13 +1406,10 @@ def maximumAbove(requestContext, seriesList, n):
 
         &target=maximumAbove(system.interface.eth*.packetsSent,1000)
 
-    This would only display interfaces which sent more than 1000 packets/min.
+    This would only display interfaces which at one point sent more than
+    1000 packets/min.
     """
-    results = []
-    for series in seriesList:
-        if max(series) > n:
-            results.append(series)
-    return results
+    return [s for s in seriesList if max(s) > n]
 
 
 def minimumAbove(requestContext, seriesList, n):
@@ -1424,13 +1421,10 @@ def minimumAbove(requestContext, seriesList, n):
 
         &target=minimumAbove(system.interface.eth*.packetsSent,1000)
 
-    This would only display interfaces which sent more than 1000 packets/min.
+    This would only display interfaces which always sent more than 1000
+    packets/min.
     """
-    results = []
-    for series in seriesList:
-        if min(series) > n:
-            results.append(series)
-    return results
+    return [s for s in seriesList if min(s) > n]
 
 
 def maximumBelow(requestContext, seriesList, n):
@@ -1442,14 +1436,25 @@ def maximumBelow(requestContext, seriesList, n):
 
         &target=maximumBelow(system.interface.eth*.packetsSent,1000)
 
-    This would only display interfaces which sent less than 1000 packets/min.
+    This would only display interfaces which always sent less than 1000
+    packets/min.
     """
+    return [s for s in seriesList if max(s) <= n]
 
-    result = []
-    for series in seriesList:
-        if max(series) <= n:
-            result.append(series)
-    return result
+
+def minimumBelow(requestContext, seriesList, n):
+    """
+    Takes one metric or a wildcard seriesList followed by a constant n.
+    Draws only the metrics with a minimum value below n.
+
+    Example::
+
+        &target=minimumBelow(system.interface.eth*.packetsSent,1000)
+
+    This would only display interfaces which sent at one point less than
+    1000 packets/min.
+    """
+    return [s for s in seriesList if min(s) <= n]
 
 
 def highestCurrent(requestContext, seriesList, n=1):

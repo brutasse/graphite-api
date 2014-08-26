@@ -16,6 +16,8 @@ Graphite-API releases
   database-backed finders such as Cyanite because it allows fetching all time
   series at once instead of sequentially.
 
+* Add ``minimumBelow`` function.
+
 * Fix parsing dates such as "feb27" during month days > 28.
 
 * Fixes for the following graphite-web issues:
