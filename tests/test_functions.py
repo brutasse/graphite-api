@@ -374,6 +374,11 @@ class FunctionsTest(TestCase):
         last = functions.keepLastValue({}, [series], limit=97)[0]
         self.assertEqual(last[:3], [1, 1, 1])
 
+    def test_changed(self):
+        series = self._generate_series_list(config=[[0, 1, 2, 2, 2, 3, 3, 2]])
+        [changed] = functions.changed({}, series)
+        self.assertEqual(list(changed), [0, 1, 1, 0, 0, 1, 0, 1])
+
     def test_as_percent(self):
         series = self._generate_series_list()
         perc = functions.asPercent({}, series)[0]
