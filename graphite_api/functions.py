@@ -396,7 +396,7 @@ def percentileOfSeries(requestContext, seriesList, n, interpolate=False):
 
     if not seriesList:
         return []
-    name = 'percentilesOfSeries(%s,%g)' % (seriesList[0].pathExpression, n)
+    name = 'percentileOfSeries(%s,%g)' % (seriesList[0].pathExpression, n)
     start, end, step = normalize([seriesList])[1:]
     values = [_getPercentile(row, n, interpolate) for row in zip(*seriesList)]
     resultSeries = TimeSeries(name, start, end, step, values)
