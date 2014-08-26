@@ -578,6 +578,7 @@ class FunctionsTest(TestCase):
 
     def test_alias_by_metric(self):
         series = self._generate_series_list(config=[range(100)])
+        series[0].name = 'scaleToSeconds(%s,10)' % series[0].name
         alias = functions.aliasByMetric({}, series)[0]
         self.assertEqual(alias.name, "value")
 

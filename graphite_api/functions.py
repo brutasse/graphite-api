@@ -1287,7 +1287,7 @@ def aliasByMetric(requestContext, seriesList):
 
     """
     for series in seriesList:
-        series.name = series.name.split('.')[-1]
+        series.name = series.name.split('.')[-1].split(',')[0]
     return seriesList
 
 
