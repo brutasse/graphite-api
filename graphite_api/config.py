@@ -90,19 +90,6 @@ def configure(app):
     for key, value in list(default_conf.items()):
         config.setdefault(key, value)
 
-    loaded_config = {'functions': {}, 'finders': []}
-    for functions in config['functions']:
-        loaded_config['functions'].update(load_by_path(functions))
-
-    finders = []
-    for finder in config['finders']:
-        finders.append(load_by_path(finder)(config))
-    loaded_config['store'] = Store(finders)
-    loaded_config['searcher'] = IndexSearcher(config['search_index'])
-    app.config['GRAPHITE'] = loaded_config
-    app.config['TIME_ZONE'] = config['time_zone']
-    logger.info("configured timezone", timezone=app.config['TIME_ZONE'])
-
     if 'sentry_dsn' in config:
         try:
             from raven.contrib.flask import Sentry
@@ -127,6 +114,20 @@ def configure(app):
             for key, value in config['cache'].items():
                 cache_conf['CACHE_{0}'.format(key.upper())] = value
             app.cache = Cache(app, config=cache_conf)
+
+    loaded_config = {'functions': {}, 'finders': []}
+    for functions in config['functions']:
+        loaded_config['functions'].update(load_by_path(functions))
+
+    finders = []
+    for finder in config['finders']:
+        finders.append(load_by_path(finder)(config))
+    loaded_config['store'] = Store(finders)
+    loaded_config['searcher'] = IndexSearcher(config['search_index'])
+    app.config['GRAPHITE'] = loaded_config
+    app.config['TIME_ZONE'] = config['time_zone']
+    logger.info("configured timezone", timezone=app.config['TIME_ZONE'])
+
     app.wsgi_app = TrailingSlash(CORS(app.wsgi_app,
                                       config.get('allowed_origins')))
 
