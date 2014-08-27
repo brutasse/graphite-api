@@ -5,3 +5,15 @@ allowed_origins:
 cache:
   type: simple
   default_timeout: 0
+logging:
+  version: 1
+  disable_existing_loggers: true
+  handlers:
+    stdout:
+      class: logging.StreamHandler
+  loggers:
+    graphite_api:
+      handlers:
+        - stdout
+      propagate: true
+      level: INFO

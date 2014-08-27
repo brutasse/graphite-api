@@ -4,11 +4,15 @@ import gzip
 import os.path
 import time
 
+from structlog import get_logger
+
 from ..intervals import Interval, IntervalSet
 from ..node import BranchNode, LeafNode
 from .._vendor import whisper
 
 from . import fs_to_metric, get_real_metric_path, match_entries
+
+logger = get_logger()
 
 
 class WhisperFinder(object):
@@ -16,6 +20,8 @@ class WhisperFinder(object):
         self.directories = config['whisper']['directories']
 
     def find_nodes(self, query):
+        logger.debug("find_nodes", finder="whisper", start=query.startTime,
+                     end=query.endTime, pattern=query.pattern)
         clean_pattern = query.pattern.replace('\\', '')
         pattern_parts = clean_pattern.split('.')
 
@@ -92,6 +98,9 @@ class WhisperReader(object):
         return IntervalSet([Interval(start, end)])
 
     def fetch(self, startTime, endTime):
+        logger.debug("fetch", reader="whisper", path=self.fs_path,
+                     metric_path=self.real_metric_path,
+                     start=startTime, end=endTime)
         data = whisper.fetch(self.fs_path, startTime, endTime)
         if not data:
             return None
@@ -114,6 +123,9 @@ class GzippedWhisperReader(WhisperReader):
         return IntervalSet([Interval(start, end)])
 
     def fetch(self, startTime, endTime):
+        logger.debug("fetch", reader="gzip_whisper", path=self.fs_path,
+                     metric_path=self.real_metric_path,
+                     start=startTime, end=endTime)
         fh = gzip.GzipFile(self.fs_path, 'rb')
         try:
             return whisper.file_fetch(fh, startTime, endTime)

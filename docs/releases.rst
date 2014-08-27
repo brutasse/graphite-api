@@ -20,6 +20,8 @@ Graphite-API releases
 
 * Allow wildcards origins (``*``) in CORS configuration.
 
+* Whisper finder now logs debug information.
+
 * Fix parsing dates such as "feb27" during month days > 28.
 
 * Fixes for the following graphite-web issues:
