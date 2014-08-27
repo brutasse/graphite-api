@@ -18,7 +18,9 @@ Graphite-API releases
 
 * Add ``minimumBelow`` and ``changed`` functions.
 
-* Add ``/metrics`` API URL as an alias to ``/metrics/find``.
+* Add ``/metrics`` API call as an alias to ``/metrics/find``.
+
+* Add missing ``/metrics/index.json`` API call.
 
 * Allow wildcards origins (``*``) in CORS configuration.
 

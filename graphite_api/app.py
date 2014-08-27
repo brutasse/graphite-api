@@ -204,6 +204,13 @@ def metrics_expand():
     return jsonify({'results': results})
 
 
+@app.route('/metrics/index.json', methods=methods)
+def metrics_index():
+    index = set()
+    recurse('*', index)
+    return jsonify(sorted(index), jsonp=RequestParams.get('jsonp', False))
+
+
 def prune_datapoints(series, max_datapoints, start, end):
     time_range = end - start
     points = time_range // series.step

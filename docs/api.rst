@@ -37,7 +37,7 @@ the system.
 ``/metrics/find``
 -----------------
 
-Finds metrics under a given path.
+Finds metrics under a given path. Other alias: ``/metrics``.
 
 Example::
 
@@ -113,6 +113,26 @@ Example::
             {"is_leaf": true, "path": "collectd.bar"}
         ]
     }
+
+``/metrics/index.json``
+-----------------------
+
+Walks the metrics tree and returns every metric found as a sorted JSON array.
+
+Parameters:
+
+*jsonp* (optional)
+    Wraps the response in a jsonp callback.
+
+Example::
+
+    GET /metrics/index.json
+
+    [
+        "collectd.host1.load.longterm",
+        "collectd.host1.load.midterm",
+        "collectd.host1.load.shortterm"
+    ]
 
 .. _/index:
 
