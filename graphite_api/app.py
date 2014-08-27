@@ -10,7 +10,7 @@ from collections import defaultdict
 from datetime import datetime
 from io import StringIO, BytesIO
 
-from flask import Flask, jsonify
+from flask import Flask
 from structlog import get_logger
 
 from .config import configure
@@ -24,10 +24,17 @@ from .utils import RequestParams, hash_request
 logger = get_logger()
 
 
-def jsonify_status(content, status):
-    resp = jsonify(content)
-    resp.status_code = status
-    return resp
+def jsonify(data, status=200, jsonp=False, headers=None):
+    if headers is None:
+        headers = {}
+
+    body = json.dumps(data, cls=JSONEncoder)
+    if jsonp:
+        headers['Content-Type'] = 'text/javascript'
+        body = '{0}({1})'.format(jsonp, body)
+    else:
+        headers['Content-Type'] = 'application/json'
+    return body, status, headers
 
 
 class Graphite(Flask):
@@ -69,8 +76,8 @@ def dashboard_find():
 
 @app.route('/dashboard/load/<name>', methods=methods)
 def dashboard_load(name):
-    return jsonify_status(
-        {'error': "Dashboard '{0}' does not exist.".format(name)}, 404)
+    return jsonify({'error': "Dashboard '{0}' does not exist.".format(name)},
+                   status=404)
 
 
 @app.route('/events/get_data', methods=methods)
@@ -89,7 +96,7 @@ def metrics_search():
     if 'query' not in RequestParams:
         errors['query'] = 'this parameter is required.'
     if errors:
-        return jsonify_status({'errors': errors}, 400)
+        return jsonify({'errors': errors}, status=400)
     results = sorted(app.searcher.search(
         query=RequestParams['query'],
         max_results=max_results,
@@ -127,7 +134,7 @@ def metrics_find():
         errors['query'] = 'this parameter is required.'
 
     if errors:
-        return jsonify_status({'errors': errors}, 400)
+        return jsonify({'errors': errors}, status=400)
 
     query = RequestParams['query']
     matches = sorted(
@@ -177,7 +184,7 @@ def metrics_expand():
     if 'query' not in RequestParams:
         errors['query'] = 'this parameter is required.'
     if errors:
-        return jsonify_status({'errors': errors}, 400)
+        return jsonify({'errors': errors}, status=400)
 
     results = defaultdict(set)
     for query in RequestParams.getlist('query'):
@@ -242,7 +249,7 @@ def build_index():
         index_file.write('\n'.join(sorted(index)).encode('utf-8'))
     shutil.move(index_file.name, app.searcher.index_path)
     app.searcher.reload()
-    return jsonify_status({'success': True, 'entries': len(index)}, 200)
+    return jsonify({'success': True, 'entries': len(index)})
 
 
 @app.route('/render', methods=methods)
@@ -282,7 +289,7 @@ def render():
             errors['maxDataPoints'] = 'Must be an integer.'
 
     if errors:
-        return jsonify_status({'errors': errors}, 400)
+        return jsonify({'errors': errors}, status=400)
 
     for opt in graph_class.customizable:
         if opt in RequestParams:
@@ -325,7 +332,7 @@ def render():
         cache_timeout = int(cache_timeout)
 
     if errors:
-        return jsonify_status({'errors': errors}, 400)
+        return jsonify({'errors': errors}, status=400)
 
     # Done with options.
 
@@ -364,7 +371,7 @@ def render():
                                             func(context, series) or 0))
 
         if errors:
-            return jsonify_status({'errors': errors}, 400)
+            return jsonify({'errors': errors}, status=400)
 
     else:  # graphType == 'line'
         for target in request_options['targets']:
@@ -407,16 +414,8 @@ def render():
                     series_data.append({'target': series.name,
                                         'datapoints': datapoints})
 
-            rendered = json.dumps(series_data, cls=JSONEncoder)
-
-            if 'jsonp' in request_options:
-                headers['Content-Type'] = 'text/javascript'
-                return ('{0}({1})'.format(request_options['jsonp'],
-                                          rendered), 200,
-                        headers)
-            else:
-                headers['Content-Type'] = 'application/json'
-                return rendered, 200, headers
+            return jsonify(series_data, headers=headers,
+                           jsonp=request_options.get('jsonp', False))
 
         if request_options['format'] == 'raw':
             response = StringIO()
