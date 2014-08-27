@@ -18,6 +18,8 @@ Graphite-API releases
 
 * Add ``minimumBelow`` and ``changed`` functions.
 
+* Allow wildcards origins (``*``) in CORS configuration.
+
 * Fix parsing dates such as "feb27" during month days > 28.
 
 * Fixes for the following graphite-web issues:

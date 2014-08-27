@@ -80,7 +80,11 @@ Extra sections
       allowed_origins:
         - dashboard.example.com
 
-  You can specify as many origins as you want.
+  You can specify as many origins as you want. A wildcard can be used to allow
+  all origins::
+
+      allowed_origins:
+        - *
 
 *cache*
 
