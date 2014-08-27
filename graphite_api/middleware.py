@@ -15,7 +15,7 @@ class CORS(object):
             return self.app(environ, start_response)
 
         netloc = urlparse(origin).netloc
-        if netloc in self.origins:
+        if netloc in self.origins or '*' in self.origins:
             allow_origin = [
                 ('Access-Control-Allow-Origin', origin),
                 ('Access-Control-Allow-Credentials', 'true'),
