@@ -97,6 +97,7 @@ def metrics_search():
     return jsonify({'metrics': results})
 
 
+@app.route('/metrics', methods=methods)
 @app.route('/metrics/find', methods=methods)
 def metrics_find():
     errors = {}

@@ -30,27 +30,28 @@ class MetricsTests(TestCase):
 
         self._create_dbs()
 
-        response = self.app.get(url, query_string={'query': 'test.*',
-                                                   'format': 'treejson'})
-        self.assertJSON(response, [{
-            'allowChildren': 1,
-            'expandable': 1,
-            'id': 'test.bar',
-            'leaf': 0,
-            'text': 'bar',
-        }, {
-            'allowChildren': 1,
-            'expandable': 1,
-            'id': 'test.wat',
-            'leaf': 0,
-            'text': 'wat',
-        }, {
-            'allowChildren': 0,
-            'expandable': 0,
-            'id': 'test.foo',
-            'leaf': 1,
-            'text': 'foo',
-        }])
+        for _url in ['/metrics/find', '/metrics']:
+            response = self.app.get(_url, query_string={'query': 'test.*',
+                                                        'format': 'treejson'})
+            self.assertJSON(response, [{
+                'allowChildren': 1,
+                'expandable': 1,
+                'id': 'test.bar',
+                'leaf': 0,
+                'text': 'bar',
+            }, {
+                'allowChildren': 1,
+                'expandable': 1,
+                'id': 'test.wat',
+                'leaf': 0,
+                'text': 'wat',
+            }, {
+                'allowChildren': 0,
+                'expandable': 0,
+                'id': 'test.foo',
+                'leaf': 1,
+                'text': 'foo',
+            }])
 
         response = self.app.get(url, query_string={'query': 'test.*',
                                                    'format': 'treejson',

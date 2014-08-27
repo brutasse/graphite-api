@@ -18,6 +18,8 @@ Graphite-API releases
 
 * Add ``minimumBelow`` and ``changed`` functions.
 
+* Add ``/metrics`` API URL as an alias to ``/metrics/find``.
+
 * Allow wildcards origins (``*``) in CORS configuration.
 
 * Whisper finder now logs debug information.
