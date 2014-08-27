@@ -90,10 +90,6 @@ def configure(app):
     for key, value in list(default_conf.items()):
         config.setdefault(key, value)
 
-    loaded_config = {'functions': {}, 'finders': []}
-    for functions in config['functions']:
-        loaded_config['functions'].update(load_by_path(functions))
-
     app.statsd = None
     if 'statsd' in config:
         try:
@@ -105,6 +101,25 @@ def configure(app):
         else:
             c = config['statsd']
             app.statsd = StatsClient(c['host'], c.get('port', 8125))
+
+    app.cache = None
+    if 'cache' in config:
+        try:
+            from flask.ext.cache import Cache
+        except ImportError:
+            warnings.warn("'cache' is provided in the configuration but "
+                          "Flask-Cache is not installed. Please `pip install "
+                          "Flask-Cache`.")
+        else:
+            cache_conf = {'CACHE_DEFAULT_TIMEOUT': 60,
+                          'CACHE_KEY_PREFIX': 'graphite-api:'}
+            for key, value in config['cache'].items():
+                cache_conf['CACHE_{0}'.format(key.upper())] = value
+            app.cache = Cache(app, config=cache_conf)
+
+    loaded_config = {'functions': {}, 'finders': []}
+    for functions in config['functions']:
+        loaded_config['functions'].update(load_by_path(functions))
 
     finders = []
     for finder in config['finders']:
@@ -125,20 +140,6 @@ def configure(app):
         else:
             Sentry(app, dsn=config['sentry_dsn'])
 
-    app.cache = None
-    if 'cache' in config:
-        try:
-            from flask.ext.cache import Cache
-        except ImportError:
-            warnings.warn("'cache' is provided in the configuration but "
-                          "Flask-Cache is not installed. Please `pip install "
-                          "Flask-Cache`.")
-        else:
-            cache_conf = {'CACHE_DEFAULT_TIMEOUT': 60,
-                          'CACHE_KEY_PREFIX': 'graphite-api:'}
-            for key, value in config['cache'].items():
-                cache_conf['CACHE_{0}'.format(key.upper())] = value
-            app.cache = Cache(app, config=cache_conf)
     app.wsgi_app = TrailingSlash(CORS(app.wsgi_app,
                                       config.get('allowed_origins')))
 
