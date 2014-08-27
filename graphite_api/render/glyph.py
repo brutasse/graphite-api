@@ -19,6 +19,7 @@ import math
 import pytz
 import re
 import six
+from ConfigParser import SafeConfigParser
 
 from datetime import datetime, timedelta
 from io import BytesIO
@@ -608,7 +609,16 @@ class Graph(object):
         self.ctx.restore()
 
     def loadTemplate(self, template):
-        opts = defaults = defaultGraphOptions
+        from os import environ
+        config_file = environ.get('GRAPHITE_API_TEMPLATES_CONFIG',
+                '/etc/graphTemplates.conf')
+
+        conf = SafeConfigParser()
+        if conf.read(config_file):
+            defaults = dict(conf.items('default'))
+            opts = dict(conf.items(template))
+        else:
+            opts = defaults = defaultGraphOptions
 
         self.defaultBackground = opts.get('background', defaults['background'])
         self.defaultForeground = opts.get('foreground', defaults['foreground'])
