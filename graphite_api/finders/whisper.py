@@ -4,18 +4,22 @@ import gzip
 import os.path
 import time
 
+from structlog import get_logger
 from ..intervals import Interval, IntervalSet
 from ..node import BranchNode, LeafNode
 from .._vendor import whisper
 
 from . import fs_to_metric, get_real_metric_path, match_entries
 
+logger = get_logger()
 
 class WhisperFinder(object):
     def __init__(self, config):
+        self.log = logger.bind()
         self.directories = config['whisper']['directories']
 
     def find_nodes(self, query):
+        self.log.debug("find_nodes", start=query.startTime, end=query.endTime, rangeInMins=(query.endTime-query.startTime)/60, pattern=query.pattern)
         clean_pattern = query.pattern.replace('\\', '')
         pattern_parts = clean_pattern.split('.')
 
