@@ -16,7 +16,7 @@ from structlog import get_logger
 from .config import configure
 from .encoders import JSONEncoder
 from .render.attime import parseATTime
-from .render.datalib import fetchData, TimeSeries
+from .render.datalib import fetchDataMulti, TimeSeries
 from .render.glyph import GraphTypes
 from .render.grammar import grammar
 from .utils import RequestParams, hash_request
@@ -360,6 +360,7 @@ def render():
         'data': [],
     }
 
+    targets = []
     if request_options['graphType'] == 'pie':
         for target in request_options['targets']:
             if ':' in target:
@@ -370,12 +371,14 @@ def render():
                     errors['target'] = "Invalid target: '{0}'.".format(target)
                 context['data'].append((name, value))
             else:
-                series_list = evaluateTarget(context, target)
+                targets.append(target)
 
-                for series in series_list:
-                    func = app.functions[request_options['pieMode']]
-                    context['data'].append((series.name,
-                                            func(context, series) or 0))
+            series_list = evaluateTargets(context, target)
+
+            for series in series_list:
+                func = app.functions[request_options['pieMode']]
+                context['data'].append((series.name,
+                                        func(context, series) or 0))
 
         if errors:
             return jsonify({'errors': errors}, status=400)
@@ -384,9 +387,10 @@ def render():
         for target in request_options['targets']:
             if not target.strip():
                 continue
-            series_list = evaluateTarget(context, target)
-            context['data'].extend(series_list)
+            targets.append(target)
 
+        series_list = evaluateTargets(context, targets)
+        context['data'].extend(series_list)
         request_options['format'] = request_options.get('format')
 
         if request_options['format'] == 'csv':
@@ -457,9 +461,15 @@ def render():
         app.cache.add(request_key, response, cache_timeout)
     return response
 
+def evaluateTargets(requestContext, targets):
+    """
+    Get list of tokens, parseString with grammar
+    Then evaluate all tokens at once.
+    """
+    tokens = []
+    for target in targets:
+        tokens.append(grammar.parseString(target))
 
-def evaluateTarget(requestContext, target):
-    tokens = grammar.parseString(target)
     result = evaluateTokens(requestContext, tokens)
 
     if isinstance(result, TimeSeries):
@@ -468,22 +478,65 @@ def evaluateTarget(requestContext, target):
     return result
 
 
-def evaluateTokens(requestContext, tokens):
+def findPaths(requestContext, tokens, paths):
+    """"
+    Fill out set (passed as 3-rd argument) with pathExpressions
+    that needs to be fetched
+    """
     if tokens.expression:
-        return evaluateTokens(requestContext, tokens.expression)
+        findPaths(requestContext, tokens.expression, paths)
+    elif tokens.call:
+        for arg in tokens.call.args:
+            findPaths(requestContext, arg, paths)
+        for kwarg in tokens.call.kwargs:
+            findPaths(requestContext, kwarg.args[0], paths)
+    elif tokens.pathExpression:
+        paths.add(tokens.pathExpression)
+
+
+def evaluateTokens(requestContext, tokensList):
+    """
+    Find all paths that needs to be fetch
+    Then fetch all points (if it's possible using fetch_multi)
+    Create list of timeSeries data and evaluate all other tokens.
+    """
+    fetch = set()
+
+    for tokens in tokensList:
+        findPaths(requestContext, tokens, fetch)
+
+    timeSeriesList = fetchDataMulti(requestContext, list(fetch))
+    series = []
+    for tokens in tokensList:
+        serie = evaluateTokensWithTimeSeries(requestContext, tokens, timeSeriesList)
+        if serie:
+            series.extend(serie)
+
+    return series
+
+
+def evaluateTokensWithTimeSeries(requestContext, tokens, timeSeriesList):
+    """
+    evaluate all expressions and functions.
+    Use timeSeriesList when it's needed to fetch the data
+    """
+    if tokens.expression:
+        return evaluateTokensWithTimeSeries(requestContext, tokens.expression, timeSeriesList)
 
     elif tokens.pathExpression:
-        return fetchData(requestContext, tokens.pathExpression)
+        for ts in timeSeriesList:
+            if ts.name == tokens.pathExpression:
+                return [ts]
+        return [fetchDataMulti(requestContext, [tokens.pathExpression])]
 
     elif tokens.call:
         func = app.functions[tokens.call.funcname]
-        args = [evaluateTokens(requestContext,
-                               arg) for arg in tokens.call.args]
+        args = [evaluateTokensWithTimeSeries(requestContext, arg, timeSeriesList) for arg in tokens.call.args]
         kwargs = dict([(kwarg.argname,
-                        evaluateTokens(requestContext, kwarg.args[0]))
+                        evaluateTokensWithTimeSeries(requestContext, kwarg.args[0], timeSeriesList))
                        for kwarg in tokens.call.kwargs])
-        return func(requestContext, *args, **kwargs)
 
+        return func(requestContext, *args, **kwargs)
     elif tokens.number:
         if tokens.number.integer:
             return int(tokens.number.integer)
