@@ -79,26 +79,23 @@ class TimeSeries(list):
 
 
 # Data retrieval API
-def fetchData(requestContext, pathExpr):
+def fetchDataMulti(requestContext, paths):
     from ..app import app
 
     seriesList = []
     startTime = int(epoch(requestContext['startTime']))
     endTime = int(epoch(requestContext['endTime']))
 
-    def _fetchData(pathExpr, startTime, endTime, requestContext, seriesList):
-        matching_nodes = app.store.find(pathExpr, startTime, endTime)
-
-        # Group nodes that support multiple fetches
+    def _fetchDataMulti(pathExpr, startTime, endTime, requestContext, seriesList):
         multi_nodes = defaultdict(list)
         single_nodes = []
-        for node in matching_nodes:
-            if not node.is_leaf:
-                continue
-            if hasattr(node, '__fetch_multi__'):
-                multi_nodes[node.__fetch_multi__].append(node)
-            else:
-                single_nodes.append(node)
+        for path in pathExpr:
+            matching_nodes = app.store.find(path, startTime, endTime)
+            for node in matching_nodes:
+                if hasattr(node, '__fetch_multi__'):
+                    multi_nodes[node.__fetch_multi__].append(node)
+                else:
+                    single_nodes.append(node)
 
         fetches = [
             (node, node.fetch(startTime, endTime)) for node in single_nodes]
@@ -155,7 +152,7 @@ def fetchData(requestContext, pathExpr):
 
         return seriesList
 
-    return _fetchData(pathExpr, startTime, endTime, requestContext, seriesList)
+    return _fetchDataMulti(paths, startTime, endTime, requestContext, seriesList)
 
 
 def nonempty(series):
