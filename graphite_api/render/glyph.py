@@ -56,7 +56,7 @@ colorAliases = {
     'darkgrey': (111, 111, 111),
 }
 
-# This gets overriden by graphTemplates.conf
+# This gets overriden by your graph templates
 defaultGraphOptions = dict(
     background='white',
     foreground='black',
@@ -608,7 +608,12 @@ class Graph(object):
         self.ctx.restore()
 
     def loadTemplate(self, template):
+        from ..app import app
+        conf = app.config.get('templates', {})
+
         opts = defaults = defaultGraphOptions
+        defaults.update(conf.get('defaults', {}))
+        opts.update(conf.get(template, {}))
 
         self.defaultBackground = opts.get('background', defaults['background'])
         self.defaultForeground = opts.get('foreground', defaults['foreground'])
