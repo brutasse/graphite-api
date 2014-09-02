@@ -1012,7 +1012,7 @@ template
 
 *Default: default*
 
-Used to specify a template from ``graphTemplates.conf`` to use for default
+Used to specify a template to use for default
 colors and graph styles.
 
 Example::
