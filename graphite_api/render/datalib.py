@@ -79,80 +79,77 @@ class TimeSeries(list):
 
 
 # Data retrieval API
-def fetchDataMulti(requestContext, paths):
+def fetchDataMulti(requestContext, pathExpr):
     from ..app import app
 
     seriesList = []
     startTime = int(epoch(requestContext['startTime']))
     endTime = int(epoch(requestContext['endTime']))
 
-    def _fetchDataMulti(pathExpr, startTime, endTime, requestContext, seriesList):
-        multi_nodes = defaultdict(list)
-        single_nodes = []
-        for path in pathExpr:
-            matching_nodes = app.store.find(path, startTime, endTime)
-            for node in matching_nodes:
-                if hasattr(node, '__fetch_multi__'):
-                    multi_nodes[node.__fetch_multi__].append(node)
-                else:
-                    single_nodes.append(node)
+    multi_nodes = defaultdict(list)
+    single_nodes = []
+    for path in pathExpr:
+        matching_nodes = app.store.find(path, startTime, endTime)
+        for node in matching_nodes:
+            if hasattr(node, '__fetch_multi__'):
+                multi_nodes[node.__fetch_multi__].append(node)
+            else:
+                single_nodes.append(node)
 
-        fetches = [
-            (node, node.fetch(startTime, endTime)) for node in single_nodes]
+    fetches = [
+        (node, node.fetch(startTime, endTime)) for node in single_nodes]
 
-        for finder in app.store.finders:
-            if not hasattr(finder, '__fetch_multi__'):
-                continue
-            nodes = multi_nodes[finder.__fetch_multi__]
-            if not nodes:
-                continue
-            time_info, series = finder.fetch_multi(nodes, startTime, endTime)
-            start, end, step = time_info
-            for path, values in series.items():
-                series = TimeSeries(path, start, end, step, values)
-                series.pathExpression = path
-                seriesList.append(series)
-
-        for node, results in fetches:
-            if not results:
-                logger.info("no results", node=node, start=startTime,
-                            end=endTime)
-                continue
-
-            try:
-                timeInfo, values = results
-            except ValueError as e:
-                raise Exception("could not parse timeInfo/values from metric "
-                                "'%s': %s" % (node.path, e))
-            start, end, step = timeInfo
-
-            series = TimeSeries(node.path, start, end, step, values)
-            # hack to pass expressions through to render functions
-            series.pathExpression = node.path
+    for finder in app.store.finders:
+        if not hasattr(finder, '__fetch_multi__'):
+            continue
+        nodes = multi_nodes[finder.__fetch_multi__]
+        if not nodes:
+            continue
+        time_info, series = finder.fetch_multi(nodes, startTime, endTime)
+        start, end, step = time_info
+        for path, values in series.items():
+            series = TimeSeries(path, start, end, step, values)
+            series.pathExpression = path
             seriesList.append(series)
 
-        # Prune empty series with duplicate metric paths to avoid showing
-        # empty graph elements for old whisper data
-        names = set([s.name for s in seriesList])
-        for name in names:
-            series_with_duplicate_names = [
-                s for s in seriesList if s.name == name]
-            empty_duplicates = [
-                s for s in series_with_duplicate_names
-                if not nonempty(series)]
+    for node, results in fetches:
+        if not results:
+            logger.info("no results", node=node, start=startTime,
+                        end=endTime)
+            continue
 
-            if (
-                series_with_duplicate_names == empty_duplicates and
-                len(empty_duplicates) > 0
-            ):  # if they're all empty
-                empty_duplicates.pop()  # make sure we leave one in seriesList
+        try:
+            timeInfo, values = results
+        except ValueError as e:
+            raise Exception("could not parse timeInfo/values from metric "
+                            "'%s': %s" % (node.path, e))
+        start, end, step = timeInfo
 
-            for series in empty_duplicates:
-                seriesList.remove(series)
+        series = TimeSeries(node.path, start, end, step, values)
+        # hack to pass expressions through to render functions
+        series.pathExpression = node.path
+        seriesList.append(series)
 
-        return seriesList
+    # Prune empty series with duplicate metric paths to avoid showing
+    # empty graph elements for old whisper data
+    names = set([s.name for s in seriesList])
+    for name in names:
+        series_with_duplicate_names = [
+            s for s in seriesList if s.name == name]
+        empty_duplicates = [
+            s for s in series_with_duplicate_names
+            if not nonempty(series)]
 
-    return _fetchDataMulti(paths, startTime, endTime, requestContext, seriesList)
+        if (
+            series_with_duplicate_names == empty_duplicates and
+            len(empty_duplicates) > 0
+        ):  # if they're all empty
+            empty_duplicates.pop()  # make sure we leave one in seriesList
+
+        for series in empty_duplicates:
+            seriesList.remove(series)
+
+    return seriesList
 
 
 def nonempty(series):

@@ -2368,7 +2368,8 @@ def timeStack(requestContext, seriesList, timeShiftUnit, timeShiftStart,
         innerDelta = delta * shft
         myContext['startTime'] = requestContext['startTime'] + innerDelta
         myContext['endTime'] = requestContext['endTime'] + innerDelta
-        for shiftedSeries in evaluateTargets(myContext, [series.pathExpression]):
+        for shiftedSeries in evaluateTargets(myContext,
+                                             [series.pathExpression]):
             shiftedSeries.name = 'timeShift(%s, %s, %s)' % (shiftedSeries.name,
                                                             timeShiftUnit,
                                                             shft)

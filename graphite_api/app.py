@@ -511,7 +511,9 @@ def evaluateTokens(requestContext, tokensList):
     timeSeriesList = fetchDataMulti(requestContext, list(fetch))
     series = []
     for tokens in tokensList:
-        serie = evaluateTokensWithTimeSeries(requestContext, tokens, timeSeriesList)
+        serie = evaluateTokensWithTimeSeries(requestContext,
+                                             tokens,
+                                             timeSeriesList)
         if isinstance(serie, TimeSeries):
             series.append(serie)
         elif serie:
@@ -526,7 +528,9 @@ def evaluateTokensWithTimeSeries(requestContext, tokens, timeSeriesList):
     Use timeSeriesList when it's needed to fetch the data
     """
     if tokens.expression:
-        return evaluateTokensWithTimeSeries(requestContext, tokens.expression, timeSeriesList)
+        return evaluateTokensWithTimeSeries(requestContext,
+                                            tokens.expression,
+                                            timeSeriesList)
 
     elif tokens.pathExpression:
         for ts in timeSeriesList:
@@ -539,9 +543,14 @@ def evaluateTokensWithTimeSeries(requestContext, tokens, timeSeriesList):
 
     elif tokens.call:
         func = app.functions[tokens.call.funcname]
-        args = [evaluateTokensWithTimeSeries(requestContext, arg, timeSeriesList) for arg in tokens.call.args]
+        args = [evaluateTokensWithTimeSeries(requestContext,
+                                             arg,
+                                             timeSeriesList)
+                for arg in tokens.call.args]
         kwargs = dict([(kwarg.argname,
-                        evaluateTokensWithTimeSeries(requestContext, kwarg.args[0], timeSeriesList))
+                        evaluateTokensWithTimeSeries(requestContext,
+                                                     kwarg.args[0],
+                                                     timeSeriesList))
                        for kwarg in tokens.call.kwargs])
 
         return func(requestContext, *args, **kwargs)
