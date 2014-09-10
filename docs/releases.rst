@@ -28,6 +28,9 @@ Graphite-API releases
 
 * Fix parsing dates such as "feb27" during month days > 28.
 
+* Change ``sum()`` to return ``null`` instead of 0 when all series' datapoints
+  are null at the same time. This is graphite-web's behavior.
+
 * Fixes for the following graphite-web issues:
 
   * `#639 <https://github.com/graphite-project/graphite-web/issues/639>`_ --

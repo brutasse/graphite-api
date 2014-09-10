@@ -39,23 +39,32 @@ DAY = HOUR * 24
 
 
 # Utility functions
-not_none = partial(is_not, None)
+not_none = partial(filter, partial(is_not, None))
 
 
-def safeSum(values):
-    return sum(filter(not_none, values))
+def safe(f):
+    def inner(values):
+        vals = list(not_none(values))
+        if not vals:
+            return
+        return f(vals)
+    return inner
 
 
-def safeDiff(values):
-    safeValues = list(filter(not_none, values))
-    if safeValues:
-        values = list(map(lambda x: -x, safeValues[1:]))
-        values.insert(0, safeValues[0])
-        return sum(values)
+safeSum = safe(sum)
+safeMin = safe(min)
+safeMax = safe(max)
+
+
+@safe
+def safeDiff(safeValues):
+    values = list(map(lambda x: -x, safeValues[1:]))
+    values.insert(0, safeValues[0])
+    return sum(values)
 
 
 def safeLen(values):
-    return len(list(filter(not_none, values)))
+    return len(list(not_none(values)))
 
 
 def safeDiv(a, b):
@@ -91,7 +100,7 @@ def safeStdDev(a):
     ln = safeLen(a)
     avg = safeDiv(sm, ln)
     sum = 0
-    for val in filter(not_none, a):
+    for val in not_none(a):
         sum = sum + (val - avg) * (val - avg)
     return math.sqrt(sum/ln)
 
@@ -102,20 +111,8 @@ def safeLast(values):
             return v
 
 
-def safeMin(values):
-    safeValues = [v for v in values if v is not None]
-    if safeValues:
-        return min(safeValues)
-
-
-def safeMax(values):
-    safeValues = [v for v in values if v is not None]
-    if safeValues:
-        return max(safeValues)
-
-
 def safeMap(function, values):
-    safeValues = [v for v in values if v is not None]
+    safeValues = list(not_none(values))
     if safeValues:
         return [function(x) for x in values]
 
@@ -1646,7 +1643,7 @@ def _getPercentile(points, n, interpolate=False):
     Statistics Handbook:
     http://www.itl.nist.gov/div898/handbook/prc/section2/prc252.htm
     """
-    sortedPoints = sorted(filter(not_none, points))
+    sortedPoints = sorted(not_none(points))
     if len(sortedPoints) == 0:
         return None
     fractionalRank = (n/100.0) * (len(sortedPoints) + 1)
@@ -1680,7 +1677,7 @@ def nPercentile(requestContext, seriesList, n):
         # Create a sorted copy of the TimeSeries excluding None values in the
         # values list.
         s_copy = TimeSeries(s.name, s.start, s.end, s.step,
-                            sorted(filter(not_none, s)))
+                            sorted(not_none(s)))
         if not s_copy:
             continue    # Skip this series because it is empty.
 
