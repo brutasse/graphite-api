@@ -717,7 +717,7 @@ class LineGraph(Graph):
         'leftColor', 'leftDashed', 'xFormat', 'minorY', 'hideYAxis',
         'uniqueLegend', 'vtitleRight', 'yDivisors', 'connectedLimit')
     validLineModes = ('staircase', 'slope', 'connected')
-    validAreaModes = ('none', 'first', 'all', 'stacked')
+    validAreaModes = ('none', 'first', 'double', 'all', 'stacked')
     validPieModes = ('maximum', 'minimum', 'average')
 
     def drawGraph(self, **params):
@@ -1022,6 +1022,12 @@ class LineGraph(Graph):
                         total[i] += original
         elif self.areaMode == 'first':
             self.data[0].options['stacked'] = True
+        elif self.areaMode == 'double':
+            self.data[0].options['stacked'] = True
+            try:
+                self.data[1].options['stacked'] = True
+            except IndexError:
+                pass
         elif self.areaMode == 'all':
             for series in self.data:
                 if 'drawAsInfinite' not in series.options:
