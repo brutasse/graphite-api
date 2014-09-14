@@ -1217,7 +1217,7 @@ class LineGraph(Graph):
         self.ctx.line_to(x, areaYFrom)  # bottom endX
         self.ctx.line_to(startX, areaYFrom)  # bottom startX
         self.ctx.close_path()
-        self.ctx.fill()
+        self.ctx.fill_preserve()
 
         # clip above y axis
         self.ctx.append_path(pattern)
