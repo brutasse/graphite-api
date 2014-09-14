@@ -68,6 +68,7 @@ defaultGraphOptions = dict(
     fontsize=10,
     fontbold='false',
     fontitalic='false',
+    linemode='slope,
 )
 
 # X-axis configurations (copied from rrdtool, this technique is evil & ugly
@@ -371,6 +372,7 @@ class Graph(object):
 
         self.foregroundColor = params.get('fgcolor', self.defaultForeground)
         self.backgroundColor = params.get('bgcolor', self.defaultBackground)
+        self.lineMode = params.get('linemode', self.defaultLineMode)
         self.setColor(self.backgroundColor)
         self.drawRectangle(0, 0, self.width, self.height)
 
@@ -612,6 +614,7 @@ class Graph(object):
 
         self.defaultBackground = opts.get('background', defaults['background'])
         self.defaultForeground = opts.get('foreground', defaults['foreground'])
+        self.defaultLineMode = opts.get('linemode', defaults['linemode'])
         self.defaultMajorGridLineColor = opts.get('majorline',
                                                   defaults['majorline'])
         self.defaultMinorGridLineColor = opts.get('minorline',
@@ -791,6 +794,10 @@ class LineGraph(Graph):
         # Now to setup our LineGraph specific options
         self.lineWidth = float(params.get('lineWidth', 1.2))
         self.lineMode = params.get('lineMode', 'slope').lower()
+        if not params.get('lineMode', '').lower():
+            self.lineMode = params.get('lineMode', self.defaultLineMode).lower()
+        else:
+            self.lineMode = params.get('lineMode')
         self.connectedLimit = params.get("connectedLimit", INFINITY)
         assert self.lineMode in self.validLineModes, "Invalid line mode!"
         self.areaMode = params.get('areaMode', 'none').lower()
