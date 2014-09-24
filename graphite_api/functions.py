@@ -2460,7 +2460,7 @@ def aggregateLine(requestContext, seriesList, func='avg'):
 
     Example::
 
-        &target=aggregateLineSeries(server.connections.total, 'avg')
+        &target=aggregateLine(server.connections.total, 'avg')
 
     """
     t_funcs = {'avg': safeAvg, 'min': safeMin, 'max': safeMax}
