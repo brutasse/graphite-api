@@ -316,7 +316,7 @@ class FunctionsTest(TestCase):
 
     def test_sum_series(self):
         series = self._generate_series_list()
-        sum_ = functions.sumSeries({}, series)[0]
+        [sum_] = functions.sumSeries({}, series)
         self.assertEqual(sum_.pathExpression,
                          "sumSeries(collectd.test-db1.load.value,"
                          "collectd.test-db2.load.value,"
@@ -325,7 +325,7 @@ class FunctionsTest(TestCase):
 
     def test_sum_series_wildcards(self):
         series = self._generate_series_list()
-        sum_ = functions.sumSeriesWithWildcards({}, series, 1)[0]
+        [sum_] = functions.sumSeriesWithWildcards({}, series, 1)
         self.assertEqual(sum_.pathExpression,
                          "sumSeries(collectd.test-db3.load.value,"
                          "sumSeries(collectd.test-db1.load.value,"
@@ -1030,3 +1030,16 @@ class FunctionsTest(TestCase):
         }
         walk = functions.randomWalkFunction(ctx, 'foo')[0]
         self.assertEqual(len(walk), 721)
+
+    def test_null_zero_sum(self):
+        s = TimeSeries("s", 0, 1, 1, [None])
+        s.pathExpression = 's'
+        [series] = functions.sumSeries({}, [s])
+        self.assertEqual(list(series), [None])
+
+        s = TimeSeries("s", 0, 1, 1, [None, 1])
+        s.pathExpression = 's'
+        t = TimeSeries("s", 0, 1, 1, [None, None])
+        t.pathExpression = 't'
+        [series] = functions.sumSeries({}, [s, t])
+        self.assertEqual(list(series), [None, 1])
