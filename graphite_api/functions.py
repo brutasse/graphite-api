@@ -159,6 +159,7 @@ def formatPathExpressions(seriesList):
 
 # Series Functions
 
+
 def sumSeries(requestContext, *seriesLists):
     """
     Short form: sum()
@@ -286,7 +287,8 @@ def averageSeries(requestContext, *seriesLists):
         return []
     seriesList, start, end, step = normalize(seriesLists)
     name = "averageSeries(%s)" % formatPathExpressions(seriesList)
-    values = (safeDiv(safeSum(row), safeLen(row)) for row in zip_longest(*seriesList))
+    values = (safeDiv(safeSum(row), safeLen(row))
+              for row in zip_longest(*seriesList))
     series = TimeSeries(name, start, end, step, values)
     series.pathExpression = name
     return [series]
@@ -389,7 +391,8 @@ def percentileOfSeries(requestContext, seriesList, n, interpolate=False):
         return []
     name = 'percentileOfSeries(%s,%g)' % (seriesList[0].pathExpression, n)
     start, end, step = normalize([seriesList])[1:]
-    values = [_getPercentile(row, n, interpolate) for row in zip_longest(*seriesList)]
+    values = [_getPercentile(row, n, interpolate)
+              for row in zip_longest(*seriesList)]
     resultSeries = TimeSeries(name, start, end, step, values)
     resultSeries.pathExpression = name
     return [resultSeries]
@@ -598,7 +601,8 @@ def weightedAverage(requestContext, seriesListAvg, seriesListWeight, node):
 
     sortedSeries = {}
 
-    for seriesAvg, seriesWeight in zip_longest(seriesListAvg, seriesListWeight):
+    for seriesAvg, seriesWeight in zip_longest(
+            seriesListAvg, seriesListWeight):
         key = seriesAvg.name.split(".")[node]
         sortedSeries.setdefault(key, {})
         sortedSeries[key]['avg'] = seriesAvg
@@ -619,7 +623,8 @@ def weightedAverage(requestContext, seriesListAvg, seriesListWeight, node):
         seriesAvg = sortedSeries[key]['avg']
 
         productValues = [safeMul(val1, val2)
-                         for val1, val2 in zip_longest(seriesAvg, seriesWeight)]
+                         for val1, val2
+                         in zip_longest(seriesAvg, seriesWeight)]
         name = 'product(%s,%s)' % (seriesWeight.name, seriesAvg.name)
         productSeries = TimeSeries(name, seriesAvg.start, seriesAvg.end,
                                    seriesAvg.step, productValues)
