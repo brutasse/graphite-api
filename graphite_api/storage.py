@@ -30,7 +30,7 @@ class Store(object):
         # Reduce matching nodes for each path to a minimal set
         found_branch_nodes = set()
 
-        for path, nodes in nodes_by_path.items():
+        for path, nodes in sorted(nodes_by_path.items(), key=lambda k: k[0]):
             leaf_nodes = set()
 
             # First we dispense with the BranchNodes
