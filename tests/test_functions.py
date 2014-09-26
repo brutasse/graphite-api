@@ -91,7 +91,8 @@ class FunctionsTest(TestCase):
     def _generate_series_list(self, config=(
         range(101),
         range(2, 103),
-        [1] * 2 + [None] * 90 + [1] * 2 + [None] * 7
+        [1] * 2 + [None] * 90 + [1] * 2 + [None] * 7,
+        []
     )):
         seriesList = []
 
@@ -106,6 +107,7 @@ class FunctionsTest(TestCase):
 
     def test_remove_above_percentile(self):
         seriesList = self._generate_series_list()
+        seriesList.pop()
         percent = 50
         results = functions.removeAbovePercentile({}, seriesList, percent)
         for result, exc in zip(results, [[], [51, 52]]):
@@ -113,6 +115,7 @@ class FunctionsTest(TestCase):
 
     def test_remove_below_percentile(self):
         seriesList = self._generate_series_list()
+        seriesList.pop()
         percent = 50
         results = functions.removeBelowPercentile({}, seriesList, percent)
         expected = [[], [], [1] * 4]
@@ -320,16 +323,18 @@ class FunctionsTest(TestCase):
         self.assertEqual(sum_.pathExpression,
                          "sumSeries(collectd.test-db1.load.value,"
                          "collectd.test-db2.load.value,"
-                         "collectd.test-db3.load.value)")
+                         "collectd.test-db3.load.value,"
+                         "collectd.test-db4.load.value)")
         self.assertEqual(sum_[:3], [3, 5, 6])
 
     def test_sum_series_wildcards(self):
         series = self._generate_series_list()
         sum_ = functions.sumSeriesWithWildcards({}, series, 1)[0]
         self.assertEqual(sum_.pathExpression,
+                         "sumSeries(collectd.test-db4.load.value,"
                          "sumSeries(collectd.test-db3.load.value,"
                          "sumSeries(collectd.test-db1.load.value,"
-                         "collectd.test-db2.load.value))")
+                         "collectd.test-db2.load.value)))")
         self.assertEqual(sum_[:3], [3, 5, 6])
 
     def test_diff_series(self):
