@@ -12,6 +12,7 @@ install_requires = [
     'six',
     'structlog',
     'tzlocal',
+    'blinker',
 ]
 
 if sys.version_info < (2, 7):
