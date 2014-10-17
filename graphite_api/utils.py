@@ -30,9 +30,9 @@ class RequestParams(object):
         if request.json and key in request.json:
             return request.json[key]
         if key in request.form:
-            return request.form[key]
+            return request.form.getlist(key)[-1]
         if key in request.args:
-            return request.args[key]
+            return request.args.getlist(key)[-1]
         raise KeyError
 
     def __contains__(self, key):
