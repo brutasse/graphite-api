@@ -24,7 +24,7 @@ import re
 import random
 import six
 
-from six.moves import zip, map, reduce
+from six.moves import zip_longest, map, reduce
 
 from .render.attime import parseTimeOffset
 from .render.glyph import format_units
@@ -159,11 +159,6 @@ def formatPathExpressions(seriesList):
 
 # Series Functions
 
-# NOTE: Some of the functions below use izip, which may be problematic.
-# izip stops when it hits the end of the shortest series
-# in practice this *shouldn't* matter because all series will cover
-# the same interval, despite having possibly different steps...
-
 
 def sumSeries(requestContext, *seriesLists):
     """
@@ -187,7 +182,7 @@ def sumSeries(requestContext, *seriesLists):
         return []
     seriesList, start, end, step = normalize(seriesLists)
     name = "sumSeries(%s)" % formatPathExpressions(seriesList)
-    values = (safeSum(row) for row in zip(*seriesList))
+    values = (safeSum(row) for row in zip_longest(*seriesList))
     series = TimeSeries(name, start, end, step, values)
     series.pathExpression = name
     return [series]
@@ -270,7 +265,7 @@ def diffSeries(requestContext, *seriesLists):
         return []
     seriesList, start, end, step = normalize(seriesLists)
     name = "diffSeries(%s)" % formatPathExpressions(seriesList)
-    values = (safeDiff(row) for row in zip(*seriesList))
+    values = (safeDiff(row) for row in zip_longest(*seriesList))
     series = TimeSeries(name, start, end, step, values)
     series.pathExpression = name
     return [series]
@@ -292,7 +287,8 @@ def averageSeries(requestContext, *seriesLists):
         return []
     seriesList, start, end, step = normalize(seriesLists)
     name = "averageSeries(%s)" % formatPathExpressions(seriesList)
-    values = (safeDiv(safeSum(row), safeLen(row)) for row in zip(*seriesList))
+    values = (safeDiv(safeSum(row), safeLen(row))
+              for row in zip_longest(*seriesList))
     series = TimeSeries(name, start, end, step, values)
     series.pathExpression = name
     return [series]
@@ -313,7 +309,7 @@ def stddevSeries(requestContext, *seriesLists):
         return []
     seriesList, start, end, step = normalize(seriesLists)
     name = "stddevSeries(%s)" % formatPathExpressions(seriesList)
-    values = (safeStdDev(row) for row in zip(*seriesList))
+    values = (safeStdDev(row) for row in zip_longest(*seriesList))
     series = TimeSeries(name, start, end, step, values)
     series.pathExpression = name
     return [series]
@@ -333,7 +329,7 @@ def minSeries(requestContext, *seriesLists):
         return []
     seriesList, start, end, step = normalize(seriesLists)
     name = "minSeries(%s)" % formatPathExpressions(seriesList)
-    values = (safeMin(row) for row in zip(*seriesList))
+    values = (safeMin(row) for row in zip_longest(*seriesList))
     series = TimeSeries(name, start, end, step, values)
     series.pathExpression = name
     return [series]
@@ -353,7 +349,7 @@ def maxSeries(requestContext, *seriesLists):
         return []
     seriesList, start, end, step = normalize(seriesLists)
     name = "maxSeries(%s)" % formatPathExpressions(seriesList)
-    values = (safeMax(row) for row in zip(*seriesList))
+    values = (safeMax(row) for row in zip_longest(*seriesList))
     series = TimeSeries(name, start, end, step, values)
     series.pathExpression = name
     return [series]
@@ -374,7 +370,7 @@ def rangeOfSeries(requestContext, *seriesLists):
     seriesList, start, end, step = normalize(seriesLists)
     name = "rangeOfSeries(%s)" % formatPathExpressions(seriesList)
     values = (safeSubtract(max(row),
-                           min(row)) for row in zip(*seriesList))
+                           min(row)) for row in zip_longest(*seriesList))
     series = TimeSeries(name, start, end, step, values)
     series.pathExpression = name
     return [series]
@@ -395,7 +391,8 @@ def percentileOfSeries(requestContext, seriesList, n, interpolate=False):
         return []
     name = 'percentileOfSeries(%s,%g)' % (seriesList[0].pathExpression, n)
     start, end, step = normalize([seriesList])[1:]
-    values = [_getPercentile(row, n, interpolate) for row in zip(*seriesList)]
+    values = [_getPercentile(row, n, interpolate)
+              for row in zip_longest(*seriesList)]
     resultSeries = TimeSeries(name, start, end, step, values)
     resultSeries.pathExpression = name
     return [resultSeries]
@@ -492,7 +489,7 @@ def asPercent(requestContext, seriesList, total=None):
     normalize([seriesList])
 
     if total is None:
-        totalValues = [safeSum(row) for row in zip(*seriesList)]
+        totalValues = [safeSum(row) for row in zip_longest(*seriesList)]
         totalText = None  # series.pathExpression
     elif isinstance(total, list):
         if len(total) != 1:
@@ -508,7 +505,7 @@ def asPercent(requestContext, seriesList, total=None):
     resultList = []
     for series in seriesList:
         resultValues = [safeMul(safeDiv(val, totalVal), 100.0)
-                        for val, totalVal in zip(series, totalValues)]
+                        for val, totalVal in zip_longest(series, totalValues)]
 
         name = "asPercent(%s, %s)" % (series.name,
                                       totalText or series.pathExpression)
@@ -553,7 +550,7 @@ def divideSeries(requestContext, dividendSeriesList, divisorSeriesList):
         end = max([s.end for s in bothSeries])
         end -= (end - start) % step
 
-        values = (safeDiv(v1, v2) for v1, v2 in zip(*bothSeries))
+        values = (safeDiv(v1, v2) for v1, v2 in zip_longest(*bothSeries))
 
         quotientSeries = TimeSeries(name, start, end, step, values)
         quotientSeries.pathExpression = name
@@ -582,7 +579,7 @@ def multiplySeries(requestContext, *seriesLists):
         return seriesList
 
     name = "multiplySeries(%s)" % ','.join([s.name for s in seriesList])
-    product = map(lambda x: safeMul(*x), zip(*seriesList))
+    product = map(lambda x: safeMul(*x), zip_longest(*seriesList))
     resultSeries = TimeSeries(name, start, end, step, product)
     resultSeries.pathExpression = name
     return [resultSeries]
@@ -604,7 +601,8 @@ def weightedAverage(requestContext, seriesListAvg, seriesListWeight, node):
 
     sortedSeries = {}
 
-    for seriesAvg, seriesWeight in zip(seriesListAvg, seriesListWeight):
+    for seriesAvg, seriesWeight in zip_longest(
+            seriesListAvg, seriesListWeight):
         key = seriesAvg.name.split(".")[node]
         sortedSeries.setdefault(key, {})
         sortedSeries[key]['avg'] = seriesAvg
@@ -625,7 +623,8 @@ def weightedAverage(requestContext, seriesListAvg, seriesListWeight, node):
         seriesAvg = sortedSeries[key]['avg']
 
         productValues = [safeMul(val1, val2)
-                         for val1, val2 in zip(seriesAvg, seriesWeight)]
+                         for val1, val2
+                         in zip_longest(seriesAvg, seriesWeight)]
         name = 'product(%s,%s)' % (seriesWeight.name, seriesAvg.name)
         productSeries = TimeSeries(name, seriesAvg.start, seriesAvg.end,
                                    seriesAvg.step, productValues)
@@ -636,7 +635,7 @@ def weightedAverage(requestContext, seriesListAvg, seriesListWeight, node):
     [sumWeights] = sumSeries(requestContext, seriesListWeight)
 
     resultValues = [safeDiv(val1, val2)
-                    for val1, val2 in zip(sumProducts, sumWeights)]
+                    for val1, val2 in zip_longest(sumProducts, sumWeights)]
     name = "weightedAverage(%s, %s)" % (
         ','.join(set(s.pathExpression for s in seriesListAvg)),
         ','.join(set(s.pathExpression for s in seriesListWeight)))
@@ -678,7 +677,7 @@ def movingMedian(requestContext, seriesList, windowSize):
                                         seconds=bootstrapSeconds)
     result = []
 
-    for bootstrap, series in zip(bootstrapList, seriesList):
+    for bootstrap, series in zip_longest(bootstrapList, seriesList):
         if windowInterval:
             windowPoints = windowInterval // series.step
         else:
@@ -868,7 +867,7 @@ def movingAverage(requestContext, seriesList, windowSize):
                                         seconds=bootstrapSeconds)
     result = []
 
-    for bootstrap, series in zip(bootstrapList, seriesList):
+    for bootstrap, series in zip_longest(bootstrapList, seriesList):
         if windowInterval:
             windowPoints = windowInterval // series.step
         else:
@@ -1716,7 +1715,7 @@ def removeBetweenPercentile(requestContext, seriesList, n):
     if n < 50:
         n = 100 - n
 
-    transposed = list(zip(*seriesList))
+    transposed = list(zip_longest(*seriesList))
 
     lowPercentiles = [_getPercentile(col, 100-n) for col in transposed]
     highPercentiles = [_getPercentile(col, n) for col in transposed]
@@ -2020,7 +2019,7 @@ def _fetchWithBootstrap(requestContext, seriesList, **delta_kwargs):
         bootstrapList.extend(bootstraps)
 
     newSeriesList = []
-    for bootstrap, original in zip(bootstrapList, seriesList):
+    for bootstrap, original in zip_longest(bootstrapList, seriesList):
         newValues = []
         if bootstrap.step != original.step:
             ratio = bootstrap.step / original.step
@@ -2174,7 +2173,7 @@ def holtWintersForecast(requestContext, seriesList):
     """
     results = []
     bootstrapList = _fetchWithBootstrap(requestContext, seriesList, days=7)
-    for bootstrap, series in zip(bootstrapList, seriesList):
+    for bootstrap, series in zip_longest(bootstrapList, seriesList):
         analysis = holtWintersAnalysis(bootstrap)
         results.append(_trimBootstrap(analysis['predictions'], series))
     return results
@@ -2187,7 +2186,7 @@ def holtWintersConfidenceBands(requestContext, seriesList, delta=3):
     """
     results = []
     bootstrapList = _fetchWithBootstrap(requestContext, seriesList, days=7)
-    for bootstrap, series in zip(bootstrapList, seriesList):
+    for bootstrap, series in zip_longest(bootstrapList, seriesList):
         analysis = holtWintersAnalysis(bootstrap)
         forecast = _trimBootstrap(analysis['predictions'], series)
         deviation = _trimBootstrap(analysis['deviations'], series)
@@ -2598,7 +2597,7 @@ def countSeries(requestContext, *seriesLists):
         return []
     seriesList, start, end, step = normalize(seriesLists)
     name = "countSeries(%s)" % formatPathExpressions(seriesList)
-    values = (int(len(row)) for row in zip(*seriesList))
+    values = (int(len(row)) for row in zip_longest(*seriesList))
     series = TimeSeries(name, start, end, step, values)
     series.pathExpression = name
     return [series]
@@ -2794,7 +2793,7 @@ def smartSummarize(requestContext, seriesList, intervalString, func='sum'):
 
         timestamps = range(int(series.start), int(series.end),
                            int(series.step))
-        datapoints = zip(timestamps, series)
+        datapoints = zip_longest(timestamps, series)
 
         # Populate buckets
         for timestamp, value in datapoints:
@@ -2887,7 +2886,7 @@ def summarize(requestContext, seriesList, intervalString, func='sum',
 
         timestamps = range(int(series.start), int(series.end),
                            int(series.step))
-        datapoints = zip(timestamps, series)
+        datapoints = zip_longest(timestamps, series)
 
         for timestamp, value in datapoints:
             if alignToFrom:

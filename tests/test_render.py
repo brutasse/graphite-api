@@ -349,3 +349,26 @@ class RenderTest(TestCase):
             self.assertEqual(data, [{'datapoints': [
                 [None, start + i + 1] for i in range(60)
             ], 'target': 'test'}])
+
+    def test_sorted(self):
+        for db in (
+            ('test', 'foo.wsp'),
+            ('test', 'welp.wsp'),
+            ('test', 'baz.wsp'),
+        ):
+            db_path = os.path.join(WHISPER_DIR, *db)
+            if not os.path.exists(os.path.dirname(db_path)):
+                os.makedirs(os.path.dirname(db_path))
+            whisper.create(db_path, [(1, 60)])
+
+        response = self.app.get(self.url, query_string={'rawData': '1',
+                                                        'target': 'test.*'})
+        dses = response.data.decode('utf-8').strip().split("\n")
+
+        paths = []
+        for ds in dses:
+            info, data = ds.strip().split('|', 1)
+            path, start, stop, step = info.split(',')
+            paths.append(path)
+
+        self.assertEqual(paths, ['test.baz', 'test.foo', 'test.welp'])
