@@ -1,3 +1,4 @@
+import os
 import csv
 import json
 import math
@@ -207,7 +208,15 @@ def metrics_expand():
 @app.route('/metrics/index.json', methods=methods)
 def metrics_index():
     index = set()
-    recurse('*', index)
+    if os.path.exists(app.searcher.index_path):
+        with open(app.searcher.index_path, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                index.add(line)
+    else:
+        recurse('*', index)
     return jsonify(sorted(index), jsonp=RequestParams.get('jsonp', False))
 
 
