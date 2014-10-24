@@ -210,11 +210,9 @@ def metrics_index():
     index = set()
     if os.path.exists(app.searcher.index_path):
         with open(app.searcher.index_path, 'r') as f:
-            for line in f:
-                line = line.strip()
-                if not line:
-                    continue
-                index.add(line)
+            index = set([line.strip() for line in f if line])
+        if not index:
+            recurse('*', index)
     else:
         recurse('*', index)
     return jsonify(sorted(index), jsonp=RequestParams.get('jsonp', False))
