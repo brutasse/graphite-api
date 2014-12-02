@@ -165,15 +165,7 @@ Nginx + uWSGI
 
 First, you need to install uwsgi and uwsgi-plugin-python (by example for debian).
 
-Then create the graphite-api-wsgi.py:
-
-.. code-block:: bash
-
-    # /var/www/wsgi-scripts/graphite-api-wsgi.py
-
-    from graphite_api.app import app as application
-
-Configure uwsgi graphite.ini:
+Then configure uwsgi graphite.ini:
 
 .. code-block:: uwsgi
 
@@ -183,9 +175,8 @@ Configure uwsgi graphite.ini:
     processes = 2
     socket = localhost:8080
     plugins = python27
-    pythonpath = /var/www/wsgi-scripts
     home = /var/www/wsgi-scripts/env
-    mount = /=/var/www/wsgi-scripts/graphite-api-wsgi.py
+    module = graphite_api.app:app
     env = GRAPHITE_API_CONFIG=/var/www/wsgi-scripts/config.yml
 
 Enable graphite.ini and restart uwsgi:
