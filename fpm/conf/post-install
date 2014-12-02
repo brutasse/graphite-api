@@ -3,8 +3,8 @@
 set -e
 
 # Create bytecode
-python -m compileall /usr/share/python/graphite/lib > /dev/null
-python -O -m compileall /usr/share/python/graphite/lib > /dev/null
+python -m compileall /usr/share/python/graphite/lib > /dev/null || true
+python -O -m compileall /usr/share/python/graphite/lib > /dev/null || true
 
 # Create user if it doesn't exist
 if ! id graphite > /dev/null 2>&1 ; then
