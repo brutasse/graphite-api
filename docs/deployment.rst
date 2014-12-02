@@ -163,27 +163,37 @@ backend and Sentry integration are available.
 Nginx + uWSGI
 -------------
 
-First, you need to install uwsgi and uwsgi-plugin-python (by example for debian).
+First, you need to install uWSGI with Python support. On Debian, install ``uwsgi-plugin-python``.
 
-Then configure uwsgi graphite.ini:
+Then create the uWSGI file for Graphite-API in
+``/etc/uwsgi/apps-available/graphite-api.ini``:
 
-.. code-block:: uwsgi
-
-    # /etc/uwsgi/apps-available/graphite.ini
+.. code-block:: ini
 
     [uwsgi]
     processes = 2
     socket = localhost:8080
     plugins = python27
-    home = /var/www/wsgi-scripts/env
     module = graphite_api.app:app
+
+If you installed Graphite-API in a virtualenv, specify the virtualenv path:
+
+.. code-block:: ini
+
+    home = /var/www/wsgi-scripts/env
+
+If you need a custom location for Graphite-API's config file, set the
+environment variable like this:
+
+.. code-block:: ini
+
     env = GRAPHITE_API_CONFIG=/var/www/wsgi-scripts/config.yml
 
-Enable graphite.ini and restart uwsgi:
+Enable ``graphite-api.ini`` and restart uWSGI:
 
 .. code-block:: bash
 
-    $ ln -s /etc/uwsgi/apps-available/graphite.ini /etc/uwsgi/apps-enabled
+    $ ln -s /etc/uwsgi/apps-available/graphite-api.ini /etc/uwsgi/apps-enabled
     $ service uwsgi restart
 
 Finally, configure the nginx vhost:
