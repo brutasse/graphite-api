@@ -2,9 +2,16 @@
 
 set -e
 
-# Create bytecode
-python -m compileall /usr/share/python/graphite/lib > /dev/null
-python -O -m compileall /usr/share/python/graphite/lib > /dev/null
+pythonver=$(python --version 2>&1 | awk -F'.' '{print $1}')
+
+# Create bytecode
+if [[ x$pythonver == 'xPython 2' ]]; then
+	python -m compileall /usr/share/python/graphite/lib > /dev/null || true
+	python -O -m compileall /usr/share/python/graphite/lib > /dev/null || true
+else
+	python -m compileall /usr/share/python/graphite/lib > /dev/null
+	python -O -m compileall /usr/share/python/graphite/lib > /dev/null
+fi
 
 # Create user if it doesn't exist
 if ! id graphite > /dev/null 2>&1 ; then
