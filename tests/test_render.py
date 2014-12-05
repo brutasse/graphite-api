@@ -208,6 +208,17 @@ class RenderTest(TestCase):
             response = self.app.get(self.url, query_string=qs)
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.headers['Content-Type'], 'image/png')
+            if qs.get('noCache'):
+                self.assertEqual(response.headers['Pragma'], 'no-cache')
+                self.assertEqual(response.headers['Cache-Control'], 'no-cache')
+                self.assertFalse('Expires' in response.headers)
+            else:
+                self.assertEqual(response.headers['Cache-Control'],
+                                 'max-age={0}'.format(
+                                     qs.get('cacheTimeout', 60)))
+                self.assertNotEqual(response.headers['Cache-Control'],
+                                    'no-cache')
+                self.assertFalse('Pragma' in response.headers)
 
         for qs in [
             {'bgcolor': 'foo'},
