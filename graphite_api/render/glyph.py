@@ -687,14 +687,16 @@ class Graph(object):
                 for char in re.findall(r'L -(\d+) -\d+', match.group(1)):
                     name += chr(int(char))
                 return '</g><g data-header="true" class="%s">' % name
-            svgData = re.sub(r'<path.+?d="M -88 -88 (.+?)"/>',
-                             onHeaderPath, svgData)
+            svgData, subs = re.subn(r'<path.+?d="M -88 -88 (.+?)"/>',
+                                    onHeaderPath, svgData)
 
             # Replace the first </g><g> with <g>, and close out the last </g>
             # at the end
             svgData = svgData.replace('</g><g data-header',
-                                      '<g data-header', 1) + "</g>"
+                                      '<g data-header', 1)
             svgData = svgData.replace(' data-header="true"', '')
+            if subs > 0:
+                svgData += "</g>"
 
             fileObj.write(svgData.encode())
             fileObj.write(("""<script>

@@ -47,6 +47,8 @@ Graphite-API releases
     wildcard series of length 2.
   * `#702 <https://github.com/graphite-project/graphite-web/pull/702>`_ --
     handle backslash as path separator on windows.
+  * `#410 <https://github.com/graphite-project/graphite-web/pull/410`_ -- SVG
+    output sometimes had an extra ``</g>`` tag.
 
 1.0.1 -- 2014-03-21
 -------------------
