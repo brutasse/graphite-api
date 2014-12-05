@@ -250,6 +250,45 @@ def averageSeriesWithWildcards(requestContext, seriesList, *positions):
     return result
 
 
+def multiplySeriesWithWildcards(requestContext, seriesList, *position):
+    """
+    Call multiplySeries after inserting wildcards at the given position(s).
+
+    Example::
+
+        &target=multiplySeriesWithWildcards(
+            [web.host-[0-7].avg-response.value,
+             web.host-[0-7].total-request.value], 2,3)
+
+    This would be the equivalent of::
+
+        &target=multiplySeries(web.host-0.avg-response.value,
+                               web.host-0.total-request.value)
+        &target=multiplySeries(web.host-1.avg-response.value,
+                               web.host-1.total-request.value)
+        ...
+    """
+    positions = [position] if isinstance(position, int) else position
+
+    newSeries = {}
+    newNames = []
+
+    for series in seriesList:
+        new_name = ".".join(map(lambda x: x[1],
+                                filter(lambda i: i[0] not in positions,
+                                       enumerate(series.name.split('.')))))
+
+        if new_name in newSeries:
+            [newSeries[new_name]] = multiplySeries(requestContext,
+                                                   (newSeries[new_name],
+                                                    series))
+        else:
+            newSeries[new_name] = series
+            newNames.append(new_name)
+        newSeries[new_name].name = new_name
+    return [newSeries[name] for name in newNames]
+
+
 def diffSeries(requestContext, *seriesLists):
     """
     Can take two or more metrics.
@@ -3149,6 +3188,7 @@ SeriesFunctions = {
     'avg': averageSeries,
     'sumSeriesWithWildcards': sumSeriesWithWildcards,
     'averageSeriesWithWildcards': averageSeriesWithWildcards,
+    'multiplySeriesWithWildcards': multiplySeriesWithWildcards,
     'minSeries': minSeries,
     'maxSeries': maxSeries,
     'rangeOfSeries': rangeOfSeries,

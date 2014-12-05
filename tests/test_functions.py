@@ -1048,3 +1048,25 @@ class FunctionsTest(TestCase):
         t.pathExpression = 't'
         [series] = functions.sumSeries({}, [s, t])
         self.assertEqual(list(series), [None, 1])
+
+    def test_multiply_with_wildcards(self):
+        s1 = [
+            TimeSeries('web.host-1.avg-response.value', 0, 1, 1, [1, 10, 11]),
+            TimeSeries('web.host-2.avg-response.value', 0, 1, 1, [2, 20, 21]),
+            TimeSeries('web.host-3.avg-response.value', 0, 1, 1, [3, 30, 31]),
+            TimeSeries('web.host-4.avg-response.value', 0, 1, 1, [4, 40, 41]),
+        ]
+        s2 = [
+            TimeSeries('web.host-4.total-request.value', 0, 1, 1, [4, 8, 12]),
+            TimeSeries('web.host-3.total-request.value', 0, 1, 1, [3, 7, 11]),
+            TimeSeries('web.host-1.total-request.value', 0, 1, 1, [1, 5, 9]),
+            TimeSeries('web.host-2.total-request.value', 0, 1, 1, [2, 6, 10]),
+        ]
+        expected = [
+            TimeSeries('web.host-1', 0, 1, 1, [1, 50, 99]),
+            TimeSeries('web.host-2', 0, 1, 1, [4, 120, 210]),
+            TimeSeries('web.host-3', 0, 1, 1, [9, 210, 341]),
+            TimeSeries('web.host-4', 0, 1, 1, [16, 320, 492]),
+        ]
+        results = functions.multiplySeriesWithWildcards({}, s1 + s2, 2, 3)
+        self.assertEqual(results, expected)
