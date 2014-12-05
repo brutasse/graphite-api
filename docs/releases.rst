@@ -19,6 +19,9 @@ Graphite-API releases
 * Add ``multiplySeriesWithWildcards``, ``minimumBelow`` and ``changed``
   functions.
 
+* Add optional ``step`` argument to ``time``, ``sin`` and ``randomWalk``
+  functions.
+
 * Add ``/metrics`` API call as an alias to ``/metrics/find``.
 
 * Add missing ``/metrics/index.json`` API call.

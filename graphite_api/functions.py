@@ -2598,7 +2598,7 @@ def isNonNull(requestContext, seriesList):
     return seriesList
 
 
-def identity(requestContext, name):
+def identity(requestContext, name, step=60):
     """
     Identity function:
     Returns datapoints where the value equals the timestamp of the datapoint.
@@ -2611,8 +2611,10 @@ def identity(requestContext, name):
 
     This would create a series named "The.time.series" that contains points
     where x(t) == t.
+
+    Accepts optional second argument as 'step' parameter (default step is
+    60 sec)
     """
-    step = 60
     start = int(epoch(requestContext["startTime"]))
     end = int(epoch(requestContext["endTime"]))
     values = range(start, end, step)
@@ -3100,7 +3102,7 @@ def hitcount(requestContext, seriesList, intervalString,
     return results
 
 
-def sinFunction(requestContext, name, amplitude=1):
+def sinFunction(requestContext, name, amplitude=1, step=60):
     """
     Short Alias: sin()
 
@@ -3112,8 +3114,9 @@ def sinFunction(requestContext, name, amplitude=1):
         &target=sin("The.time.series", 2)
 
     This would create a series named "The.time.series" that contains sin(x)*2.
+
+    A third argument can be provided as a step parameter (default is 60 secs).
     """
-    step = 60
     delta = timedelta(seconds=step)
     when = requestContext["startTime"]
     values = []
@@ -3130,7 +3133,7 @@ def sinFunction(requestContext, name, amplitude=1):
     return [series]
 
 
-def randomWalkFunction(requestContext, name):
+def randomWalkFunction(requestContext, name, step=60):
     """
     Short Alias: randomWalk()
 
@@ -3143,8 +3146,10 @@ def randomWalkFunction(requestContext, name):
 
     This would create a series named "The.time.series" that contains points
     where x(t) == x(t-1)+random()-0.5, and x(0) == 0.
+
+    Accepts an optional second argument as step parameter (default step is
+    60 sec).
     """
-    step = 60
     delta = timedelta(seconds=step)
     when = requestContext["startTime"]
     values = []
