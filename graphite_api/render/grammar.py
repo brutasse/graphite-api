@@ -2,7 +2,7 @@ from distutils.version import StrictVersion
 from pyparsing import (
     ParserElement, Forward, Combine, Optional, Word, Literal, CaselessKeyword,
     CaselessLiteral, Group, FollowedBy, LineEnd, OneOrMore, ZeroOrMore,
-    nums, alphas, alphanums, printables, delimitedList, quotedString,
+    nums, alphas, alphanums, printables, delimitedList, QuotedString,
     __version__
 )
 
@@ -24,7 +24,7 @@ sciNumber = Combine(
     (floatNumber | intNumber) + CaselessLiteral('e') + intNumber
 )('scientific')
 
-aString = quotedString('string')
+aString = QuotedString(quoteChar="'\"", escChar="\\")('string')
 
 # Use lookahead to match only numbers in a list (can't remember why this
 # is necessary)
