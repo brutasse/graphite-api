@@ -288,14 +288,22 @@ def multiplySeriesWithWildcards(requestContext, seriesList, *position):
 
 def diffSeries(requestContext, *seriesLists):
     """
-    Can take two or more metrics.
-    Subtracts parameters 2 through n from parameter 1.
+    Subtracts series 2 through n from series 1.
 
     Example::
 
         &target=diffSeries(service.connections.total,
                            service.connections.failed)
 
+    To diff a series and a constant, one should use offset instead of
+    (or in addition to) diffSeries.
+
+    Example::
+
+        &target=offset(service.connections.total, -5)
+
+        &target=offset(diffSeries(service.connections.total,
+                                  service.connections.failed), -4)
     """
     if not seriesLists or seriesLists == ([],):
         return []
