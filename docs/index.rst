@@ -37,7 +37,7 @@ find useful. Namely:
 * The application is extremely simple to :doc:`install <installation>` and
   :doc:`configure <configuration>`.
 
-* The architecture has been drastically simplified and there are much less
+* The architecture has been drastically simplified and there are many fewer
   moving parts than in graphite-web:
 
   * No memcache integration -- rendering is live.
