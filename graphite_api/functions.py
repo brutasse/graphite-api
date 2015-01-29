@@ -2960,6 +2960,9 @@ def summarize(requestContext, seriesList, intervalString, func='sum',
         datapoints = zip_longest(timestamps, series)
 
         for timestamp, value in datapoints:
+            if timestamp is None:
+                continue
+
             if alignToFrom:
                 bucketInterval = int((timestamp - series.start) / interval)
             else:
