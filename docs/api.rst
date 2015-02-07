@@ -55,6 +55,9 @@ Example::
 
 Parameters:
 
+*jsonp* (optional)
+    Wraps the response in a jsonp callback.
+
 *query* (mandatory)
   The query to search for.
 
@@ -77,6 +80,9 @@ Expands the given query with matching paths.
 
 Parameters:
 
+*jsonp* (optional)
+    Wraps the response in a jsonp callback.
+
 *query* (mandatory)
   The metrics query. Can be specified multiple times.
 
@@ -90,6 +96,9 @@ Parameters:
 -------------------
 
 Searches for metrics using the search index.
+
+*jsonp* (optional)
+    Wraps the response in a jsonp callback.
 
 *query* (mandatory)
   The metrics query.
