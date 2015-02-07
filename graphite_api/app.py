@@ -114,7 +114,9 @@ def metrics_find():
     from_time = None
     until_time = None
     wildcards = False
-
+    
+    jsonp = RequestParams.get("jsonp", False)
+    
     try:
         wildcards = bool(int(RequestParams.get('wildcards', 0)))
     except ValueError:
@@ -149,6 +151,11 @@ def metrics_find():
 
     if format == 'treejson':
         data = tree_json(matches, base_path, wildcards=wildcards)
+        out = json.dumps(data)
+        if jsonp:
+            if len(jsonp) < 1:
+                jsonp="jsonp"
+            out = "{jsonp}({data})".format(jsonp=jsonp, data=out)
         return (
             json.dumps(data),
             200,
@@ -169,7 +176,7 @@ def metrics_find():
     if len(results) > 1 and wildcards:
         results.append({'name': '*'})
 
-    return jsonify({'metrics': results})
+    return jsonify({'metrics': results}, jsonp=jsonp)
 
 
 @app.route('/metrics/expand', methods=methods)
