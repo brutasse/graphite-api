@@ -23,10 +23,11 @@ import math
 import re
 import random
 import six
+import time
 
 from six.moves import zip_longest, map, reduce
 
-from .render.attime import parseTimeOffset
+from .render.attime import parseTimeOffset, parseATTime
 from .render.glyph import format_units
 from .render.datalib import TimeSeries
 from .utils import to_seconds, epoch
@@ -2469,6 +2470,38 @@ def timeShift(requestContext, seriesList, timeShift, resetEnd=True):
     return results
 
 
+def timeSlice(requestContext, seriesList, startSliceAt, endSliceAt='now'):
+    """
+    Takes one metric or a wildcard metric, followed by a quoted
+    string with the time to start the line and another quoted string
+    with the time to end the line. The start and end times are
+    inclusive. See ``from / until`` in the render api for examples of
+    time formats.
+
+    Useful for filtering out a part of a series of data from a wider
+    range of data.
+
+    Example::
+
+        &target=timeSlice(network.core.port1,"00:00 20140101","11:59 20140630")
+        &target=timeSlice(network.core.port1,"12:00 20140630","now")
+    """
+    results = []
+    start = time.mktime(parseATTime(startSliceAt).timetuple())
+    end = time.mktime(parseATTime(endSliceAt).timetuple())
+
+    for slicedSeries in seriesList:
+        slicedSeries.name = 'timeSlice(%s, %s, %s)' % (slicedSeries.name,
+                                                       int(start), int(end))
+        curr = time.mktime(requestContext["startTime"].timetuple())
+        for i, v in enumerate(slicedSeries):
+            if v is None or curr < start or curr > end:
+                slicedSeries[i] = None
+            curr += slicedSeries.step
+        results.append(slicedSeries)
+    return results
+
+
 def constantLine(requestContext, value):
     """
     Takes a float F.
@@ -3220,6 +3253,7 @@ SeriesFunctions = {
     'log': logarithm,
     'timeStack': timeStack,
     'timeShift': timeShift,
+    'timeSlice': timeSlice,
     'summarize': summarize,
     'smartSummarize': smartSummarize,
     'hitcount': hitcount,

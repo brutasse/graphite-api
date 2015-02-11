@@ -1,6 +1,10 @@
 import copy
 import time
 
+from datetime import datetime
+
+import pytz
+
 from mock import patch, call, MagicMock
 
 from graphite_api import functions
@@ -1069,4 +1073,22 @@ class FunctionsTest(TestCase):
             TimeSeries('web.host-4', 0, 1, 1, [16, 320, 492]),
         ]
         results = functions.multiplySeriesWithWildcards({}, s1 + s2, 2, 3)
+        self.assertEqual(results, expected)
+
+    def test_timeslice(self):
+        series = [
+            TimeSeries('test.value', 0, 600, 60,
+                       [None, 1, 2, 3, None, 5, 6, None, 7, 8, 9]),
+        ]
+
+        expected = [
+            TimeSeries('timeSlice(test.value, 180, 480)', 0, 600, 60,
+                       [None, None, None, 3, None, 5, 6, None, 7, None, None]),
+        ]
+
+        results = functions.timeSlice({
+            'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
+            'endTime': datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
+            'data': [],
+        }, series, '00:03 19700101', '00:08 19700101')
         self.assertEqual(results, expected)
