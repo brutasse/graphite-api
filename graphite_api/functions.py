@@ -1287,10 +1287,11 @@ def cactiStyle(requestContext, seriesList, system=None):
         &target=cactiStyle(ganglia.*.net.bytes_out,"si")
 
     """
-    if system:
-        fmt = lambda x: "%.2f%s" % format_units(x, system=system)
-    else:
-        fmt = lambda x: "%.2f" % x
+    def fmt(x):
+        if system:
+            return "%.2f%s" % format_units(x, system=system)
+        else:
+            return "%.2f" % x
     nameLen = max([0] + [len(series.name) for series in seriesList])
     lastLen = max([0] + [len(fmt(int(safeLast(series) or 3)))
                          for series in seriesList]) + 3

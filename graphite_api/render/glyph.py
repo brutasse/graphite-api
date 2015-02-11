@@ -2020,6 +2020,13 @@ def sort_stacked(series_list):
     return stacked + not_stacked
 
 
+def condition(value, size, step):
+    if step is None:
+        return abs(value) >= size
+    else:
+        return abs(value) >= size and step >= size
+
+
 def format_units(v, step=None, system="si"):
     """Format the given value in standardized units.
 
@@ -2029,14 +2036,8 @@ def format_units(v, step=None, system="si"):
         http://en.wikipedia.org/wiki/SI_prefix
         http://en.wikipedia.org/wiki/Binary_prefix
     """
-
-    if step is None:
-        condition = lambda size: abs(v) >= size
-    else:
-        condition = lambda size: abs(v) >= size and step >= size
-
     for prefix, size in UnitSystems[system]:
-        if condition(size):
+        if condition(v, size, step):
             v2 = v / size
             if v2 - math.floor(v2) < 0.00000000001 and v > 1:
                 v2 = math.floor(v2)
