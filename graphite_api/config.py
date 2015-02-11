@@ -40,6 +40,15 @@ default_conf = {
             '/srv/graphite/whisper',
         ],
     },
+    'carbon': {
+        'hosts': [
+            '127.0.0.1:7002',
+        ],
+        'timeout': 1,
+        'retry_delay': 15,
+        'carbon_prefix': 'carbon',
+        'replication_factor': 1,
+    },
     'time_zone': get_localzone().zone,
 }
 if default_conf['time_zone'] == 'local':  # tzlocal didn't find anything
@@ -90,6 +99,12 @@ def configure(app):
     for key, value in list(default_conf.items()):
         config.setdefault(key, value)
 
+    if config['carbon'] is not None:
+        # carbon section having a bunch of values, keep default ones if
+        # they're not provided in an overriden config.
+        for key, value in list(default_conf['carbon'].items()):
+            config['carbon'].setdefault(key, value)
+
     app.statsd = None
     if 'statsd' in config:
         try:
@@ -117,9 +132,17 @@ def configure(app):
                 cache_conf['CACHE_{0}'.format(key.upper())] = value
             app.cache = Cache(app, config=cache_conf)
 
-    loaded_config = {'functions': {}, 'finders': []}
+    loaded_config = {'functions': {}}
     for functions in config['functions']:
         loaded_config['functions'].update(load_by_path(functions))
+
+    if config['carbon'] is not None:
+        if 'hashing_keyfunc' in config['carbon']:
+            config['carbon']['hashing_keyfunc'] = load_by_path(
+                config['carbon']['hashing_keyfunc'])
+        else:
+            config['carbon']['hashing_keyfunc'] = lambda x: x
+    loaded_config['carbon'] = config['carbon']
 
     finders = []
     for finder in config['finders']:

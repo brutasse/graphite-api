@@ -4,6 +4,8 @@ Graphite-API releases
 1.0.2 -- **in development**
 ---------------------------
 
+* Add CarbonLink support.
+
 * Add support for configuring a cache backend and the ``noCache`` and
   ``cacheTimeout`` API options.
 
