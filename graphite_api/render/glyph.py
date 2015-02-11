@@ -1262,12 +1262,14 @@ class LineGraph(Graph):
         seriesWithMissingValues = [series for series in self.data
                                    if None in series]
 
-        if self.params.get('drawNullAsZero') and seriesWithMissingValues:
+        yMinValue = safeMin([safeMin(series) for series in self.data
+                             if not series.options.get('drawAsInfinite')])
+        if (
+            yMinValue > 0.0 and
+            self.params.get('drawNullAsZero') and
+            seriesWithMissingValues
+        ):
             yMinValue = 0.0
-        else:
-            yMinValue = safeMin([
-                safeMin(series) for series in self.data
-                if not series.options.get('drawAsInfinite')])
 
         if self.areaMode == 'stacked':
             length = safeMin([
@@ -1284,6 +1286,13 @@ class LineGraph(Graph):
             yMaxValue = safeMax([
                 safeMax(series) for series in self.data
                 if not series.options.get('drawAsInfinite')])
+
+        if (
+            yMaxValue < 0.0 and
+            self.params.get('drawNullAsZero') and
+            seriesWithMissingValues
+        ):
+            yMaxValue = 0.0
 
         if yMinValue is None:
             yMinValue = 0.0
@@ -1991,12 +2000,14 @@ def safeMin(args):
     args = [arg for arg in args if arg not in (None, INFINITY)]
     if args:
         return min(args)
+    return 0
 
 
 def safeMax(args):
     args = [arg for arg in args if arg not in (None, INFINITY)]
     if args:
         return max(args)
+    return 0
 
 
 def safeSum(values):
