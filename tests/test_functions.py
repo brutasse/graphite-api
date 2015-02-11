@@ -1092,3 +1092,15 @@ class FunctionsTest(TestCase):
             'data': [],
         }, series, '00:03 19700101', '00:08 19700101')
         self.assertEqual(results, expected)
+
+    def test_remove_emtpy(self):
+        series = [
+            TimeSeries('foo.bar', 0, 100, 10,
+                       [None, None, None, 0, 0, 0, 1, 1, 1, None]),
+            TimeSeries('foo.baz', 0, 100, 10, [None] * 10),
+            TimeSeries('foo.blah', 0, 100, 10,
+                       [None, None, None, 0, 0, 0, 0, 0, 0, None]),
+        ]
+
+        results = functions.removeEmptySeries({}, series)
+        self.assertEqual(results, [series[0], series[2]])

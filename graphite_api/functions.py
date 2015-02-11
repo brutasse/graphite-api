@@ -43,6 +43,13 @@ DAY = HOUR * 24
 not_none = partial(filter, partial(is_not, None))
 
 
+def not_empty(values):
+    for v in values:
+        if v is not None:
+            return True
+    return False
+
+
 def safe(f):
     def inner(values):
         vals = list(not_none(values))
@@ -3171,6 +3178,20 @@ def sinFunction(requestContext, name, amplitude=1, step=60):
     return [series]
 
 
+def removeEmptySeries(requestContext, seriesList):
+    """
+    Takes one metric or a wildcard seriesList. Out of all metrics
+    passed, draws only the metrics with not empty data.
+
+    Example::
+
+        &target=removeEmptySeries(server*.instance*.threads.busy)
+
+    Draws only live servers with not empty data.
+    """
+    return [series for series in seriesList if not_empty(series)]
+
+
 def randomWalkFunction(requestContext, name, step=60):
     """
     Short Alias: randomWalk()
@@ -3297,6 +3318,7 @@ SeriesFunctions = {
     'useSeriesAbove': useSeriesAbove,
     'exclude': exclude,
     'grep': grep,
+    'removeEmptySeries': removeEmptySeries,
 
     # Data Filter functions
     'removeAbovePercentile': removeAbovePercentile,
