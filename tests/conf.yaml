@@ -1,4 +1,5 @@
 search_index: /tmp/graphite-api-index
+time_zone: UTC
 allowed_origins:
   - example.com
   - foo.example.com:8888
