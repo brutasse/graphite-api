@@ -13,7 +13,6 @@ from .middleware import CORS, TrailingSlash
 from .search import IndexSearcher
 from .storage import Store
 from . import DEBUG
-from flask.signals import got_request_exception
 
 try:
     from logging.config import dictConfig
@@ -83,10 +82,6 @@ def load_by_path(path):
     return getattr(finder, klass)
 
 
-def log_exception(sender, exception, **extra):
-    logger.error('Exception', exception=exception)
-
-
 def configure(app):
     config_file = os.environ.get('GRAPHITE_API_CONFIG',
                                  '/etc/graphite-api.yaml')
@@ -100,8 +95,6 @@ def configure(app):
         config = {}
 
     configure_logging(config)
-
-    got_request_exception.connect(log_exception, app)
 
     for key, value in list(default_conf.items()):
         config.setdefault(key, value)
