@@ -21,11 +21,13 @@ find build -iname *.pyo -exec rm {} \;
 
 cp -a conf/etc build
 
-sudo fpm \
+fpm \
 	-t deb -s dir -C build -n graphite-api -v $VERSION \
 	--iteration `date +%s` \
 	--deb-default conf/etc/default/graphite-api \
 	--deb-init conf/etc/init.d/graphite-api \
+	--deb-user root \
+	--deb-group root \
 	--config-files /etc/graphite-api.yaml \
 	--config-files /etc/init.d/graphite-api \
 	--config-files /etc/default/graphite-api \
