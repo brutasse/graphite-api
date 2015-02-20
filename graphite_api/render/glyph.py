@@ -966,8 +966,8 @@ class LineGraph(Graph):
             if value <= 0:
                 return None
             relativeValue = (
-                math.log(value, self.logBase)
-                - math.log(lowestValue, self.logBase))
+                math.log(value, self.logBase) -
+                math.log(lowestValue, self.logBase))
             valueRange = math.log(highestValue, self.logBase) - math.log(
                 lowestValue, self.logBase)
 
@@ -1675,8 +1675,8 @@ class LineGraph(Graph):
         self.xScaleFactor = float(self.graphWidth) / float(self.timeRange)
 
         potential = [
-            c for c in xAxisConfigs if c['seconds'] <= secondsPerPixel
-            and c.get('maxInterval', self.timeRange + 1) >= self.timeRange]
+            c for c in xAxisConfigs if c['seconds'] <= secondsPerPixel and
+            c.get('maxInterval', self.timeRange + 1) >= self.timeRange]
         if potential:
             self.xConf = potential[-1]
         else:

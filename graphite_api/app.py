@@ -229,9 +229,9 @@ def prune_datapoints(series, max_datapoints, start, end):
         )
         seconds_per_point = values_per_point * series.step
         nudge = (
-            seconds_per_point
-            + (series.start % series.step)
-            - (series.start % seconds_per_point)
+            seconds_per_point +
+            (series.start % series.step) -
+            (series.start % seconds_per_point)
         )
         series.start += nudge
         values_to_lose = nudge // series.step

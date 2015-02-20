@@ -2031,8 +2031,8 @@ def stdev(requestContext, seriesList, points, windowTolerance=0.1):
                 float(validPoints) / points >= windowTolerance
             ):
 
-                deviation = math.sqrt(validPoints * currentSumOfSquares
-                                      - currentSum**2) / validPoints
+                deviation = math.sqrt(validPoints * currentSumOfSquares -
+                                      currentSum**2) / validPoints
                 stddevSeries.append(deviation)
             else:
                 stddevSeries.append(None)
@@ -2108,8 +2108,8 @@ def _trimBootstrap(bootstrap, original):
 
 def holtWintersIntercept(alpha, actual, last_season, last_intercept,
                          last_slope):
-    return (alpha * (actual - last_season)
-            + (1 - alpha) * (last_intercept + last_slope))
+    return (alpha * (actual - last_season) +
+            (1 - alpha) * (last_intercept + last_slope))
 
 
 def holtWintersSlope(beta, intercept, last_intercept, last_slope):
@@ -2123,8 +2123,8 @@ def holtWintersSeasonal(gamma, actual, intercept, last_season):
 def holtWintersDeviation(gamma, actual, prediction, last_seasonal_dev):
     if prediction is None:
         prediction = 0
-    return (gamma * math.fabs(actual - prediction)
-            + (1 - gamma) * last_seasonal_dev)
+    return (gamma * math.fabs(actual - prediction) +
+            (1 - gamma) * last_seasonal_dev)
 
 
 def holtWintersAnalysis(series):
