@@ -5,6 +5,8 @@ import os
 import re
 import sys
 
+import sphinx_rtd_theme
+
 from sphinx.ext import autodoc
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), os.pardir))
@@ -29,7 +31,8 @@ exclude_patterns = ['_build']
 
 pygments_style = 'sphinx'
 
-html_theme = 'default'
+html_theme = 'sphinx_rtd_theme'
+html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 htmlhelp_basename = 'Graphite-APIdoc'
 
