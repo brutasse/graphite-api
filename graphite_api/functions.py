@@ -2385,8 +2385,8 @@ def timeStack(requestContext, seriesList, timeShiftUnit, timeShiftStart,
     with time shifts starting time shifts from the start multiplier through
     the end multiplier.
 
-    Useful for looking at history, or feeding into seriesAverage or
-    seriesStdDev.
+    Useful for looking at history, or feeding into averageSeries or
+    stddevSeries.
 
     Example::
 
