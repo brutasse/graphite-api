@@ -2711,8 +2711,7 @@ def smartSummarize(requestContext, seriesList, intervalString, func='sum'):
 
     # Adjust the start time to fit an entire day for intervals >= 1 day
     requestContext = requestContext.copy()
-    # ISSUE #51: Added tzinfo to requestContext in graphite_api/app.py:328
-    tzinfo = requestContext.get('tzinfo', None)
+    tzinfo = requestContext['tzinfo']
     s = requestContext['startTime']
     if interval >= DAY:
         requestContext['startTime'] = datetime(s.year, s.month, s.day,
