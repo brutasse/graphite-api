@@ -2742,7 +2742,8 @@ def smartSummarize(requestContext, seriesList, intervalString, func='sum'):
 
         # Populate buckets
         for timestamp, value in datapoints:
-            # ISSUE: Sometimes there is a missing timestamp in datapoints when running a smartSummary
+            # ISSUE: Sometimes there is a missing timestamp in datapoints when
+            #        running a smartSummary
             if not timestamp:
                 continue
             bucketInterval = int((timestamp - series.start) / interval)
