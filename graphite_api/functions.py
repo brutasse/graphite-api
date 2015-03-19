@@ -2715,9 +2715,11 @@ def smartSummarize(requestContext, seriesList, intervalString, func='sum'):
     tzinfo = requestContext.get('tzinfo', None)
     s = requestContext['startTime']
     if interval >= DAY:
-        requestContext['startTime'] = datetime(s.year, s.month, s.day, tzinfo=tzinfo)
+        requestContext['startTime'] = datetime(s.year, s.month, s.day,
+                                               tzinfo=tzinfo)
     elif interval >= HOUR:
-        requestContext['startTime'] = datetime(s.year, s.month, s.day, s.hour, tzinfo=tzinfo)
+        requestContext['startTime'] = datetime(s.year, s.month, s.day, s.hour,
+                                               tzinfo=tzinfo)
     elif interval >= MINUTE:
         requestContext['startTime'] = datetime(s.year, s.month, s.day, s.hour,
                                                s.minute, tzinfo=tzinfo)
