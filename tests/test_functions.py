@@ -988,6 +988,7 @@ class FunctionsTest(TestCase):
         ctx = {
             'startTime': parseATTime('-1min'),
             'endTime': parseATTime('now'),
+            'tzinfo': pytz.timezone('UTC'),
         }
         series = self._generate_series_list(config=[range(100)])
         for s in series:
@@ -1006,6 +1007,9 @@ class FunctionsTest(TestCase):
 
         summ = functions.smartSummarize(ctx, series, '5s', 'min')[0]
         self.assertEqual(summ[:3], [42, 47, 52])
+
+        # Higher time interval should not trigger timezone errors
+        functions.smartSummarize(ctx, series, '100s', 'min')[0]
 
     def test_summarize(self):
         series = self._generate_series_list(config=[list(range(99)) + [None]])

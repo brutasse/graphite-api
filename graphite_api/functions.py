@@ -2882,14 +2882,17 @@ def smartSummarize(requestContext, seriesList, intervalString, func='sum'):
 
     # Adjust the start time to fit an entire day for intervals >= 1 day
     requestContext = requestContext.copy()
+    tzinfo = requestContext['tzinfo']
     s = requestContext['startTime']
     if interval >= DAY:
-        requestContext['startTime'] = datetime(s.year, s.month, s.day)
+        requestContext['startTime'] = datetime(s.year, s.month, s.day,
+                                               tzinfo=tzinfo)
     elif interval >= HOUR:
-        requestContext['startTime'] = datetime(s.year, s.month, s.day, s.hour)
+        requestContext['startTime'] = datetime(s.year, s.month, s.day, s.hour,
+                                               tzinfo=tzinfo)
     elif interval >= MINUTE:
         requestContext['startTime'] = datetime(s.year, s.month, s.day, s.hour,
-                                               s.minute)
+                                               s.minute, tzinfo=tzinfo)
 
     for i, series in enumerate(seriesList):
         # XXX: breaks with summarize(metric.{a,b})
@@ -2909,6 +2912,10 @@ def smartSummarize(requestContext, seriesList, intervalString, func='sum'):
 
         # Populate buckets
         for timestamp, value in datapoints:
+            # ISSUE: Sometimes there is a missing timestamp in datapoints when
+            #        running a smartSummary
+            if not timestamp:
+                continue
             bucketInterval = int((timestamp - series.start) / interval)
 
             if bucketInterval not in buckets:

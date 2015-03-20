@@ -370,6 +370,7 @@ def render():
     context = {
         'startTime': request_options['startTime'],
         'endTime': request_options['endTime'],
+        'tzinfo': request_options['tzinfo'],
         'data': [],
     }
 
