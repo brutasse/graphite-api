@@ -4,11 +4,38 @@ Graphite-API releases
 1.0.2 -- **in development**
 ---------------------------
 
+* Add CarbonLink support.
+
+* Add support for configuring a cache backend and the ``noCache`` and
+  ``cacheTimeout`` API options.
+
+* When no timezone is provided in the configuration file, try to guess from
+  the system's timezone with a fallback to UTC.
+
+* Now supporting Flask >= 0.8 and Pyparsing >= 1.5.7.
+
 * Add support for ``fetch_multi()`` in storage finders. This is useful for
   database-backed finders such as Cyanite because it allows fetching all time
   series at once instead of sequentially.
 
+* Add ``multiplySeriesWithWildcards``, ``minimumBelow``, ``changed``,
+  ``timeSlice`` and ``removeEmptySeries`` functions.
+
+* Add optional ``step`` argument to ``time``, ``sin`` and ``randomWalk``
+  functions.
+
+* Add ``/metrics`` API call as an alias to ``/metrics/find``.
+
+* Add missing ``/metrics/index.json`` API call.
+
+* Allow wildcards origins (``*``) in CORS configuration.
+
+* Whisper finder now logs debug information.
+
 * Fix parsing dates such as "feb27" during month days > 28.
+
+* Change ``sum()`` to return ``null`` instead of 0 when all series' datapoints
+  are null at the same time. This is graphite-web's behavior.
 
 * Fixes for the following graphite-web issues:
 
@@ -20,6 +47,10 @@ Graphite-API releases
   * `#381 <https://github.com/graphite-project/graphite-web/issues/381>`_ --
     make ``areaBetween()`` work either when passed 2 arguments or a single
     wildcard series of length 2.
+  * `#702 <https://github.com/graphite-project/graphite-web/pull/702>`_ --
+    handle backslash as path separator on windows.
+  * `#410 <https://github.com/graphite-project/graphite-web/pull/410>`_ -- SVG
+    output sometimes had an extra ``</g>`` tag.
 
 1.0.1 -- 2014-03-21
 -------------------

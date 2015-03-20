@@ -12,6 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License."""
 import calendar
+import hashlib
 import pytz
 
 from flask import request
@@ -29,9 +30,9 @@ class RequestParams(object):
         if request.json and key in request.json:
             return request.json[key]
         if key in request.form:
-            return request.form[key]
+            return request.form.getlist(key)[-1]
         if key in request.args:
-            return request.args[key]
+            return request.args.getlist(key)[-1]
         raise KeyError
 
     def __contains__(self, key):
@@ -57,6 +58,22 @@ class RequestParams(object):
             return request.form.getlist(key)
         return request.args.getlist(key)
 RequestParams = RequestParams()
+
+
+def hash_request():
+    keys = set()
+    if request.json:
+        keys.update(request.json.keys())
+    if request.form:
+        keys.update(request.form.keys())
+    keys.update(request.args.keys())
+    params = u",".join([
+        u"{0}={1}".format(key, u"&".join(sorted(RequestParams.getlist(key))))
+        for key in sorted(keys) if not key.startswith('_')
+    ])
+    md5 = hashlib.md5()
+    md5.update(params.encode('utf-8'))
+    return md5.hexdigest()
 
 
 def to_seconds(delta):

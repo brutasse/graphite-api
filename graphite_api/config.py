@@ -4,6 +4,7 @@ import structlog
 import warnings
 import yaml
 
+from tzlocal import get_localzone
 from importlib import import_module
 from structlog.processors import (format_exc_info, JSONRenderer,
                                   KeyValueRenderer)
@@ -39,8 +40,19 @@ default_conf = {
             '/srv/graphite/whisper',
         ],
     },
-    'time_zone': 'UTC',
+    'carbon': {
+        'hosts': [
+            '127.0.0.1:7002',
+        ],
+        'timeout': 1,
+        'retry_delay': 15,
+        'carbon_prefix': 'carbon',
+        'replication_factor': 1,
+    },
+    'time_zone': get_localzone().zone,
 }
+if default_conf['time_zone'] == 'local':  # tzlocal didn't find anything
+    default_conf['time_zone'] = 'UTC'
 
 
 # attributes of a classical log record
@@ -87,9 +99,50 @@ def configure(app):
     for key, value in list(default_conf.items()):
         config.setdefault(key, value)
 
-    loaded_config = {'functions': {}, 'finders': []}
+    if config['carbon'] is not None:
+        # carbon section having a bunch of values, keep default ones if
+        # they're not provided in an overriden config.
+        for key, value in list(default_conf['carbon'].items()):
+            config['carbon'].setdefault(key, value)
+
+    app.statsd = None
+    if 'statsd' in config:
+        try:
+            from statsd import StatsClient
+        except ImportError:
+            warnings.warn("'statsd' is provided in the configuration but "
+                          "the statsd client is not installed. Please `pip "
+                          "install statsd`.")
+        else:
+            c = config['statsd']
+            app.statsd = StatsClient(c['host'], c.get('port', 8125))
+
+    app.cache = None
+    if 'cache' in config:
+        try:
+            from flask.ext.cache import Cache
+        except ImportError:
+            warnings.warn("'cache' is provided in the configuration but "
+                          "Flask-Cache is not installed. Please `pip install "
+                          "Flask-Cache`.")
+        else:
+            cache_conf = {'CACHE_DEFAULT_TIMEOUT': 60,
+                          'CACHE_KEY_PREFIX': 'graphite-api:'}
+            for key, value in config['cache'].items():
+                cache_conf['CACHE_{0}'.format(key.upper())] = value
+            app.cache = Cache(app, config=cache_conf)
+
+    loaded_config = {'functions': {}}
     for functions in config['functions']:
         loaded_config['functions'].update(load_by_path(functions))
+
+    if config['carbon'] is not None:
+        if 'hashing_keyfunc' in config['carbon']:
+            config['carbon']['hashing_keyfunc'] = load_by_path(
+                config['carbon']['hashing_keyfunc'])
+        else:
+            config['carbon']['hashing_keyfunc'] = lambda x: x
+    loaded_config['carbon'] = config['carbon']
 
     finders = []
     for finder in config['finders']:
@@ -98,16 +151,18 @@ def configure(app):
     loaded_config['searcher'] = IndexSearcher(config['search_index'])
     app.config['GRAPHITE'] = loaded_config
     app.config['TIME_ZONE'] = config['time_zone']
+    logger.info("configured timezone", timezone=app.config['TIME_ZONE'])
 
     if 'sentry_dsn' in config:
         try:
             from raven.contrib.flask import Sentry
         except ImportError:
-            warnings.warn("'sentry_dsn' is provided in the configuration the "
-                          "sentry client is not installed. Please `pip "
+            warnings.warn("'sentry_dsn' is provided in the configuration but "
+                          "the sentry client is not installed. Please `pip "
                           "install raven[flask]`.")
         else:
             Sentry(app, dsn=config['sentry_dsn'])
+
     app.wsgi_app = TrailingSlash(CORS(app.wsgi_app,
                                       config.get('allowed_origins')))
 

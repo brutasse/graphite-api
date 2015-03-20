@@ -30,27 +30,28 @@ class MetricsTests(TestCase):
 
         self._create_dbs()
 
-        response = self.app.get(url, query_string={'query': 'test.*',
-                                                   'format': 'treejson'})
-        self.assertJSON(response, [{
-            'allowChildren': 1,
-            'expandable': 1,
-            'id': 'test.bar',
-            'leaf': 0,
-            'text': 'bar',
-        }, {
-            'allowChildren': 1,
-            'expandable': 1,
-            'id': 'test.wat',
-            'leaf': 0,
-            'text': 'wat',
-        }, {
-            'allowChildren': 0,
-            'expandable': 0,
-            'id': 'test.foo',
-            'leaf': 1,
-            'text': 'foo',
-        }])
+        for _url in ['/metrics/find', '/metrics']:
+            response = self.app.get(_url, query_string={'query': 'test.*',
+                                                        'format': 'treejson'})
+            self.assertJSON(response, [{
+                'allowChildren': 1,
+                'expandable': 1,
+                'id': 'test.bar',
+                'leaf': 0,
+                'text': 'bar',
+            }, {
+                'allowChildren': 1,
+                'expandable': 1,
+                'id': 'test.wat',
+                'leaf': 0,
+                'text': 'wat',
+            }, {
+                'allowChildren': 0,
+                'expandable': 0,
+                'id': 'test.foo',
+                'leaf': 1,
+                'text': 'foo',
+            }])
 
         response = self.app.get(url, query_string={'query': 'test.*',
                                                    'format': 'treejson',
@@ -222,3 +223,31 @@ class MetricsTests(TestCase):
             {'is_leaf': True, 'path': 'collectd.load'},
             {'is_leaf': True, 'path': 'collectd.memory'},
         ]})
+
+    def test_metrics_index(self):
+        url = '/metrics/index.json'
+        response = self.app.get(url)
+        self.assertJSON(response, [])
+        self.assertEqual(response.headers['Content-Type'], 'application/json')
+
+        response = self.app.get(url, query_string={'jsonp': 'foo'})
+        self.assertEqual(response.data, b'foo([])')
+        self.assertEqual(response.headers['Content-Type'], 'text/javascript')
+
+        parent = os.path.join(WHISPER_DIR, 'collectd')
+        os.makedirs(parent)
+
+        for metric in ['load', 'memory', 'cpu']:
+            db = os.path.join(parent, '{0}.wsp'.format(metric))
+            whisper.create(db, [(1, 60)])
+
+        response = self.app.get(url)
+        self.assertJSON(response, [
+            u'collectd.cpu',
+            u'collectd.load',
+            u'collectd.memory',
+        ])
+        response = self.app.get(url, query_string={'jsonp': 'bar'})
+        self.assertEqual(
+            response.data,
+            b'bar(["collectd.cpu", "collectd.load", "collectd.memory"])')

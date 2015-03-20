@@ -37,7 +37,7 @@ the system.
 ``/metrics/find``
 -----------------
 
-Finds metrics under a given path.
+Finds metrics under a given path. Other alias: ``/metrics``.
 
 Example::
 
@@ -113,6 +113,26 @@ Example::
             {"is_leaf": true, "path": "collectd.bar"}
         ]
     }
+
+``/metrics/index.json``
+-----------------------
+
+Walks the metrics tree and returns every metric found as a sorted JSON array.
+
+Parameters:
+
+*jsonp* (optional)
+    Wraps the response in a jsonp callback.
+
+Example::
+
+    GET /metrics/index.json
+
+    [
+        "collectd.host1.load.longterm",
+        "collectd.host1.load.midterm",
+        "collectd.host1.load.shortterm"
+    ]
 
 .. _/index:
 
@@ -562,6 +582,14 @@ Examples::
   &bgcolor=blue
   &bgcolor=#2222FF
 
+.. _param-cachetimeout:
+
+cacheTimeout
+````````````
+
+Default: the value of ``cache.default_timeout`` in your configuration file. By
+default, 60 seconds.
+
 colorList
 `````````
 
@@ -926,6 +954,15 @@ note that series with more points than there are pixels in the graph area
 (e.g. a few month's worth of per-minute data) will look very 'smooshed' as
 there will be a good deal of line overlap. In response, one may use lineWidth_
 to compensate for this.
+
+.. _param-nocache:
+
+noCache
+```````
+
+*Default: False*
+
+Set it to disable caching in rendered graphs.
 
 pieMode
 ```````

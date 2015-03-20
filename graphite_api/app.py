@@ -1,3 +1,4 @@
+import os
 import csv
 import json
 import math
@@ -5,13 +6,15 @@ import pytz
 import shutil
 import six
 import tempfile
+import time
 
 from collections import defaultdict
 from datetime import datetime
 from io import StringIO, BytesIO
 
-from flask import Flask, jsonify
+from flask import Flask
 from structlog import get_logger
+from werkzeug.http import http_date
 
 from .config import configure
 from .encoders import JSONEncoder
@@ -19,9 +22,22 @@ from .render.attime import parseATTime
 from .render.datalib import fetchData, TimeSeries
 from .render.glyph import GraphTypes
 from .render.grammar import grammar
-from .utils import RequestParams
+from .utils import RequestParams, hash_request
 
 logger = get_logger()
+
+
+def jsonify(data, status=200, jsonp=False, headers=None):
+    if headers is None:
+        headers = {}
+
+    body = json.dumps(data, cls=JSONEncoder)
+    if jsonp:
+        headers['Content-Type'] = 'text/javascript'
+        body = '{0}({1})'.format(jsonp, body)
+    else:
+        headers['Content-Type'] = 'application/json'
+    return body, status, headers
 
 
 class Graphite(Flask):
@@ -63,8 +79,8 @@ def dashboard_find():
 
 @app.route('/dashboard/load/<name>', methods=methods)
 def dashboard_load(name):
-    return jsonify(
-        {'error': "Dashboard '{0}' does not exist.".format(name)}), 404
+    return jsonify({'error': "Dashboard '{0}' does not exist.".format(name)},
+                   status=404)
 
 
 @app.route('/events/get_data', methods=methods)
@@ -83,7 +99,7 @@ def metrics_search():
     if 'query' not in RequestParams:
         errors['query'] = 'this parameter is required.'
     if errors:
-        return jsonify({'errors': errors}), 400
+        return jsonify({'errors': errors}, status=400)
     results = sorted(app.searcher.search(
         query=RequestParams['query'],
         max_results=max_results,
@@ -91,6 +107,7 @@ def metrics_search():
     return jsonify({'metrics': results})
 
 
+@app.route('/metrics', methods=methods)
 @app.route('/metrics/find', methods=methods)
 def metrics_find():
     errors = {}
@@ -120,7 +137,7 @@ def metrics_find():
         errors['query'] = 'this parameter is required.'
 
     if errors:
-        return jsonify({'errors': errors}), 400
+        return jsonify({'errors': errors}, status=400)
 
     query = RequestParams['query']
     matches = sorted(
@@ -170,7 +187,7 @@ def metrics_expand():
     if 'query' not in RequestParams:
         errors['query'] = 'this parameter is required.'
     if errors:
-        return jsonify({'errors': errors}), 400
+        return jsonify({'errors': errors}, status=400)
 
     results = defaultdict(set)
     for query in RequestParams.getlist('query'):
@@ -190,6 +207,19 @@ def metrics_expand():
     return jsonify({'results': results})
 
 
+@app.route('/metrics/index.json', methods=methods)
+def metrics_index():
+    index = set()
+    if os.path.exists(app.searcher.index_path):
+        with open(app.searcher.index_path, 'r') as f:
+            index = set([line.strip() for line in f if line])
+        if not index:
+            recurse('*', index)
+    else:
+        recurse('*', index)
+    return jsonify(sorted(index), jsonp=RequestParams.get('jsonp', False))
+
+
 def prune_datapoints(series, max_datapoints, start, end):
     time_range = end - start
     points = time_range // series.step
@@ -199,9 +229,9 @@ def prune_datapoints(series, max_datapoints, start, end):
         )
         seconds_per_point = values_per_point * series.step
         nudge = (
-            seconds_per_point
-            + (series.start % series.step)
-            - (series.start % seconds_per_point)
+            seconds_per_point +
+            (series.start % series.step) -
+            (series.start % seconds_per_point)
         )
         series.start += nudge
         values_to_lose = nudge // series.step
@@ -235,7 +265,7 @@ def build_index():
         index_file.write('\n'.join(sorted(index)).encode('utf-8'))
     shutil.move(index_file.name, app.searcher.index_path)
     app.searcher.reload()
-    return jsonify({'success': True, 'entries': len(index)}), 200
+    return jsonify({'success': True, 'entries': len(index)})
 
 
 @app.route('/render', methods=methods)
@@ -275,7 +305,7 @@ def render():
             errors['maxDataPoints'] = 'Must be an integer.'
 
     if errors:
-        return jsonify({'errors': errors}), 400
+        return jsonify({'errors': errors}, status=400)
 
     for opt in graph_class.customizable:
         if opt in RequestParams:
@@ -312,12 +342,27 @@ def render():
     request_options['startTime'] = start_time
     request_options['endTime'] = end_time
 
+    use_cache = app.cache is not None and 'noCache' not in RequestParams
+    cache_timeout = RequestParams.get('cacheTimeout')
+    if cache_timeout is not None:
+        cache_timeout = int(cache_timeout)
+
     if errors:
-        return jsonify({'errors': errors}), 400
+        return jsonify({'errors': errors}, status=400)
 
     # Done with options.
 
+    if use_cache:
+        request_key = hash_request()
+        response = app.cache.get(request_key)
+        if response is not None:
+            return response
+
     headers = {
+        'Last-Modified': http_date(time.time()),
+        'Expires': http_date(time.time() + (cache_timeout or 60)),
+        'Cache-Control': 'max-age={0}'.format(cache_timeout or 60)
+    } if use_cache else {
         'Pragma': 'no-cache',
         'Cache-Control': 'no-cache',
     }
@@ -347,7 +392,7 @@ def render():
                                             func(context, series) or 0))
 
         if errors:
-            return jsonify({'errors': errors}), 400
+            return jsonify({'errors': errors}, status=400)
 
     else:  # graphType == 'line'
         for target in request_options['targets']:
@@ -390,23 +435,15 @@ def render():
                     series_data.append({'target': series.name,
                                         'datapoints': datapoints})
 
-            rendered = json.dumps(series_data, cls=JSONEncoder)
-
-            if 'jsonp' in request_options:
-                headers['Content-Type'] = 'text/javascript'
-                return ('{0}({1})'.format(request_options['jsonp'],
-                                          rendered), 200,
-                        headers)
-            else:
-                headers['Content-Type'] = 'application/json'
-                return rendered, 200, headers
+            return jsonify(series_data, headers=headers,
+                           jsonp=request_options.get('jsonp', False))
 
         if request_options['format'] == 'raw':
             response = StringIO()
             for series in context['data']:
                 response.write(u"%s,%d,%d,%d|" % (
                     series.name, series.start, series.end, series.step))
-                response.write(u','.join(map(str, series)))
+                response.write(u','.join(map(repr, series)))
                 response.write(u'\n')
             response.seek(0)
             headers['Content-Type'] = 'text/plain'
@@ -422,13 +459,17 @@ def render():
 
     if use_svg and 'jsonp' in request_options:
         headers['Content-Type'] = 'text/javascript'
-        return ('{0}({1})'.format(request_options['jsonp'],
-                                  json.dumps(image.decode('utf-8'))),
-                200, headers)
+        response = ('{0}({1})'.format(request_options['jsonp'],
+                                      json.dumps(image.decode('utf-8'))),
+                    200, headers)
     else:
         ctype = 'image/svg+xml' if use_svg else 'image/png'
         headers['Content-Type'] = ctype
-        return image, 200, headers
+        response = image, 200, headers
+
+    if use_cache:
+        app.cache.add(request_key, response, cache_timeout)
+    return response
 
 
 def evaluateTarget(requestContext, target):

@@ -1,4 +1,5 @@
 Flask
+Flask-Cache
 cairocffi
 pyparsing
 pytz
@@ -6,3 +7,4 @@ pyyaml
 raven[flask]
 six
 structlog
+tzlocal

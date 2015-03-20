@@ -687,14 +687,16 @@ class Graph(object):
                 for char in re.findall(r'L -(\d+) -\d+', match.group(1)):
                     name += chr(int(char))
                 return '</g><g data-header="true" class="%s">' % name
-            svgData = re.sub(r'<path.+?d="M -88 -88 (.+?)"/>',
-                             onHeaderPath, svgData)
+            svgData, subs = re.subn(r'<path.+?d="M -88 -88 (.+?)"/>',
+                                    onHeaderPath, svgData)
 
             # Replace the first </g><g> with <g>, and close out the last </g>
             # at the end
             svgData = svgData.replace('</g><g data-header',
-                                      '<g data-header', 1) + "</g>"
+                                      '<g data-header', 1)
             svgData = svgData.replace(' data-header="true"', '')
+            if subs > 0:
+                svgData += "</g>"
 
             fileObj.write(svgData.encode())
             fileObj.write(("""<script>
@@ -964,8 +966,8 @@ class LineGraph(Graph):
             if value <= 0:
                 return None
             relativeValue = (
-                math.log(value, self.logBase)
-                - math.log(lowestValue, self.logBase))
+                math.log(value, self.logBase) -
+                math.log(lowestValue, self.logBase))
             valueRange = math.log(highestValue, self.logBase) - math.log(
                 lowestValue, self.logBase)
 
@@ -1217,7 +1219,7 @@ class LineGraph(Graph):
         self.ctx.line_to(x, areaYFrom)  # bottom endX
         self.ctx.line_to(startX, areaYFrom)  # bottom startX
         self.ctx.close_path()
-        self.ctx.fill()
+        self.ctx.fill_preserve()
 
         # clip above y axis
         self.ctx.append_path(pattern)
@@ -1260,12 +1262,14 @@ class LineGraph(Graph):
         seriesWithMissingValues = [series for series in self.data
                                    if None in series]
 
-        if self.params.get('drawNullAsZero') and seriesWithMissingValues:
+        yMinValue = safeMin([safeMin(series) for series in self.data
+                             if not series.options.get('drawAsInfinite')])
+        if (
+            yMinValue > 0.0 and
+            self.params.get('drawNullAsZero') and
+            seriesWithMissingValues
+        ):
             yMinValue = 0.0
-        else:
-            yMinValue = safeMin([
-                safeMin(series) for series in self.data
-                if not series.options.get('drawAsInfinite')])
 
         if self.areaMode == 'stacked':
             length = safeMin([
@@ -1282,6 +1286,13 @@ class LineGraph(Graph):
             yMaxValue = safeMax([
                 safeMax(series) for series in self.data
                 if not series.options.get('drawAsInfinite')])
+
+        if (
+            yMaxValue < 0.0 and
+            self.params.get('drawNullAsZero') and
+            seriesWithMissingValues
+        ):
+            yMaxValue = 0.0
 
         if yMinValue is None:
             yMinValue = 0.0
@@ -1664,8 +1675,8 @@ class LineGraph(Graph):
         self.xScaleFactor = float(self.graphWidth) / float(self.timeRange)
 
         potential = [
-            c for c in xAxisConfigs if c['seconds'] <= secondsPerPixel
-            and c.get('maxInterval', self.timeRange + 1) >= self.timeRange]
+            c for c in xAxisConfigs if c['seconds'] <= secondsPerPixel and
+            c.get('maxInterval', self.timeRange + 1) >= self.timeRange]
         if potential:
             self.xConf = potential[-1]
         else:
@@ -1751,8 +1762,6 @@ class LineGraph(Graph):
             labels = self.yLabelValuesL
         else:
             labels = self.yLabelValues
-        if self.logBase:
-            labels.append(self.logBase * max(labels))
 
         for i, value in enumerate(labels):
             self.ctx.set_line_width(0.4)
@@ -1991,12 +2000,14 @@ def safeMin(args):
     args = [arg for arg in args if arg not in (None, INFINITY)]
     if args:
         return min(args)
+    return 0
 
 
 def safeMax(args):
     args = [arg for arg in args if arg not in (None, INFINITY)]
     if args:
         return max(args)
+    return 0
 
 
 def safeSum(values):
@@ -2009,6 +2020,13 @@ def sort_stacked(series_list):
     return stacked + not_stacked
 
 
+def condition(value, size, step):
+    if step is None:
+        return abs(value) >= size
+    else:
+        return abs(value) >= size and step >= size
+
+
 def format_units(v, step=None, system="si"):
     """Format the given value in standardized units.
 
@@ -2018,14 +2036,8 @@ def format_units(v, step=None, system="si"):
         http://en.wikipedia.org/wiki/SI_prefix
         http://en.wikipedia.org/wiki/Binary_prefix
     """
-
-    if step is None:
-        condition = lambda size: abs(v) >= size
-    else:
-        condition = lambda size: abs(v) >= size and step >= size
-
     for prefix, size in UnitSystems[system]:
-        if condition(size):
+        if condition(v, size, step):
             v2 = v / size
             if v2 - math.floor(v2) < 0.00000000001 and v > 1:
                 v2 = math.floor(v2)

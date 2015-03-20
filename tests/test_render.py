@@ -197,6 +197,9 @@ class RenderTest(TestCase):
             {'graphType': 'pie', 'pieMode': 'average',
              'valueLabels': 'number'},
             {'graphType': 'pie', 'pieMode': 'average', 'pieLabels': 'rotated'},
+            {'noCache': 'true'},
+            {'cacheTimeout': 5},
+            {'cacheTimeout': 5},  # cache hit
         ]:
             if qs.setdefault('target', ['foo', 'test']) == ['foo', 'test']:
                 if '_expr' in qs:
@@ -205,6 +208,17 @@ class RenderTest(TestCase):
             response = self.app.get(self.url, query_string=qs)
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.headers['Content-Type'], 'image/png')
+            if qs.get('noCache'):
+                self.assertEqual(response.headers['Pragma'], 'no-cache')
+                self.assertEqual(response.headers['Cache-Control'], 'no-cache')
+                self.assertFalse('Expires' in response.headers)
+            else:
+                self.assertEqual(response.headers['Cache-Control'],
+                                 'max-age={0}'.format(
+                                     qs.get('cacheTimeout', 60)))
+                self.assertNotEqual(response.headers['Cache-Control'],
+                                    'no-cache')
+                self.assertFalse('Pragma' in response.headers)
 
         for qs in [
             {'bgcolor': 'foo'},
@@ -346,3 +360,26 @@ class RenderTest(TestCase):
             self.assertEqual(data, [{'datapoints': [
                 [None, start + i + 1] for i in range(60)
             ], 'target': 'test'}])
+
+    def test_sorted(self):
+        for db in (
+            ('test', 'foo.wsp'),
+            ('test', 'welp.wsp'),
+            ('test', 'baz.wsp'),
+        ):
+            db_path = os.path.join(WHISPER_DIR, *db)
+            if not os.path.exists(os.path.dirname(db_path)):
+                os.makedirs(os.path.dirname(db_path))
+            whisper.create(db_path, [(1, 60)])
+
+        response = self.app.get(self.url, query_string={'rawData': '1',
+                                                        'target': 'test.*'})
+        dses = response.data.decode('utf-8').strip().split("\n")
+
+        paths = []
+        for ds in dses:
+            info, data = ds.strip().split('|', 1)
+            path, start, stop, step = info.split(',')
+            paths.append(path)
+
+        self.assertEqual(paths, ['test.baz', 'test.foo', 'test.welp'])

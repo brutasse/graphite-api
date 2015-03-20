@@ -3,8 +3,9 @@ import os
 import shutil
 import sys
 
-os.environ.setdefault('GRAPHITE_API_CONFIG',
-                      os.path.join(os.path.dirname(__file__), 'conf.yaml'))
+os.environ.setdefault(
+    'GRAPHITE_API_CONFIG',
+    os.path.join(os.path.dirname(__file__), 'conf.yaml'))  # noqa
 
 try:
     import unittest2 as unittest

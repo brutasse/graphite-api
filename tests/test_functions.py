@@ -1,6 +1,10 @@
 import copy
 import time
 
+from datetime import datetime
+
+import pytz
+
 from mock import patch, call, MagicMock
 
 from graphite_api import functions
@@ -91,7 +95,8 @@ class FunctionsTest(TestCase):
     def _generate_series_list(self, config=(
         range(101),
         range(2, 103),
-        [1] * 2 + [None] * 90 + [1] * 2 + [None] * 7
+        [1] * 2 + [None] * 90 + [1] * 2 + [None] * 7,
+        []
     )):
         seriesList = []
 
@@ -106,6 +111,7 @@ class FunctionsTest(TestCase):
 
     def test_remove_above_percentile(self):
         seriesList = self._generate_series_list()
+        seriesList.pop()
         percent = 50
         results = functions.removeAbovePercentile({}, seriesList, percent)
         for result, exc in zip(results, [[], [51, 52]]):
@@ -113,6 +119,7 @@ class FunctionsTest(TestCase):
 
     def test_remove_below_percentile(self):
         seriesList = self._generate_series_list()
+        seriesList.pop()
         percent = 50
         results = functions.removeBelowPercentile({}, seriesList, percent)
         expected = [[], [], [1] * 4]
@@ -316,20 +323,22 @@ class FunctionsTest(TestCase):
 
     def test_sum_series(self):
         series = self._generate_series_list()
-        sum_ = functions.sumSeries({}, series)[0]
+        [sum_] = functions.sumSeries({}, series)
         self.assertEqual(sum_.pathExpression,
                          "sumSeries(collectd.test-db1.load.value,"
                          "collectd.test-db2.load.value,"
-                         "collectd.test-db3.load.value)")
+                         "collectd.test-db3.load.value,"
+                         "collectd.test-db4.load.value)")
         self.assertEqual(sum_[:3], [3, 5, 6])
 
     def test_sum_series_wildcards(self):
         series = self._generate_series_list()
-        sum_ = functions.sumSeriesWithWildcards({}, series, 1)[0]
+        [sum_] = functions.sumSeriesWithWildcards({}, series, 1)
         self.assertEqual(sum_.pathExpression,
+                         "sumSeries(collectd.test-db4.load.value,"
                          "sumSeries(collectd.test-db3.load.value,"
                          "sumSeries(collectd.test-db1.load.value,"
-                         "collectd.test-db2.load.value))")
+                         "collectd.test-db2.load.value)))")
         self.assertEqual(sum_[:3], [3, 5, 6])
 
     def test_diff_series(self):
@@ -373,6 +382,11 @@ class FunctionsTest(TestCase):
         series[-1] = 1
         last = functions.keepLastValue({}, [series], limit=97)[0]
         self.assertEqual(last[:3], [1, 1, 1])
+
+    def test_changed(self):
+        series = self._generate_series_list(config=[[0, 1, 2, 2, 2, 3, 3, 2]])
+        [changed] = functions.changed({}, series)
+        self.assertEqual(list(changed), [0, 1, 1, 0, 0, 1, 0, 1])
 
     def test_as_percent(self):
         series = self._generate_series_list()
@@ -573,6 +587,7 @@ class FunctionsTest(TestCase):
 
     def test_alias_by_metric(self):
         series = self._generate_series_list(config=[range(100)])
+        series[0].name = 'scaleToSeconds(%s,10)' % series[0].name
         alias = functions.aliasByMetric({}, series)[0]
         self.assertEqual(alias.name, "value")
 
@@ -647,6 +662,13 @@ class FunctionsTest(TestCase):
         self.assertEqual(max_below, [])
         max_below = functions.maximumBelow({}, series, 100)
         self.assertEqual(max_below, series)
+
+    def test_min_below(self):
+        series = self._generate_series_list(config=[range(100)])
+        min_below = functions.minimumBelow({}, series, -1)
+        self.assertEqual(min_below, [])
+        min_below = functions.minimumBelow({}, series, 0)
+        self.assertEqual(min_below, series)
 
     def test_highest_current(self):
         series = self._generate_series_list(config=[range(100),
@@ -1023,3 +1045,68 @@ class FunctionsTest(TestCase):
         }
         walk = functions.randomWalkFunction(ctx, 'foo')[0]
         self.assertEqual(len(walk), 721)
+
+    def test_null_zero_sum(self):
+        s = TimeSeries("s", 0, 1, 1, [None])
+        s.pathExpression = 's'
+        [series] = functions.sumSeries({}, [s])
+        self.assertEqual(list(series), [None])
+
+        s = TimeSeries("s", 0, 1, 1, [None, 1])
+        s.pathExpression = 's'
+        t = TimeSeries("s", 0, 1, 1, [None, None])
+        t.pathExpression = 't'
+        [series] = functions.sumSeries({}, [s, t])
+        self.assertEqual(list(series), [None, 1])
+
+    def test_multiply_with_wildcards(self):
+        s1 = [
+            TimeSeries('web.host-1.avg-response.value', 0, 1, 1, [1, 10, 11]),
+            TimeSeries('web.host-2.avg-response.value', 0, 1, 1, [2, 20, 21]),
+            TimeSeries('web.host-3.avg-response.value', 0, 1, 1, [3, 30, 31]),
+            TimeSeries('web.host-4.avg-response.value', 0, 1, 1, [4, 40, 41]),
+        ]
+        s2 = [
+            TimeSeries('web.host-4.total-request.value', 0, 1, 1, [4, 8, 12]),
+            TimeSeries('web.host-3.total-request.value', 0, 1, 1, [3, 7, 11]),
+            TimeSeries('web.host-1.total-request.value', 0, 1, 1, [1, 5, 9]),
+            TimeSeries('web.host-2.total-request.value', 0, 1, 1, [2, 6, 10]),
+        ]
+        expected = [
+            TimeSeries('web.host-1', 0, 1, 1, [1, 50, 99]),
+            TimeSeries('web.host-2', 0, 1, 1, [4, 120, 210]),
+            TimeSeries('web.host-3', 0, 1, 1, [9, 210, 341]),
+            TimeSeries('web.host-4', 0, 1, 1, [16, 320, 492]),
+        ]
+        results = functions.multiplySeriesWithWildcards({}, s1 + s2, 2, 3)
+        self.assertEqual(results, expected)
+
+    def test_timeslice(self):
+        series = [
+            TimeSeries('test.value', 0, 600, 60,
+                       [None, 1, 2, 3, None, 5, 6, None, 7, 8, 9]),
+        ]
+
+        expected = [
+            TimeSeries('timeSlice(test.value, 180, 480)', 0, 600, 60,
+                       [None, None, None, 3, None, 5, 6, None, 7, None, None]),
+        ]
+
+        results = functions.timeSlice({
+            'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
+            'endTime': datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
+            'data': [],
+        }, series, '00:03 19700101', '00:08 19700101')
+        self.assertEqual(results, expected)
+
+    def test_remove_emtpy(self):
+        series = [
+            TimeSeries('foo.bar', 0, 100, 10,
+                       [None, None, None, 0, 0, 0, 1, 1, 1, None]),
+            TimeSeries('foo.baz', 0, 100, 10, [None] * 10),
+            TimeSeries('foo.blah', 0, 100, 10,
+                       [None, None, None, 0, 0, 0, 0, 0, 0, None]),
+        ]
+
+        results = functions.removeEmptySeries({}, series)
+        self.assertEqual(results, [series[0], series[2]])

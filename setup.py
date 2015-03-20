@@ -5,12 +5,13 @@ from setuptools import setup, find_packages
 
 install_requires = [
     'Flask',
+    'PyYAML',
     'cairocffi',
     'pyparsing',
     'pytz',
-    'PyYAML',
     'six',
     'structlog',
+    'tzlocal',
 ]
 
 if sys.version_info < (2, 7):
@@ -37,6 +38,8 @@ setup(
     extras_require={
         'sentry': ['raven[flask]'],
         'cyanite': ['cyanite'],
+        'cache': ['Flask-Cache'],
+        'statsd': ['statsd'],
     },
     zip_safe=False,
     platforms='any',
