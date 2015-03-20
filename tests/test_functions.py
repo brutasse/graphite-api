@@ -985,8 +985,6 @@ class FunctionsTest(TestCase):
         self.assertEqual(grep, [series[0]])
 
     def test_smart_summarize(self):
-        import pytz
-
         ctx = {
             'startTime': parseATTime('-1min'),
             'endTime': parseATTime('now'),
