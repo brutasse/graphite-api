@@ -33,6 +33,8 @@ fpm \
 	--config-files /etc/default/graphite-api \
 	-d libcairo2 \
 	-d "libffi5 | libffi6" \
+	-d adduser \
+	-d python \
 	--after-install conf/post-install \
 	--before-remove conf/pre-remove \
 	--after-remove conf/post-remove \
