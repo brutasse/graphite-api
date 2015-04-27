@@ -28,6 +28,7 @@ On Ubuntu (14.04 LTS)::
 
 Then run::
 
+    sudo apt-get install apt-https-transport
     sudo apt-get update
     sudo apt-get install graphite-api
 
