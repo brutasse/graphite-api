@@ -41,6 +41,9 @@ setup(
         'cache': ['Flask-Cache'],
         'statsd': ['statsd'],
     },
+    entry_points={
+        'console_scripts': ['graphite=graphite_api.cli:main'],
+    },
     zip_safe=False,
     platforms='any',
     classifiers=(
