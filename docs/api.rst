@@ -828,7 +828,7 @@ lineMode
 Sets the line drawing behavior. Takes one of the following parameters:
 
 ``slope``
-  Slope line mode draws a line from each point to the next. Periods will Null
+  Slope line mode draws a line from each point to the next. Periods with Null
   values will not be drawn.
 
 ``staircase``
