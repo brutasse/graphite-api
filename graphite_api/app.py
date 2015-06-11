@@ -121,13 +121,18 @@ def metrics_find():
         errors['wildcards'] = 'must be 0 or 1.'
 
     try:
-        from_time = int(RequestParams.get('from', 0))
+        from_time = int(RequestParams.get('from', -1))
     except ValueError:
         errors['from'] = 'must be an epoch timestamp.'
     try:
-        until_time = int(RequestParams.get('until', 0))
+        until_time = int(RequestParams.get('until', -1))
     except ValueError:
         errors['until'] = 'must be an epoch timestamp.'
+
+    if from_time == -1:
+        from_time = None
+    if until_time == -1:
+        until_time = None
 
     format = RequestParams.get('format', 'treejson')
     if format not in ['treejson', 'completer']:
