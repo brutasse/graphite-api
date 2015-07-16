@@ -29,7 +29,7 @@ from six.moves import zip_longest, map, reduce
 
 from .render.attime import parseTimeOffset, parseATTime
 from .render.glyph import format_units
-from .render.datalib import TimeSeries
+from .render.datalib import TimeSeries, fetchData
 from .utils import to_seconds, epoch
 
 NAN = float('NaN')
@@ -1928,13 +1928,15 @@ def useSeriesAbove(requestContext, seriesList, value, search, replace):
 
         &target=useSeriesAbove(ganglia.metric1.reqs,10,"reqs","time")
     """
-    from .app import evaluateTarget
+    from .app import evaluateTarget, pathsFromTarget
     newSeries = []
 
     for series in seriesList:
         newname = re.sub(search, replace, series.name)
         if safeMax(series) > value:
-            n = evaluateTarget(requestContext, newname)
+            paths = pathsFromTarget(newname)
+            data_store = fetchData(requestContext, paths)
+            n = evaluateTarget(requestContext, newname, data_store)
             if n is not None and len(n) > 0:
                 newSeries.append(n[0])
 
@@ -2055,19 +2057,32 @@ def _fetchWithBootstrap(requestContext, seriesList, **delta_kwargs):
     """
     Request the same data but with a bootstrap period at the beginning.
     """
-    from .app import evaluateTarget
+    from .app import evaluateTarget, pathsFromTarget
     bootstrapContext = requestContext.copy()
     bootstrapContext['startTime'] = (
         requestContext['startTime'] - timedelta(**delta_kwargs))
     bootstrapContext['endTime'] = requestContext['startTime']
 
     bootstrapList = []
+
+    # Get all paths to fetch
+    paths = []
+    for series in seriesList:
+        if series.pathExpression in [b.pathExpression for b in bootstrapList]:
+            continue
+        paths.extend(pathsFromTarget(series.pathExpression))
+
+    # Fetch all paths
+    data_store = fetchData(bootstrapContext, paths)
+
     for series in seriesList:
         if series.pathExpression in [b.pathExpression for b in bootstrapList]:
             # This pathExpression returns multiple series and we already
             # fetched it
             continue
-        bootstraps = evaluateTarget(bootstrapContext, series.pathExpression)
+        bootstraps = evaluateTarget(bootstrapContext,
+                                    series.pathExpression,
+                                    data_store)
         bootstrapList.extend(bootstraps)
 
     newSeriesList = []
@@ -2392,7 +2407,7 @@ def timeStack(requestContext, seriesList, timeShiftUnit, timeShiftStart,
         # create a series for today and each of the previous 7 days
         &target=timeStack(Sales.widgets.largeBlue,"1d",0,7)
     """
-    from .app import evaluateTarget
+    from .app import evaluateTarget, pathsFromTarget
     # Default to negative. parseTimeOffset defaults to +
     if timeShiftUnit[0].isdigit():
         timeShiftUnit = '-' + timeShiftUnit
@@ -2409,7 +2424,10 @@ def timeStack(requestContext, seriesList, timeShiftUnit, timeShiftStart,
         innerDelta = delta * shft
         myContext['startTime'] = requestContext['startTime'] + innerDelta
         myContext['endTime'] = requestContext['endTime'] + innerDelta
-        for shiftedSeries in evaluateTarget(myContext, series.pathExpression):
+        paths = pathsFromTarget(series.pathExpression)
+        for shiftedSeries in evaluateTarget(myContext,
+                                            series.pathExpression,
+                                            fetchData(myContext, paths)):
             shiftedSeries.name = 'timeShift(%s, %s, %s)' % (shiftedSeries.name,
                                                             timeShiftUnit,
                                                             shft)
@@ -2447,7 +2465,7 @@ def timeShift(requestContext, seriesList, timeShift, resetEnd=True):
         &target=timeShift(Sales.widgets.largeBlue,"+1h")
 
     """
-    from .app import evaluateTarget
+    from .app import evaluateTarget, pathsFromTarget
     # Default to negative. parseTimeOffset defaults to +
     if timeShift[0].isdigit():
         timeShift = '-' + timeShift
@@ -2463,7 +2481,10 @@ def timeShift(requestContext, seriesList, timeShift, resetEnd=True):
     # which is all we care about.
     series = seriesList[0]
 
-    for shiftedSeries in evaluateTarget(myContext, series.pathExpression):
+    paths = pathsFromTarget(series.pathExpression)
+    for shiftedSeries in evaluateTarget(myContext,
+                                        series.pathExpression,
+                                        fetchData(myContext, paths)):
         shiftedSeries.name = 'timeShift(%s, %s)' % (shiftedSeries.name,
                                                     timeShift)
         if resetEnd:
@@ -2874,7 +2895,7 @@ def smartSummarize(requestContext, seriesList, intervalString, func='sum'):
     """
     Smarter experimental version of summarize.
     """
-    from .app import evaluateTarget
+    from .app import evaluateTarget, pathsFromTarget
     results = []
     delta = parseTimeOffset(intervalString)
     interval = to_seconds(delta)
@@ -2893,10 +2914,17 @@ def smartSummarize(requestContext, seriesList, intervalString, func='sum'):
         requestContext['startTime'] = datetime(s.year, s.month, s.day, s.hour,
                                                s.minute, tzinfo=tzinfo)
 
+    paths = []
+    for series in seriesList:
+        paths.extend(pathsFromTarget(series.pathExpression))
+    data_store = fetchData(requestContext, paths)
+
     for i, series in enumerate(seriesList):
         # XXX: breaks with summarize(metric.{a,b})
         #            each series.pathExpression == metric.{a,b}
-        newSeries = evaluateTarget(requestContext, series.pathExpression)[0]
+        newSeries = evaluateTarget(requestContext,
+                                   series.pathExpression,
+                                   data_store)[0]
         series[0:len(series)] = newSeries
         series.start = newSeries.start
         series.end = newSeries.end
@@ -3076,7 +3104,7 @@ def hitcount(requestContext, seriesList, intervalString,
     or coarse-grained records) and handles rarely-occurring events
     gracefully.
     """
-    from .app import evaluateTarget
+    from .app import evaluateTarget, pathsFromTarget
     results = []
     delta = parseTimeOffset(intervalString)
     interval = to_seconds(delta)
@@ -3093,9 +3121,16 @@ def hitcount(requestContext, seriesList, intervalString,
             requestContext['startTime'] = datetime(s.year, s.month, s.day,
                                                    s.hour, s.minute)
 
+        # Gather all paths first, then the data
+        paths = []
+        for series in seriesList:
+            paths.extend(pathsFromTarget(series.pathExpression))
+        data_store = fetchData(requestContext, paths)
+
         for i, series in enumerate(seriesList):
             newSeries = evaluateTarget(requestContext,
-                                       series.pathExpression)[0]
+                                       series.pathExpression,
+                                       data_store)[0]
             intervalCount = int((series.end - series.start) / interval)
             series[0:len(series)] = newSeries
             series.start = newSeries.start

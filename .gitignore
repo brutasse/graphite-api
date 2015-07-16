@@ -1,5 +1,6 @@
 .tox
 *.egg-info
+*.pyc
 .coverage
 htmlcov
 docs/_build
