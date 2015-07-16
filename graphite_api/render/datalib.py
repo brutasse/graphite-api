@@ -78,84 +78,108 @@ class TimeSeries(list):
             self.name, self.start, self.end, self.step)
 
 
-# Data retrieval API
-def fetchData(requestContext, pathExpr):
-    from ..app import app
+class DataStore(object):
+    """
+    Simple object to store results of multi fetches.
+    Also aids in looking up data by pathExpressions.
+    """
+    def __init__(self):
+        self.paths = defaultdict(list)
+        self.data = defaultdict(list)
 
-    seriesList = []
+    def add_path(self, path_expr, path):
+        """
+        Adds the path to the pathExpression.
+        """
+        # Only add if we dont already have the path
+        if path not in self.paths[path_expr]:
+            self.paths[path_expr].append(path)
+
+    def get_paths(self, path_expr):
+        """
+        Returns all paths found for path_expr
+        """
+        return self.paths[path_expr]
+
+    def add_data(self, path, time_info, data):
+        """
+        Stores data before it can be put into a time series
+        """
+        # Dont add if empty
+        if not nonempty(data):
+            for d in self.data[path]:
+                if nonempty(d['values']):
+                    return
+
+        # Add data to path
+        self.data[path].append({
+            'time_info': time_info,
+            'values': data
+        })
+
+    def get_series_list(self, path_expr):
+        series_list = []
+        for path in self.get_paths(path_expr):
+            for data in self.data.get(path):
+                start, end, step = data['time_info']
+                series = TimeSeries(path, start, end, step, data['values'])
+                series.pathExpression = path_expr
+                series_list.append(series)
+        return series_list
+
+
+def fetchData(requestContext, pathExprs):
+    from ..app import app
     startTime = int(epoch(requestContext['startTime']))
     endTime = int(epoch(requestContext['endTime']))
 
-    def _fetchData(pathExpr, startTime, endTime, requestContext, seriesList):
-        matching_nodes = app.store.find(pathExpr, startTime, endTime)
+    # Convert to list if given single path
+    if not isinstance(pathExprs, list):
+        pathExprs = [pathExprs]
 
-        # Group nodes that support multiple fetches
-        multi_nodes = defaultdict(list)
-        single_nodes = []
-        for node in matching_nodes:
+    data_store = DataStore()
+    multi_nodes = defaultdict(list)
+    single_nodes = []
+
+    # Group nodes that support multiple fetches
+    for pathExpr in pathExprs:
+        for node in app.store.find(pathExpr):
             if not node.is_leaf:
                 continue
+            data_store.add_path(pathExpr, node.path)
             if hasattr(node, '__fetch_multi__'):
                 multi_nodes[node.__fetch_multi__].append(node)
             else:
                 single_nodes.append(node)
 
-        fetches = [
-            (node, node.fetch(startTime, endTime)) for node in single_nodes]
+    # Multi fetches
+    for finder in app.store.finders:
+        if not hasattr(finder, '__fetch_multi__'):
+            continue
+        nodes = multi_nodes[finder.__fetch_multi__]
+        if not nodes:
+            continue
+        time_info, series = finder.fetch_multi(nodes, startTime, endTime)
+        for path, values in series.items():
+            data_store.add_data(path, time_info, values)
 
-        for finder in app.store.finders:
-            if not hasattr(finder, '__fetch_multi__'):
-                continue
-            nodes = multi_nodes[finder.__fetch_multi__]
-            if not nodes:
-                continue
-            time_info, series = finder.fetch_multi(nodes, startTime, endTime)
-            start, end, step = time_info
-            for path, values in series.items():
-                series = TimeSeries(path, start, end, step, values)
-                series.pathExpression = pathExpr
-                seriesList.append(series)
+    # Single fetches
+    fetches = [
+        (node, node.fetch(startTime, endTime)) for node in single_nodes]
+    for node, results in fetches:
+        if not results:
+            logger.info("no results", node=node, start=startTime,
+                        end=endTime)
+            continue
 
-        for node, results in fetches:
-            if not results:
-                logger.info("no results", node=node, start=startTime,
-                            end=endTime)
-                continue
+        try:
+            time_info, values = results
+        except ValueError as e:
+            raise Exception("could not parse timeInfo/values from metric "
+                            "'%s': %s" % (node.path, e))
+        data_store.add_data(node.path, time_info, values)
 
-            try:
-                timeInfo, values = results
-            except ValueError as e:
-                raise Exception("could not parse timeInfo/values from metric "
-                                "'%s': %s" % (node.path, e))
-            start, end, step = timeInfo
-
-            series = TimeSeries(node.path, start, end, step, values)
-            # hack to pass expressions through to render functions
-            series.pathExpression = pathExpr
-            seriesList.append(series)
-
-        # Prune empty series with duplicate metric paths to avoid showing
-        # empty graph elements for old whisper data
-        names = set([s.name for s in seriesList])
-        for name in names:
-            series_with_duplicate_names = [
-                s for s in seriesList if s.name == name]
-            empty_duplicates = [
-                s for s in series_with_duplicate_names
-                if not nonempty(series)]
-
-            if (
-                series_with_duplicate_names == empty_duplicates and
-                len(empty_duplicates) > 0
-            ):  # if they're all empty
-                empty_duplicates.pop()  # make sure we leave one in seriesList
-
-            for series in empty_duplicates:
-                seriesList.remove(series)
-
-        return seriesList
-
-    return _fetchData(pathExpr, startTime, endTime, requestContext, seriesList)
+    return data_store
 
 
 def nonempty(series):
