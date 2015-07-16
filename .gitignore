@@ -5,3 +5,6 @@ htmlcov
 docs/_build
 dist
 build
+# ignore pycharm files
+*.iml
+.idea
