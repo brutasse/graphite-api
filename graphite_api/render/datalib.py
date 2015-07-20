@@ -84,22 +84,20 @@ class DataStore(object):
     Also aids in looking up data by pathExpressions.
     """
     def __init__(self):
-        self.paths = defaultdict(list)
+        self.paths = defaultdict(set)
         self.data = defaultdict(list)
 
     def add_path(self, path_expr, path):
         """
         Adds the path to the pathExpression.
         """
-        # Only add if we dont already have the path
-        if path not in self.paths[path_expr]:
-            self.paths[path_expr].append(path)
+        self.paths[path_expr].add(path)
 
     def get_paths(self, path_expr):
         """
         Returns all paths found for path_expr
         """
-        return self.paths[path_expr]
+        return sorted(self.paths[path_expr])
 
     def add_data(self, path, time_info, data):
         """

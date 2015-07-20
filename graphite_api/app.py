@@ -1,6 +1,7 @@
 import os
 import csv
 import json
+import itertools
 import math
 import pytz
 import shutil
@@ -488,22 +489,23 @@ def render():
 
 
 def pathsFromTarget(target):
-    paths = []
     tokens = grammar.parseString(target)
-    pathsFromTokens(tokens, paths)
-    return paths
+    return list(pathsFromTokens(tokens))
 
 
-def pathsFromTokens(tokens, paths):
+def pathsFromTokens(tokens):
+    iters = []
     if tokens.expression:
-        pathsFromTokens(tokens.expression, paths)
+        iters.append(pathsFromTokens(tokens.expression))
     elif tokens.pathExpression:
-        paths.append(tokens.pathExpression)
+        iters.append([tokens.pathExpression])
     elif tokens.call:
-        for arg in tokens.call.args:
-            pathsFromTokens(arg, paths)
-        for kwarg in tokens.call.kwargs:
-            pathsFromTokens(kwarg.args[0], paths)
+        iters.extend([pathsFromTokens(arg)
+                      for arg in tokens.call.args])
+        iters.extend([pathsFromTokens(kwarg.args[0])
+                      for kwarg in tokens.call.kwargs])
+    for path in itertools.chain(*iters):
+        yield(path)
 
 
 def evaluateTarget(requestContext, target, data_store):
@@ -532,8 +534,7 @@ def evaluateTokens(requestContext, tokens, data_store):
                                        kwarg.args[0],
                                        data_store))
                        for kwarg in tokens.call.kwargs])
-        ret = func(requestContext, *args, **kwargs)
-        return ret
+        return func(requestContext, *args, **kwargs)
 
     elif tokens.number:
         if tokens.number.integer:
