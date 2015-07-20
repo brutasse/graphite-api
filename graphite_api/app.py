@@ -534,7 +534,8 @@ def evaluateTokens(requestContext, tokens, data_store):
                                        kwarg.args[0],
                                        data_store))
                        for kwarg in tokens.call.kwargs])
-        return func(requestContext, *args, **kwargs)
+        ret = func(requestContext, *args, **kwargs)
+        return ret
 
     elif tokens.number:
         if tokens.number.integer:
