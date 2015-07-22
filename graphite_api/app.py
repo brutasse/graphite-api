@@ -75,13 +75,13 @@ methods = ('GET', 'POST')
 # No-op routes, non-essential for creating dashboards
 @app.route('/dashboard/find', methods=methods)
 def dashboard_find():
-    return jsonify({'dashboards': []})
+    return jsonify({'dashboards': []}, jsonp=RequestParams.get('jsonp', False))
 
 
 @app.route('/dashboard/load/<name>', methods=methods)
 def dashboard_load(name):
     return jsonify({'error': "Dashboard '{0}' does not exist.".format(name)},
-                   status=404)
+                   status=404, jsonp=RequestParams.get('jsonp', False))
 
 
 @app.route('/events/get_data', methods=methods)
@@ -100,12 +100,12 @@ def metrics_search():
     if 'query' not in RequestParams:
         errors['query'] = 'this parameter is required.'
     if errors:
-        return jsonify({'errors': errors}, status=400)
+        return jsonify({'errors': errors}, status=400, jsonp=RequestParams.get('jsonp', False))
     results = sorted(app.searcher.search(
         query=RequestParams['query'],
         max_results=max_results,
     ), key=lambda result: result['path'] or '')
-    return jsonify({'metrics': results})
+    return jsonify({'metrics': results}, jsonp=RequestParams.get('jsonp', False))
 
 
 @app.route('/metrics', methods=methods)
@@ -115,7 +115,9 @@ def metrics_find():
     from_time = None
     until_time = None
     wildcards = False
-
+    
+    jsonp = RequestParams.get("jsonp", False)
+    
     try:
         wildcards = bool(int(RequestParams.get('wildcards', 0)))
     except ValueError:
@@ -143,7 +145,7 @@ def metrics_find():
         errors['query'] = 'this parameter is required.'
 
     if errors:
-        return jsonify({'errors': errors}, status=400)
+        return jsonify({'errors': errors}, status=400, jsonp=RequestParams.get('jsonp', False))
 
     query = RequestParams['query']
     matches = sorted(
@@ -155,8 +157,13 @@ def metrics_find():
 
     if format == 'treejson':
         data = tree_json(matches, base_path, wildcards=wildcards)
+        out = json.dumps(data)
+        if jsonp:
+            if len(jsonp) < 1:
+                jsonp="jsonp"
+            out = "{jsonp}({data})".format(jsonp=jsonp, data=out)
         return (
-            json.dumps(data),
+            out,
             200,
             {'Content-Type': 'application/json'}
         )
@@ -175,12 +182,15 @@ def metrics_find():
     if len(results) > 1 and wildcards:
         results.append({'name': '*'})
 
-    return jsonify({'metrics': results})
+    return jsonify({'metrics': results}, jsonp=jsonp)
 
 
 @app.route('/metrics/expand', methods=methods)
 def metrics_expand():
     errors = {}
+    
+    jsonp = RequestParams.get("jsonp", False)
+    
     try:
         group_by_expr = bool(int(RequestParams.get('groupByExpr', 0)))
     except ValueError:
@@ -193,7 +203,7 @@ def metrics_expand():
     if 'query' not in RequestParams:
         errors['query'] = 'this parameter is required.'
     if errors:
-        return jsonify({'errors': errors}, status=400)
+        return jsonify({'errors': errors}, status=400, jsonp=jsonp)
 
     results = defaultdict(set)
     for query in RequestParams.getlist('query'):
@@ -210,7 +220,7 @@ def metrics_expand():
             new_results = new_results.union(value)
         results = sorted(new_results)
 
-    return jsonify({'results': results})
+    return jsonify({'results': results}, jsonp=jsonp)
 
 
 @app.route('/metrics/index.json', methods=methods)
@@ -271,7 +281,7 @@ def build_index():
         index_file.write('\n'.join(sorted(index)).encode('utf-8'))
     shutil.move(index_file.name, app.searcher.index_path)
     app.searcher.reload()
-    return jsonify({'success': True, 'entries': len(index)})
+    return jsonify({'success': True, 'entries': len(index)}, jsonp=RequestParams.get('jsonp', False))
 
 
 @app.route('/render', methods=methods)
@@ -311,7 +321,7 @@ def render():
             errors['maxDataPoints'] = 'Must be an integer.'
 
     if errors:
-        return jsonify({'errors': errors}, status=400)
+        return jsonify({'errors': errors}, status=400, jsonp=RequestParams.get('jsonp', False))
 
     for opt in graph_class.customizable:
         if opt in RequestParams:
