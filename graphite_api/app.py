@@ -1,6 +1,7 @@
 import os
 import csv
 import json
+import itertools
 import math
 import pytz
 import shutil
@@ -379,6 +380,16 @@ def render():
         'data': [],
     }
 
+    # Gather all data to take advantage of backends with fetch_multi
+    paths = []
+    for target in request_options['targets']:
+        if request_options['graphType'] == 'pie':
+            if ':' in target:
+                continue
+        if target.strip():
+            paths += pathsFromTarget(target)
+    data_store = fetchData(context, paths)
+
     if request_options['graphType'] == 'pie':
         for target in request_options['targets']:
             if ':' in target:
@@ -389,7 +400,7 @@ def render():
                     errors['target'] = "Invalid target: '{0}'.".format(target)
                 context['data'].append((name, value))
             else:
-                series_list = evaluateTarget(context, target)
+                series_list = evaluateTarget(context, target, data_store)
 
                 for series in series_list:
                     func = app.functions[request_options['pieMode']]
@@ -403,7 +414,7 @@ def render():
         for target in request_options['targets']:
             if not target.strip():
                 continue
-            series_list = evaluateTarget(context, target)
+            series_list = evaluateTarget(context, target, data_store)
             context['data'].extend(series_list)
 
         request_options['format'] = request_options.get('format')
@@ -477,9 +488,29 @@ def render():
     return response
 
 
-def evaluateTarget(requestContext, target):
+def pathsFromTarget(target):
     tokens = grammar.parseString(target)
-    result = evaluateTokens(requestContext, tokens)
+    return list(pathsFromTokens(tokens))
+
+
+def pathsFromTokens(tokens):
+    iters = []
+    if tokens.expression:
+        iters.append(pathsFromTokens(tokens.expression))
+    elif tokens.pathExpression:
+        iters.append([tokens.pathExpression])
+    elif tokens.call:
+        iters.extend([pathsFromTokens(arg)
+                      for arg in tokens.call.args])
+        iters.extend([pathsFromTokens(kwarg.args[0])
+                      for kwarg in tokens.call.kwargs])
+    for path in itertools.chain(*iters):
+        yield(path)
+
+
+def evaluateTarget(requestContext, target, data_store):
+    tokens = grammar.parseString(target)
+    result = evaluateTokens(requestContext, tokens, data_store)
 
     if isinstance(result, TimeSeries):
         return [result]  # we have to return a list of TimeSeries objects
@@ -487,21 +518,24 @@ def evaluateTarget(requestContext, target):
     return result
 
 
-def evaluateTokens(requestContext, tokens):
+def evaluateTokens(requestContext, tokens, data_store):
     if tokens.expression:
-        return evaluateTokens(requestContext, tokens.expression)
+        return evaluateTokens(requestContext, tokens.expression, data_store)
 
     elif tokens.pathExpression:
-        return fetchData(requestContext, tokens.pathExpression)
+        return data_store.get_series_list(tokens.pathExpression)
 
     elif tokens.call:
         func = app.functions[tokens.call.funcname]
         args = [evaluateTokens(requestContext,
-                               arg) for arg in tokens.call.args]
+                               arg, data_store) for arg in tokens.call.args]
         kwargs = dict([(kwarg.argname,
-                        evaluateTokens(requestContext, kwarg.args[0]))
+                        evaluateTokens(requestContext,
+                                       kwarg.args[0],
+                                       data_store))
                        for kwarg in tokens.call.kwargs])
-        return func(requestContext, *args, **kwargs)
+        ret = func(requestContext, *args, **kwargs)
+        return ret
 
     elif tokens.number:
         if tokens.number.integer:
