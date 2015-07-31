@@ -37,6 +37,10 @@ Graphite-API releases
 * Change ``sum()`` to return ``null`` instead of 0 when all series' datapoints
   are null at the same time. This is graphite-web's behavior.
 
+* Extract paths of all targets before fetching data. This is a significant
+  optimization for storage backends such as Cyanite that allow bulk-fetching
+  metrics.
+
 * Fixes for the following graphite-web issues:
 
   * `#639 <https://github.com/graphite-project/graphite-web/issues/639>`_ --
