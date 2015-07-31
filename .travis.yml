@@ -1,6 +1,7 @@
 language: python
 python: 3.4
 sudo: false
+cache: pip
 
 env:
   - TOXENV=py26
