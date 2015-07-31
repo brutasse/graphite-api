@@ -186,7 +186,7 @@ def sumSeries(requestContext, *seriesLists):
     rates.
 
     """
-    if not seriesLists or seriesLists == ([],):
+    if not seriesLists or not any(seriesLists):
         return []
     seriesList, start, end, step = normalize(seriesLists)
     name = "sumSeries(%s)" % formatPathExpressions(seriesList)
@@ -313,7 +313,7 @@ def diffSeries(requestContext, *seriesLists):
         &target=offset(diffSeries(service.connections.total,
                                   service.connections.failed), -4)
     """
-    if not seriesLists or seriesLists == ([],):
+    if not seriesLists or not any(seriesLists):
         return []
     seriesList, start, end, step = normalize(seriesLists)
     name = "diffSeries(%s)" % formatPathExpressions(seriesList)
@@ -335,7 +335,7 @@ def averageSeries(requestContext, *seriesLists):
         &target=averageSeries(company.server.*.threads.busy)
 
     """
-    if not seriesLists or seriesLists == ([],):
+    if not seriesLists or not any(seriesLists):
         return []
     seriesList, start, end, step = normalize(seriesLists)
     name = "averageSeries(%s)" % formatPathExpressions(seriesList)
@@ -357,7 +357,7 @@ def stddevSeries(requestContext, *seriesLists):
         &target=stddevSeries(company.server.*.threads.busy)
 
     """
-    if not seriesLists or seriesLists == ([],):
+    if not seriesLists or not any(seriesLists):
         return []
     seriesList, start, end, step = normalize(seriesLists)
     name = "stddevSeries(%s)" % formatPathExpressions(seriesList)
@@ -377,7 +377,7 @@ def minSeries(requestContext, *seriesLists):
 
         &target=minSeries(Server*.connections.total)
     """
-    if not seriesLists or seriesLists == ([],):
+    if not seriesLists or not any(seriesLists):
         return []
     seriesList, start, end, step = normalize(seriesLists)
     name = "minSeries(%s)" % formatPathExpressions(seriesList)
@@ -397,7 +397,7 @@ def maxSeries(requestContext, *seriesLists):
         &target=maxSeries(Server*.connections.total)
 
     """
-    if not seriesLists or seriesLists == ([],):
+    if not seriesLists or not any(seriesLists):
         return []
     seriesList, start, end, step = normalize(seriesLists)
     name = "maxSeries(%s)" % formatPathExpressions(seriesList)
@@ -417,7 +417,7 @@ def rangeOfSeries(requestContext, *seriesLists):
         &target=rangeOfSeries(Server*.connections.total)
 
     """
-    if not seriesLists or seriesLists == ([],):
+    if not seriesLists or not any(seriesLists):
         return []
     seriesList, start, end, step = normalize(seriesLists)
     name = "rangeOfSeries(%s)" % formatPathExpressions(seriesList)
@@ -623,7 +623,7 @@ def multiplySeries(requestContext, *seriesLists):
 
     """
 
-    if not seriesLists or seriesLists == ([],):
+    if not seriesLists or not any(seriesLists):
         return []
     seriesList, start, end, step = normalize(seriesLists)
 
@@ -2700,7 +2700,7 @@ def countSeries(requestContext, *seriesLists):
         &target=countSeries(carbon.agents.*.*)
 
     """
-    if not seriesLists or seriesLists == ([],):
+    if not seriesLists or not any(seriesLists):
         return []
     seriesList, start, end, step = normalize(seriesLists)
     name = "countSeries(%s)" % formatPathExpressions(seriesList)
