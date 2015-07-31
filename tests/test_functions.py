@@ -5,7 +5,10 @@ from datetime import datetime
 
 import pytz
 
-from mock import patch, call, MagicMock
+try:
+    from unittest.mock import patch, call, MagicMock
+except ImportError:
+    from mock import patch, call, MagicMock
 
 from graphite_api import functions
 from graphite_api.app import app
