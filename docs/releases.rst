@@ -41,6 +41,8 @@ Graphite-API releases
   optimization for storage backends such as Cyanite that allow bulk-fetching
   metrics.
 
+* Add JSONP support to all API endpoints that can return JSON.
+
 * Fixes for the following graphite-web issues:
 
   * `#639 <https://github.com/graphite-project/graphite-web/issues/639>`_ --

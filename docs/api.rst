@@ -70,6 +70,9 @@ Parameters:
 *until*
   Epoch timestamp until which to consider metrics.
 
+*jsonp* (optional)
+  Wraps the response in a JSONP callback.
+
 ``/metrics/expand``
 -------------------
 
@@ -86,16 +89,24 @@ Parameters:
 *leavesOnly* (0 or 1)
   Whether to only return leaves or both branches and leaves. Default: 0
 
+*jsonp* (optional)
+  Wraps the response in a JSONP callback.
+
 ``/metrics/search``
 -------------------
 
 Searches for metrics using the search index.
+
+Parameters:
 
 *query* (mandatory)
   The metrics query.
 
 *max_results*
   The maximum number of results to return. Default: 25.
+
+*jsonp* (optional)
+  Wraps the response in a JSONP callback.
 
 .. note::
 
@@ -141,6 +152,11 @@ Example::
 
 Rebuilds the search index by recursively querying the storage finders for
 available paths.
+
+Parameters:
+
+*jsonp* (optional)
+  Wraps the response in a JSONP callback.
 
 Example::
 

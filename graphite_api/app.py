@@ -28,9 +28,11 @@ from .utils import RequestParams, hash_request
 logger = get_logger()
 
 
-def jsonify(data, status=200, jsonp=False, headers=None):
+def jsonify(data, status=200, headers=None):
     if headers is None:
         headers = {}
+
+    jsonp = RequestParams.get('jsonp', False)
 
     body = json.dumps(data, cls=JSONEncoder)
     if jsonp:
@@ -223,7 +225,7 @@ def metrics_index():
             recurse('*', index)
     else:
         recurse('*', index)
-    return jsonify(sorted(index), jsonp=RequestParams.get('jsonp', False))
+    return jsonify(sorted(index))
 
 
 def prune_datapoints(series, max_datapoints, start, end):
@@ -451,8 +453,7 @@ def render():
                     series_data.append({'target': series.name,
                                         'datapoints': datapoints})
 
-            return jsonify(series_data, headers=headers,
-                           jsonp=request_options.get('jsonp', False))
+            return jsonify(series_data, headers=headers)
 
         if request_options['format'] == 'raw':
             response = StringIO()
