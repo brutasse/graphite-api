@@ -3,6 +3,8 @@ set -xe
 
 export VERSION=1.0.1
 
+rm -rf build
+
 mkdir -p build/usr/share/python
 virtualenv build/usr/share/python/graphite
 build/usr/share/python/graphite/bin/pip install -U pip distribute
