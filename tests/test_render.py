@@ -308,6 +308,12 @@ class RenderTest(TestCase):
         svg = response.data.decode('utf-8')
         self.assertTrue(svg.startswith('<?xml version="1.0"'))
 
+        response = self.app.get(self.url, query_string={'target': 'inexisting',
+                                                        'format': 'svg'})
+        self.assertEqual(response.status_code, 200)
+        svg = response.data.decode('utf-8')
+        self.assertTrue(svg.startswith('<?xml version="1.0"'))
+
         response = self.app.get(self.url, query_string={
             'target': 'sum(test)',
         })

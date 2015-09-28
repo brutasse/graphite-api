@@ -43,6 +43,8 @@ Graphite-API releases
 
 * Add JSONP support to all API endpoints that can return JSON.
 
+* Fix 500 error when generating a SVG graph without any data.
+
 * Fixes for the following graphite-web issues:
 
   * `#639 <https://github.com/graphite-project/graphite-web/issues/639>`_ --

@@ -635,40 +635,45 @@ class Graph(object):
         if self.outputFormat == 'png':
             self.surface.write_to_png(fileObj)
         else:
-            metaData = {
-                'x': {
-                    'start': self.startTime,
-                    'end': self.endTime
-                },
-                'options': {
-                    'lineWidth': self.lineWidth
-                },
-                'font': self.defaultFontParams,
-                'area': self.area,
-                'series': []
-            }
-
-            if not self.secondYAxis:
-                metaData['y'] = {
-                    'top': self.yTop,
-                    'bottom': self.yBottom,
-                    'step': self.yStep,
-                    'labels': self.yLabels,
-                    'labelValues': self.yLabelValues
+            if hasattr(self, 'startTime'):
+                has_data = True
+                metaData = {
+                    'x': {
+                        'start': self.startTime,
+                        'end': self.endTime
+                    },
+                    'options': {
+                        'lineWidth': self.lineWidth
+                    },
+                    'font': self.defaultFontParams,
+                    'area': self.area,
+                    'series': []
                 }
 
-            for series in self.data:
-                if 'stacked' not in series.options:
-                    metaData['series'].append({
-                        'name': series.name,
-                        'start': series.start,
-                        'end': series.end,
-                        'step': series.step,
-                        'valuesPerPoint': series.valuesPerPoint,
-                        'color': series.color,
-                        'data': series,
-                        'options': series.options
-                    })
+                if not self.secondYAxis:
+                    metaData['y'] = {
+                        'top': self.yTop,
+                        'bottom': self.yBottom,
+                        'step': self.yStep,
+                        'labels': self.yLabels,
+                        'labelValues': self.yLabelValues
+                    }
+
+                for series in self.data:
+                    if 'stacked' not in series.options:
+                        metaData['series'].append({
+                            'name': series.name,
+                            'start': series.start,
+                            'end': series.end,
+                            'step': series.step,
+                            'valuesPerPoint': series.valuesPerPoint,
+                            'color': series.color,
+                            'data': series,
+                            'options': series.options
+                        })
+            else:
+                has_data = False
+                metaData = {}
 
             self.surface.finish()
             svgData = self.surfaceData.getvalue()
@@ -680,23 +685,24 @@ class Graph(object):
             svgData = svgData.replace('</defs>\n<g',
                                       '</defs>\n<g class="graphite"', 1)
 
-            # We encode headers using special paths with d^="M -88 -88"
-            # Find these, and turn them into <g> wrappers instead
-            def onHeaderPath(match):
-                name = ''
-                for char in re.findall(r'L -(\d+) -\d+', match.group(1)):
-                    name += chr(int(char))
-                return '</g><g data-header="true" class="%s">' % name
-            svgData, subs = re.subn(r'<path.+?d="M -88 -88 (.+?)"/>',
-                                    onHeaderPath, svgData)
+            if has_data:
+                # We encode headers using special paths with d^="M -88 -88"
+                # Find these, and turn them into <g> wrappers instead
+                def onHeaderPath(match):
+                    name = ''
+                    for char in re.findall(r'L -(\d+) -\d+', match.group(1)):
+                        name += chr(int(char))
+                    return '</g><g data-header="true" class="%s">' % name
+                svgData, subs = re.subn(r'<path.+?d="M -88 -88 (.+?)"/>',
+                                        onHeaderPath, svgData)
 
-            # Replace the first </g><g> with <g>, and close out the last </g>
-            # at the end
-            svgData = svgData.replace('</g><g data-header',
-                                      '<g data-header', 1)
-            svgData = svgData.replace(' data-header="true"', '')
-            if subs > 0:
-                svgData += "</g>"
+                # Replace the first </g><g> with <g>, and close out the last
+                # </g> at the end
+                svgData = svgData.replace('</g><g data-header',
+                                          '<g data-header', 1)
+                svgData = svgData.replace(' data-header="true"', '')
+                if subs > 0:
+                    svgData += "</g>"
 
             fileObj.write(svgData.encode())
             fileObj.write(("""<script>
