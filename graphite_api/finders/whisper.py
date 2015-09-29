@@ -122,6 +122,9 @@ class WhisperReader(object):
             if isinstance(cached_datapoints, dict):
                 cached_datapoints = cached_datapoints.items()
             for timestamp, value in sorted(cached_datapoints):
+                # filter only to cached datapoints within [start, end)
+                if not (timestamp >= start and timestamp < end):
+                    continue
                 interval = timestamp - (timestamp % step)
                 i = int(interval - start) // step
                 values[i] = value
