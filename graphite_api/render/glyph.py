@@ -56,14 +56,14 @@ colorAliases = {
     'darkgrey': (111, 111, 111),
 }
 
-# This gets overriden by graphTemplates.conf
+# This gets overriden by your graph templates
 defaultGraphOptions = dict(
     background='white',
     foreground='black',
     majorline='rose',
     minorline='grey',
-    linecolors=('blue,green,red,purple,brown,yellow,aqua,grey,'
-                'magenta,pink,gold,rose'),
+    lineColors=("blue", "green", "red", "purple", "brown", "yellow", "aqua",
+                "grey", "magenta", "pink", "gold", "rose"),
     fontname='Sans',
     fontsize=10,
     fontbold='false',
@@ -608,7 +608,12 @@ class Graph(object):
         self.ctx.restore()
 
     def loadTemplate(self, template):
+        from ..app import app
+        conf = app.config.get('templates', {})
+
         opts = defaults = defaultGraphOptions
+        defaults.update(conf.get('defaults', {}))
+        opts.update(conf.get(template, {}))
 
         self.defaultBackground = opts.get('background', defaults['background'])
         self.defaultForeground = opts.get('foreground', defaults['foreground'])
@@ -617,8 +622,8 @@ class Graph(object):
         self.defaultMinorGridLineColor = opts.get('minorline',
                                                   defaults['minorline'])
         self.defaultColorList = [
-            c.strip() for c in opts.get('linecolors',
-                                        defaults['linecolors']).split(',')]
+            c.strip() for c in opts.get('lineColors',
+                                        defaults['lineColors'])]
         fontName = opts.get('fontname', defaults['fontname'])
         fontSize = float(opts.get('fontsize', defaults['fontsize']))
         fontBold = opts.get('fontbold', defaults['fontbold']).lower() == 'true'

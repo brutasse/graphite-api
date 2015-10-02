@@ -180,6 +180,33 @@ Extra sections
 
 .. _Graphite-Influxdb: https://github.com/vimeo/graphite-influxdb
 
+
+*templates*
+
+  To define color/styling, of graphs, like so:
+  * values under the 'default' template key serve to override
+  the built-in defaults (see glyph.py).
+  * Other template keys provide further styling which will be used
+  via the http parameter ``template=<template_key>``.
+  The defaults are used for unspecified values.
+
+  Example::
+
+    templates:
+        default:
+            background: 'white'
+            foreground: 'black'
+            majorLine: 'rose'
+            minorLine: 'grey'
+            lineColors: [ 'blue','green','red','purple','brown','yellow','aqua','grey','magenta','pink','gold','rose' ]
+            fontName: 'Sans'
+            fontSize: 10
+            fontBold: false
+            fontItalic: false
+        my_template:
+            background: 'pink'
+
+
 Custom location
 ---------------
 
