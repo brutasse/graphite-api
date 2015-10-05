@@ -2808,7 +2808,6 @@ def reduceSeries(requestContext, seriesLists, reduceFunction, reduceNode,
 
     .. seealso:: :py:func:`mapSeries`
     """
-    from .app import app
     metaSeries = {}
     keys = []
     for seriesList in seriesLists:
@@ -3411,3 +3410,5 @@ SeriesFunctions = {
     "sinFunction": sinFunction,
     "randomWalkFunction": randomWalkFunction,
 }
+
+from .app import app
