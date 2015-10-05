@@ -1,7 +1,7 @@
 #! /usr/bin/env bash
 set -xe
 
-export VERSION=1.0.1
+export VERSION=1.1
 
 rm -rf build
 
