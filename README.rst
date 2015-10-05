@@ -19,7 +19,6 @@ Implemented API calls:
 
 * ``/metrics/find``
 * ``/metrics/expand``
-* ``/metrics/search`` (removed strange ``keep_query_pattern`` parameter)
 * ``/render``
 
 No-ops:
