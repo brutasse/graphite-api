@@ -92,24 +92,6 @@ def events():
 
 
 # API calls that actually do something
-@app.route('/metrics/search', methods=methods)
-def metrics_search():
-    errors = {}
-    try:
-        max_results = int(RequestParams.get('max_results', 25))
-    except ValueError:
-        errors['max_results'] = 'must be an integer.'
-    if 'query' not in RequestParams:
-        errors['query'] = 'this parameter is required.'
-    if errors:
-        return jsonify({'errors': errors}, status=400)
-    results = sorted(app.searcher.search(
-        query=RequestParams['query'],
-        max_results=max_results,
-    ), key=lambda result: result['path'] or '')
-    return jsonify({'metrics': results})
-
-
 @app.route('/metrics', methods=methods)
 @app.route('/metrics/find', methods=methods)
 def metrics_find():

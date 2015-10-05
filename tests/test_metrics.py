@@ -191,20 +191,7 @@ class MetricsTests(TestCase):
         response = self.app.get(url)
         self.assertJSON(response, [])
 
-    def test_search(self):
-        url = '/metrics/search'
-        response = self.app.get(url, query_string={'max_results': 'a'})
-        self.assertJSON(response, {'errors': {
-            'max_results': 'must be an integer.',
-            'query': 'this parameter is required.'}}, status_code=400)
-
-        response = self.app.get(url, query_string={'query': 'test'})
-        self.assertJSON(response, {'metrics': []})
-
-    def test_search_index(self):
-        response = self.app.get('/metrics/search',
-                                query_string={'query': 'collectd.*'})
-        self.assertJSON(response, {'metrics': []})
+    def test_index(self):
         parent = os.path.join(WHISPER_DIR, 'collectd')
         os.makedirs(parent)
 
@@ -214,15 +201,6 @@ class MetricsTests(TestCase):
 
         response = self.app.put('/index')
         self.assertJSON(response, {'success': True, 'entries': 3})
-
-        response = self.app.get('/metrics/search',
-                                query_string={'query': 'collectd.*'})
-        self.assertJSON(response, {'metrics': [
-            {'is_leaf': False, 'path': None},
-            {'is_leaf': True, 'path': 'collectd.cpu'},
-            {'is_leaf': True, 'path': 'collectd.load'},
-            {'is_leaf': True, 'path': 'collectd.memory'},
-        ]})
 
     def test_metrics_index(self):
         url = '/metrics/index.json'

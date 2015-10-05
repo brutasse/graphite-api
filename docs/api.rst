@@ -92,39 +92,6 @@ Parameters:
 *jsonp* (optional)
   Wraps the response in a JSONP callback.
 
-``/metrics/search``
--------------------
-
-Searches for metrics using the search index.
-
-Parameters:
-
-*query* (mandatory)
-  The metrics query.
-
-*max_results*
-  The maximum number of results to return. Default: 25.
-
-*jsonp* (optional)
-  Wraps the response in a JSONP callback.
-
-.. note::
-
-    ``/metrics/search`` requires the search index to be up to date. See
-    :ref:`/index` below.
-
-Example::
-
-    GET /metrics/search?query=collectd.*
-
-    {
-        "metrics": [
-            {"is_leaf": false, "path": null},
-            {"is_leaf": true, "path": "collectd.foo"},
-            {"is_leaf": true, "path": "collectd.bar"}
-        ]
-    }
-
 ``/metrics/index.json``
 -----------------------
 
