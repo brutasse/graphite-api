@@ -45,6 +45,9 @@ Graphite-API releases
 
 * Fix 500 error when generating a SVG graph without any data.
 
+* Return tracebacks in the HTTP response when app errors occur. This behavior
+  can be disabled in the configuration.
+
 * Fixes for the following graphite-web issues:
 
   * `#639 <https://github.com/graphite-project/graphite-web/issues/639>`_ --
