@@ -17,7 +17,7 @@ build/usr/share/python/graphite/bin/pip install graphite-api[sentry,cyanite] gun
 find build ! -perm -a+r -exec chmod a+r {} \;
 
 cd build/usr/share/python/graphite
-sed -i "s/'\/bin\/python'/'\/bin\/python','\/bin\/python2'/g" lib/python2.7/site-packages/virtualenv_tools.py
+sed -i "s/'\/bin\/python'/\('\/bin\/python','\/bin\/python2'\)/g" lib/python2.7/site-packages/virtualenv_tools.py
 ./bin/virtualenv-tools --update-path /usr/share/python/graphite
 cd -
 
