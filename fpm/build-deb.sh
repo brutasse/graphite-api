@@ -3,6 +3,8 @@ set -xe
 
 export VERSION=1.1
 
+apt-get -y install build-essential python-dev python-virtualenv
+
 rm -rf build
 
 mkdir -p build/usr/share/python
@@ -10,7 +12,7 @@ virtualenv build/usr/share/python/graphite
 build/usr/share/python/graphite/bin/pip install -U pip distribute
 build/usr/share/python/graphite/bin/pip uninstall -y distribute
 
-build/usr/share/python/graphite/bin/pip install graphite-api[sentry,cyanite] gunicorn==18.0
+build/usr/share/python/graphite/bin/pip install graphite-api[sentry,cyanite] gunicorn==18.0 virtualenv-tools
 
 find build ! -perm -a+r -exec chmod a+r {} \;
 
