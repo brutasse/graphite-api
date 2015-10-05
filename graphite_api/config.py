@@ -1,9 +1,11 @@
 import logging
 import os
 import structlog
+import traceback
 import warnings
 import yaml
 
+from flask import make_response
 from tzlocal import get_localzone
 from importlib import import_module
 from structlog.processors import (format_exc_info, JSONRenderer,
@@ -71,6 +73,12 @@ def load_by_path(path):
     module, klass = path.rsplit('.', 1)
     finder = import_module(module)
     return getattr(finder, klass)
+
+
+def error_handler(e):
+    response = make_response(traceback.format_exc())
+    response.headers['content-type'] = 'text/plain'
+    return response
 
 
 def configure(app):
@@ -150,6 +158,8 @@ def configure(app):
 
     app.wsgi_app = TrailingSlash(CORS(app.wsgi_app,
                                       config.get('allowed_origins')))
+    if config.get('render_errors', True):
+        app.errorhandler(500)(error_handler)
 
 
 def configure_logging(config):

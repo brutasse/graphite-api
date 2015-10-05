@@ -185,6 +185,11 @@ Extra sections
 
 .. _Graphite-Influxdb: https://github.com/vimeo/graphite-influxdb
 
+*render_errors*
+
+  If ``True`` (default), full tracebacks are returned in the HTTP
+  response in case of application errors.
+
 Custom location
 ---------------
 
