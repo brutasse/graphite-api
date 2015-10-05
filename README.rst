@@ -37,7 +37,6 @@ Difference from graphite-web
 ----------------------------
 
 * Stateless. No need for a database.
-* No caching. Rendering is live.
 * No Pickle.
 * No remote rendering.
 * JSON data in request bodies is supported, additionally to form data and
