@@ -1753,7 +1753,6 @@ class LineGraph(Graph):
             xFormat = self.params.get('xFormat', self.xConf['format'])
             while dt < self.end_dt:
                 label = dt.strftime(xFormat)
-                print(label)
                 x = self.area['xmin'] + (
                     to_seconds(dt - self.start_dt) * self.xScaleFactor)
                 y = self.area['ymax'] + self.getExtents()['maxAscent']
