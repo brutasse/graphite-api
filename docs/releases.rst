@@ -1,8 +1,8 @@
 Graphite-API releases
 =====================
 
-1.0.2 -- **in development**
----------------------------
+1.1 -- 2015-10-05
+-----------------
 
 * Add CarbonLink support.
 
