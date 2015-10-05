@@ -76,9 +76,8 @@ def load_by_path(path):
 
 
 def error_handler(e):
-    response = make_response(traceback.format_exc())
-    response.headers['content-type'] = 'text/plain'
-    return response
+    return make_response(traceback.format_exc(), 500,
+                         {'Content-Type': 'text/plain'})
 
 
 def configure(app):
