@@ -23,13 +23,6 @@ Default values
     whisper:
       directories:
         - /srv/graphite/whisper
-    carbon:
-      hosts:
-        - 127.0.0.1:7002
-      timeout: 1
-      retry_delay: 15
-      carbon_prefix: carbon
-      replication_factor: 1
     time_zone: <system timezone> or UTC
 
 Config sections
@@ -59,6 +52,16 @@ Default sections
   WhisperFinder. Simply holds a ``directories`` key listing all directories
   containing whisper data.
 
+*time_zone*
+
+  The time zone to use when generating graphs. By default, Graphite-API tries
+  to detect your system timezone. If detection fails it falls back to UTC. You
+  can also manually override it if you want another value than your system's
+  timezone.
+
+Extra sections
+^^^^^^^^^^^^^^
+
 *carbon*
 
   Configuration information for reading data from carbon's cache. Items:
@@ -86,15 +89,17 @@ Default sections
   *replication_factor*
      The replication factor of your carbon setup. Default: ``1``.
 
-*time_zone*
+  Example:
 
-  The time zone to use when generating graphs. By default, Graphite-API tries
-  to detect your system timezone. If detection fails it falls back to UTC. You
-  can also manually override it if you want another value than your system's
-  timezone.
+  .. code-block:: yaml
 
-Extra sections
-^^^^^^^^^^^^^^
+      carbon:
+        hosts:
+          - 127.0.0.1:7002
+        timeout: 1
+        retry_delay: 15
+        carbon_prefix: carbon
+        replication_factor: 1
 
 *sentry_dsn*
 
