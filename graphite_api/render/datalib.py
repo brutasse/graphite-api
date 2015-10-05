@@ -57,7 +57,7 @@ class TimeSeries(list):
             yield self.__consolidate(buf)
         else:
             yield None
-        raise StopIteration
+        return
 
     def __consolidate(self, values):
         usable = [v for v in values if v is not None]
