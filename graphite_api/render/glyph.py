@@ -720,7 +720,8 @@ class LineGraph(Graph):
         'yMaxLeft', 'yMaxRight', 'yLimitLeft', 'yLimitRight', 'yStepLeft',
         'yStepRight', 'rightWidth', 'rightColor', 'rightDashed', 'leftWidth',
         'leftColor', 'leftDashed', 'xFormat', 'minorY', 'hideYAxis',
-        'uniqueLegend', 'vtitleRight', 'yDivisors', 'connectedLimit')
+        'hideXAxis', 'uniqueLegend', 'vtitleRight', 'yDivisors',
+        'connectedLimit')
     validLineModes = ('staircase', 'slope', 'connected')
     validAreaModes = ('none', 'first', 'all', 'stacked')
     validPieModes = ('maximum', 'minimum', 'average')
@@ -756,6 +757,7 @@ class LineGraph(Graph):
             params['hideLegend'] = True
             params['hideGrid'] = True
             params['hideAxes'] = True
+            params['hideXAxis'] = False
             params['hideYAxis'] = False
             params['yAxisSide'] = 'left'
             params['title'] = ''
@@ -855,7 +857,10 @@ class LineGraph(Graph):
 
         # Setup axes, labels, and grid
         # First we adjust the drawing area size to fit X-axis labels
-        if not self.params.get('hideAxes', False):
+        if (
+            not self.params.get('hideAxes', False) and
+            not self.params.get('hideXAxis', False)
+        ):
             self.area['ymax'] -= self.getExtents()['maxAscent'] * 2
 
         self.startTime = min([series.start for series in self.data])
@@ -1739,19 +1744,21 @@ class LineGraph(Graph):
                     self.drawText(labelR, xR, yR, align='left',
                                   valign='middle')
 
-        dt, x_label_delta = find_x_times(self.start_dt,
-                                         self.xConf['labelUnit'],
-                                         self.xConf['labelStep'])
+        if not self.params.get('hideXAxis'):
+            dt, x_label_delta = find_x_times(self.start_dt,
+                                             self.xConf['labelUnit'],
+                                             self.xConf['labelStep'])
 
-        # Draw the X-labels
-        xFormat = self.params.get('xFormat', self.xConf['format'])
-        while dt < self.end_dt:
-            label = dt.strftime(xFormat)
-            x = self.area['xmin'] + (
-                to_seconds(dt - self.start_dt) * self.xScaleFactor)
-            y = self.area['ymax'] + self.getExtents()['maxAscent']
-            self.drawText(label, x, y, align='center', valign='top')
-            dt += x_label_delta
+            # Draw the X-labels
+            xFormat = self.params.get('xFormat', self.xConf['format'])
+            while dt < self.end_dt:
+                label = dt.strftime(xFormat)
+                print(label)
+                x = self.area['xmin'] + (
+                    to_seconds(dt - self.start_dt) * self.xScaleFactor)
+                y = self.area['ymax'] + self.getExtents()['maxAscent']
+                self.drawText(label, x, y, align='center', valign='top')
+                dt += x_label_delta
 
     def drawGridLines(self):
         # Not sure how to handle this for 2 y-axes
