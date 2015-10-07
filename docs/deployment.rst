@@ -57,7 +57,7 @@ Finally, configure the nginx vhost:
     # /etc/nginx/sites-available/graphite.conf
 
     upstream graphite {
-        server 127.0.0.0:8888 fail_timeout=0;
+        server 127.0.0.1:8888 fail_timeout=0;
     }
 
     server {
