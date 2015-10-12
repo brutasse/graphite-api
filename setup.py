@@ -12,6 +12,7 @@ install_requires = [
     'six',
     'structlog',
     'tzlocal',
+    'setuptools',
 ]
 
 if sys.version_info < (2, 7):
