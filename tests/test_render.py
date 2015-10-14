@@ -7,6 +7,11 @@ from graphite_api._vendor import whisper
 
 from . import TestCase, WHISPER_DIR
 
+try:
+    from flask.ext.cache import Cache
+except ImportError:
+    Cache = None
+
 
 class RenderTest(TestCase):
     db = os.path.join(WHISPER_DIR, 'test.wsp')
@@ -208,7 +213,7 @@ class RenderTest(TestCase):
             response = self.app.get(self.url, query_string=qs)
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.headers['Content-Type'], 'image/png')
-            if qs.get('noCache'):
+            if Cache is None or qs.get('noCache'):
                 self.assertEqual(response.headers['Pragma'], 'no-cache')
                 self.assertEqual(response.headers['Cache-Control'], 'no-cache')
                 self.assertFalse('Expires' in response.headers)
