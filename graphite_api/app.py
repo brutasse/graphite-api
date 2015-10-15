@@ -488,7 +488,7 @@ def pathsFromTokens(tokens):
         iters.extend([pathsFromTokens(kwarg.args[0])
                       for kwarg in tokens.call.kwargs])
     for path in itertools.chain(*iters):
-        yield(path)
+        yield path
 
 
 def evaluateTarget(requestContext, target, data_store):
