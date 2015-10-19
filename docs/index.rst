@@ -42,7 +42,7 @@ find useful. Namely:
 
   * No memcache integration -- rendering is live.
 
-  * No support for the Pickle format.
+  * No support for the Pickle format when rendering.
 
   * Plugin architecture for :doc:`integrating with time series databases
     <finders>` or :doc:`adding more analysis functions <custom-functions>`.

@@ -37,7 +37,7 @@ Difference from graphite-web
 ----------------------------
 
 * Stateless. No need for a database.
-* No Pickle.
+* No Pickle rendering.
 * No remote rendering.
 * JSON data in request bodies is supported, additionally to form data and
   querystring parameters.
