@@ -2083,7 +2083,18 @@ def _fetchWithBootstrap(requestContext, seriesList, **delta_kwargs):
         bootstraps = evaluateTarget(bootstrapContext,
                                     series.pathExpression,
                                     data_store)
-        bootstrapList.extend(bootstraps)
+        found = {s.name: s for s in bootstraps}
+        for s in seriesList:
+            if s.name not in found:
+                # bootstrap interval too large for the range available in
+                # storage. Fill with nulls.
+                start = epoch(bootstrapContext['startTime'])
+                end = epoch(bootstrapContext['endTime'])
+                delta = (end - start) % s.step
+                values = [None] * delta
+                found[s.name] = TimeSeries(s.name, start, end, s.step, values)
+                found[s.name].pathExpression = s.pathExpression
+            bootstrapList.append(found[s.name])
 
     newSeriesList = []
     for bootstrap, original in zip_longest(bootstrapList, seriesList):

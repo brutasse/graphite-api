@@ -394,3 +394,12 @@ class RenderTest(TestCase):
             paths.append(path)
 
         self.assertEqual(paths, ['test.baz', 'test.foo', 'test.welp'])
+
+    def test_bootstrap_fetch_outside_range(self):
+        self.create_db()
+        response = self.app.get(
+            self.url, query_string={
+                'target': "aliasByNode(movingMedian(test, '15min'), 0)",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
