@@ -2083,7 +2083,7 @@ def _fetchWithBootstrap(requestContext, seriesList, **delta_kwargs):
         bootstraps = evaluateTarget(bootstrapContext,
                                     series.pathExpression,
                                     data_store)
-        found = {s.name: s for s in bootstraps}
+        found = dict(((s.name, s) for s in bootstraps))
         for s in seriesList:
             if s.name not in found:
                 # bootstrap interval too large for the range available in
