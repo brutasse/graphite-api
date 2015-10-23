@@ -5,10 +5,10 @@ Graphite-API releases
 -------------------------
 
 
-1.1.1 -- **in development**
----------------------------
+1.1.1 -- 2015-10-23
+-------------------
 
-* Fix ``areaMode=stacked``
+* Fix ``areaMode=stacked``.
 
 * Fix error when calling functions that use ``fetchWithBootstrap`` and the
   bootstrap range isn't available (fill with nulls instead).
