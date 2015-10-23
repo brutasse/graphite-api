@@ -31,8 +31,14 @@ class IndexSearcher(object):
     def reload(self):
         self.log.info("reading index data")
         if not os.path.exists(self.index_path):
-            with open(self.index_path, 'w'):
-                pass
+            try:
+                with open(self.index_path, 'w'):
+                    pass
+            except IOError as e:
+                self.log.error("error writing search index",
+                               path=self.index_path, error=str(e))
+                self._tree = (None, {})
+                return
         t = time.time()
         total_entries = 0
         tree = (None, {})  # (data, children)
