@@ -130,6 +130,7 @@ def fetchData(requestContext, pathExprs):
     # Convert to list if given single path
     if not isinstance(pathExprs, list):
         pathExprs = [pathExprs]
+    pathExprs = set(pathExprs)
 
     data_store = DataStore()
     multi_nodes = defaultdict(list)
