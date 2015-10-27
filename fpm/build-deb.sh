@@ -3,7 +3,7 @@ set -xe
 
 export VERSION=1.1.1
 
-apt-get -y install build-essential python-dev python-virtualenv
+apt-get -y install build-essential python-dev python-virtualenv libffi-dev
 
 rm -rf build
 

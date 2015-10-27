@@ -24,3 +24,13 @@ Building a package
 ------------------
 
 ./build-deb.sh
+
+Deb packages are generated with fresh Debian and Ubuntu cloud instances and
+the following cloud-init configuration:
+
+```
+#cloud-config
+runcmd:
+  - "wget https://raw.githubusercontent.com/brutasse/graphite-api/master/fpm/cloud-init.sh"
+  - "sh cloud-init.sh"
+```
