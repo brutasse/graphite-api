@@ -11,6 +11,7 @@ apt-get update
 apt-get -y upgrade
 apt-get -y install git ruby ruby-dev build-essential
 gem install fpm
+export PATH=$PATH:/usr/local/bin
 echo $PATH
 which fpm
 git clone https://github.com/brutasse/graphite-api.git
