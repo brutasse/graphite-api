@@ -11,6 +11,8 @@ apt-get update
 apt-get -y upgrade
 apt-get -y install git ruby ruby-dev build-essential
 gem install fpm
+echo $PATH
+which fpm
 git clone https://github.com/brutasse/graphite-api.git
 cd graphite-api/fpm
 ./build-deb.sh
