@@ -23,7 +23,9 @@ Prerequisites (to build a package)
 Building a package
 ------------------
 
+```
 ./build-deb.sh
+```
 
 Deb packages are generated with fresh Debian and Ubuntu cloud instances and
 the following cloud-init configuration:
