@@ -140,7 +140,7 @@ def fetchData(requestContext, pathExprs):
 
     # Group nodes that support multiple fetches
     for pathExpr in pathExprs:
-        for node in app.store.find(pathExpr):
+        for node in app.store.find(pathExpr, startTime, endTime):
             if not node.is_leaf:
                 continue
             path_to_exprs[node.path].append(pathExpr)
