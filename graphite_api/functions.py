@@ -1785,7 +1785,10 @@ def removeAbovePercentile(requestContext, seriesList, n):
     for s in seriesList:
         s.name = 'removeAbovePercentile(%s, %d)' % (s.name, n)
         s.pathExpression = s.name
-        percentile = nPercentile(requestContext, [s], n)[0][0]
+        try:
+            percentile = nPercentile(requestContext, [s], n)[0][0]
+        except IndexError:
+            continue
         for index, val in enumerate(s):
             if val is None:
                 continue
@@ -1820,7 +1823,10 @@ def removeBelowPercentile(requestContext, seriesList, n):
     for s in seriesList:
         s.name = 'removeBelowPercentile(%s, %d)' % (s.name, n)
         s.pathExpression = s.name
-        percentile = nPercentile(requestContext, [s], n)[0][0]
+        try:
+            percentile = nPercentile(requestContext, [s], n)[0][0]
+        except IndexError:
+            continue
         for (index, val) in enumerate(s):
             if val is None:
                 continue
