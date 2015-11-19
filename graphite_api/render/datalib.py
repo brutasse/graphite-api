@@ -159,7 +159,7 @@ def fetchData(requestContext, pathExprs):
         time_info, series = finder.fetch_multi(nodes, startTime, endTime)
         for path, values in series.items():
             data_store.add_data(path, time_info, values,
-                                path_to_exprs[node.path])
+                                path_to_exprs[path])
 
     # Single fetches
     fetches = [
