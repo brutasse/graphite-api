@@ -1,9 +1,12 @@
 Graphite-API releases
 =====================
 
-1.2 -- **in development**
--------------------------
+1.1.2 -- 2015-11-19
+-------------------
 
+* Fix regression in multi fetch handling: paths were queried multiple times,
+  leading to erroneous behaviour and slowdown.
+* Continue on IndexError in ``remove{Above,Below}Percentile`` functions.
 
 1.1.1 -- 2015-10-23
 -------------------
