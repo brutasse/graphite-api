@@ -130,7 +130,6 @@ def fetchData(requestContext, pathExprs):
     # Convert to list if given single path
     if not isinstance(pathExprs, list):
         pathExprs = [pathExprs]
-    pathExprs = set(pathExprs)
 
     data_store = DataStore()
     multi_nodes = defaultdict(list)
@@ -140,14 +139,15 @@ def fetchData(requestContext, pathExprs):
 
     # Group nodes that support multiple fetches
     for pathExpr in pathExprs:
-        for node in app.store.find(pathExpr):
+        for node in app.store.find(pathExpr, startTime, endTime):
             if not node.is_leaf:
                 continue
+            if node.path not in path_to_exprs:
+                if hasattr(node, '__fetch_multi__'):
+                    multi_nodes[node.__fetch_multi__].append(node)
+                else:
+                    single_nodes.append(node)
             path_to_exprs[node.path].append(pathExpr)
-            if hasattr(node, '__fetch_multi__'):
-                multi_nodes[node.__fetch_multi__].append(node)
-            else:
-                single_nodes.append(node)
 
     # Multi fetches
     for finder in app.store.finders:
@@ -159,7 +159,7 @@ def fetchData(requestContext, pathExprs):
         time_info, series = finder.fetch_multi(nodes, startTime, endTime)
         for path, values in series.items():
             data_store.add_data(path, time_info, values,
-                                path_to_exprs[node.path])
+                                path_to_exprs[path])
 
     # Single fetches
     fetches = [
