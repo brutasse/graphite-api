@@ -1277,7 +1277,7 @@ def alias(requestContext, seriesList, newName):
 def cactiStyle(requestContext, seriesList, system=None):
     """
     Takes a series list and modifies the aliases to provide column aligned
-    output with Current, Max, and Min values in the style of cacti. Optonally
+    output with Current, Max, and Min values in the style of cacti. Optionally
     takes a "system" value to apply unit formatting in the same style as the
     Y-axis.
     NOTE: column alignment only works with monospace fonts such as terminus.
@@ -3014,7 +3014,7 @@ def summarize(requestContext, seriesList, intervalString, func='sum',
 
     'max', 'min' or 'last' can also be specified.
 
-    By default, buckets are caculated by rounding to the nearest interval. This
+    By default, buckets are calculated by rounding to the nearest interval. This
     works well for intervals smaller than a day. For example, 22:32 will end up
     in the bucket 22:00-23:00 when the interval=1hour.
 
