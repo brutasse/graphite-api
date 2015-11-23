@@ -3014,9 +3014,9 @@ def summarize(requestContext, seriesList, intervalString, func='sum',
 
     'max', 'min' or 'last' can also be specified.
 
-    By default, buckets are calculated by rounding to the nearest interval. This
-    works well for intervals smaller than a day. For example, 22:32 will end up
-    in the bucket 22:00-23:00 when the interval=1hour.
+    By default, buckets are calculated by rounding to the nearest interval.
+    This works well for intervals smaller than a day. For example, 22:32 will
+    end up in the bucket 22:00-23:00 when the interval=1hour.
 
     Passing alignToFrom=true will instead create buckets starting at the from
     time. In this case, the bucket for 22:32 depends on the from time. If
