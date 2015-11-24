@@ -3329,7 +3329,6 @@ SeriesFunctions = {
     'derivative': derivative,
     'perSecond': perSecond,
     'integral': integral,
-    'percentileOfSeries': percentileOfSeries,
     'nonNegativeDerivative': nonNegativeDerivative,
     'log': logarithm,
     'timeStack': timeStack,
