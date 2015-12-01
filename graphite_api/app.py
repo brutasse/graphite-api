@@ -91,11 +91,27 @@ def dashboard_load(name):
 @app.route('/events/get_data', methods=methods)
 def events():
 
-    from_time = RequestParams.get('from', 0)
-    until_time = RequestParams.get('until', 0)
-    tags = RequestParams.get('tags', 0)
+    errors = {}
 
-    return json.dumps(fetchEvents(from_time, until_time, tags)), 200, {'Content-Type': 'application/json'}
+    tzinfo = pytz.timezone(app.config['TIME_ZONE'])
+    tz = RequestParams.get('tz')
+    if tz:
+        try:
+            tzinfo = pytz.timezone(tz)
+        except pytz.UnknownTimeZoneError:
+            errors['tz'] = "Unknown timezone: '{0}'.".format(tz)
+
+    until_time = parseATTime(RequestParams.get('until', 'now'), tzinfo)
+    from_time = parseATTime(RequestParams.get('from', '-1d'), tzinfo)
+
+    start_time = min(from_time, until_time)
+    end_time = max(from_time, until_time)
+    if start_time == end_time:
+        errors['from'] = errors['until'] = 'Invalid empty time range'
+
+    tags = RequestParams.get('tags', 0)
+    print "start_time "+start_time+"; end_time "+end_time
+    return json.dumps(fetchEvents(start_time, end_time, tags)), 200, {'Content-Type': 'application/json'}
 
 
 # API calls that actually do something

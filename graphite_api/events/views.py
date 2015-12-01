@@ -10,6 +10,7 @@ def fetchEvents(startTime, endTime, tags):
             break
 
     startTime = int(epoch(startTime))
-    endTime = int(epoch(startTime))
+    endTime = int(epoch(endTime))
+
     return node.getEvents(startTime, endTime, tags)
 
