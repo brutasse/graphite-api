@@ -25,6 +25,8 @@ from .render.glyph import GraphTypes
 from .render.grammar import grammar
 from .utils import RequestParams, hash_request
 
+from .events.views import fetchEvents
+
 logger = get_logger()
 
 
@@ -88,10 +90,47 @@ def dashboard_load(name):
 
 @app.route('/events/get_data', methods=methods)
 def events():
-    return json.dumps([]), 200, {'Content-Type': 'application/json'}
+
+    errors = {}
+    from_time = None
+    until_time = None
+
+    try:
+         from_time = int(RequestParams.get('from', 0))
+    except ValueError:
+        errors['from'] = 'must be an epoch timestamp.'
+    try:
+        until_time = int(RequestParams.get('until', 0))
+    except ValueError:
+        errors['until'] = 'must be an epoch timestamp.'
+    tags = int(RequestParams.get('tags', 0))
+
+    if errors:
+        return jsonify({'errors': errors}, status=400)
+
+    return json.dumps(fetchEvents(from_time, until_time, tags)), 200, {'Content-Type': 'application/json'}
 
 
 # API calls that actually do something
+@app.route('/metrics/search', methods=methods)
+def metrics_search():
+    errors = {}
+
+    try:
+        max_results = int(RequestParams.get('max_results', 25))
+    except ValueError:
+        errors['max_results'] = 'must be an integer.'
+    if 'query' not in RequestParams:
+        errors['query'] = 'this parameter is required.'
+    if errors:
+        return jsonify({'errors': errors}, status=400)
+    results = sorted(app.searcher.search(
+        query=RequestParams['query'],
+        max_results=max_results,
+    ), key=lambda result: result['path'] or '')
+    return jsonify({'metrics': results})
+
+
 @app.route('/metrics', methods=methods)
 @app.route('/metrics/find', methods=methods)
 def metrics_find():
