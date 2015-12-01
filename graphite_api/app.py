@@ -110,7 +110,11 @@ def events():
         errors['from'] = errors['until'] = 'Invalid empty time range'
 
     tags = RequestParams.get('tags', 0)
-    print "start_time "+start_time+"; end_time "+end_time
+
+    print from_time
+    print until_time
+    print start_time
+    print end_time
     return json.dumps(fetchEvents(start_time, end_time, tags)), 200, {'Content-Type': 'application/json'}
 
 
