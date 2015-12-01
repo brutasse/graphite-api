@@ -94,9 +94,7 @@ def events():
     errors = {}
 
     tzinfo = pytz.timezone(app.config['TIME_ZONE'])
-    print tzinfo
     tz = RequestParams.get('tz')
-    print tz
     if tz:
         try:
             tzinfo = pytz.timezone(tz)
@@ -106,19 +104,13 @@ def events():
     until_time = parseATTime(RequestParams.get('until', 'now'), tzinfo)
     from_time = parseATTime(RequestParams.get('from', '-1d'), tzinfo)
 
-    print RequestParams.get('until')
-    print RequestParams.get('from')
     start_time = min(from_time, until_time)
     end_time = max(from_time, until_time)
-    print from_time
-    print until_time
     if start_time == end_time:
         errors['from'] = errors['until'] = 'Invalid empty time range'
+    start_time = epoch(start_time)
 
     tags = RequestParams.get('tags', 0)
-
-    print start_time
-    print end_time
     return json.dumps(fetchEvents(start_time, end_time, tags)), 200, {'Content-Type': 'application/json'}
 
 
