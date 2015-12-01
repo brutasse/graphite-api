@@ -91,22 +91,9 @@ def dashboard_load(name):
 @app.route('/events/get_data', methods=methods)
 def events():
 
-    errors = {}
-    from_time = None
-    until_time = None
-
-    try:
-         from_time = int(RequestParams.get('from', 0))
-    except ValueError:
-        errors['from'] = 'must be an epoch timestamp.'
-    try:
-        until_time = int(RequestParams.get('until', 0))
-    except ValueError:
-        errors['until'] = 'must be an epoch timestamp.'
-    tags = int(RequestParams.get('tags', 0))
-
-    if errors:
-        return jsonify({'errors': errors}, status=400)
+    from_time = RequestParams.get('from', 0)
+    until_time = RequestParams.get('until', 0)
+    tags = RequestParams.get('tags', 0)
 
     return json.dumps(fetchEvents(from_time, until_time, tags)), 200, {'Content-Type': 'application/json'}
 
