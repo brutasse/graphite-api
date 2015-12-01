@@ -11,9 +11,6 @@ def fetchEvents(startTime, endTime, tags):
 
     startTime = int(epoch(startTime))
     endTime = int(epoch(endTime))
-    print startTime
-    print endTime
     r = node.getEvents(startTime, endTime, tags)
-    print r
     return r
 
