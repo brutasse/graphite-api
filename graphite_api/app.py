@@ -108,7 +108,6 @@ def events():
     end_time = max(from_time, until_time)
     if start_time == end_time:
         errors['from'] = errors['until'] = 'Invalid empty time range'
-    start_time = epoch(start_time)
 
     tags = RequestParams.get('tags', 0)
     return json.dumps(fetchEvents(start_time, end_time, tags)), 200, {'Content-Type': 'application/json'}
