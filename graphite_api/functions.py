@@ -2592,10 +2592,11 @@ def aggregateLine(requestContext, seriesList, func='avg'):
     results = []
     for series in seriesList:
         value = t_funcs[func](series)
-        name = 'aggregateLine(%s,%d)' % (series.pathExpression, value)
+        name = 'aggregateLine(%s,"%s")' % (series.name, func)
 
         [series] = constantLine(requestContext, value)
         series.name = name
+        series.pathExpression = series.name
         results.append(series)
     return results
 
