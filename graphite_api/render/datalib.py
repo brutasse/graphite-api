@@ -71,7 +71,8 @@ class TimeSeries(list):
             return max(usable)
         if self.consolidationFunc == 'min':
             return min(usable)
-        raise Exception("Invalid consolidation function!")
+        raise Exception(
+            "Invalid consolidation function: '%s'" % self.consolidationFunc)
 
     def __repr__(self):
         return 'TimeSeries(name=%s, start=%s, end=%s, step=%s)' % (
