@@ -398,7 +398,7 @@ class FunctionsTest(TestCase):
         self.assertEqual(perc[3], 37.5)
 
         with self.assertRaises(ValueError):
-            functions.asPercent({}, series[:2], [1, 2])
+            functions.asPercent({}, series[:2], [1, 2, 3])
 
         perc = functions.asPercent({}, series[:2], [series[2]])[0]
         self.assertEqual(perc[:2], [0.0, 100.0])

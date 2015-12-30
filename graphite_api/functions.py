@@ -158,6 +158,13 @@ def normalize(seriesLists):
     return seriesList, start, end, step
 
 
+def matchSeries(s1, s2):
+    assert len(s2) == len(s1), ("The number of series in each argument "
+                                "must be the same")
+    return zip_longest(sorted(s1, lambda a, b: cmp(a.name, b.name)),
+                       sorted(s2, lambda a, b: cmp(a.name, b.name)))
+
+
 def formatPathExpressions(seriesList):
     """
     Returns a comma-separated list of unique path expressions.
@@ -526,12 +533,15 @@ def asPercent(requestContext, seriesList, total=None):
     If `total` is not specified, the sum of all points in the wildcard series
     will be used instead.
 
-    The `total` parameter may be a single series or a numeric value.
+    The `total` parameter may be a list of series, a single series
+    or a numeric value.
 
     Example::
 
         &target=asPercent(Server01.connections.{failed,succeeded},
                           Server01.connections.attempted)
+        &target=asPercent(Server*.connections.{failed,succeeded},
+                          Server*.connections.attempted)
         &target=asPercent(apache01.threads.busy,1500)
         &target=asPercent(Server01.cpu.*.jiffies)
 
@@ -544,27 +554,41 @@ def asPercent(requestContext, seriesList, total=None):
         totalValues = [safeSum(row) for row in zip_longest(*seriesList)]
         totalText = None  # series.pathExpression
     elif isinstance(total, list):
-        if len(total) != 1:
+        if len(total) != 1 and len(total) != len(seriesList):
             raise ValueError(
-                "asPercent second argument must reference exactly 1 series")
-        normalize([seriesList, total])
-        totalValues = total[0]
-        totalText = totalValues.name
+                "asPercent second argument must be missing, a single digit, "
+                "reference exactly 1 series or reference the same number of "
+                "series as the first argument")
+
+        if len(total) == 1:
+            normalize([seriesList, total])
+            totalValues = total[0]
+            totalText = totalValues.name
     else:
         totalValues = [total] * len(seriesList[0])
         totalText = str(total)
 
     resultList = []
-    for series in seriesList:
-        resultValues = [safeMul(safeDiv(val, totalVal), 100.0)
-                        for val, totalVal in zip_longest(series, totalValues)]
+    if isinstance(total, list) and len(total) == len(seriesList):
+        for series1, series2 in matchSeries(seriesList, total):
+            name = "asPercent(%s,%s)" % (series1.name, series2.name)
+            (seriesList, start, end, step) = normalize([(series1, series2)])
+            resultValues = [safeMul(safeDiv(v1, v2), 100.0)
+                            for v1, v2 in zip_longest(series1, series2)]
+            resultSeries = TimeSeries(name, start, end, step, resultValues)
+            resultSeries.pathExpression = name
+            resultList.append(resultSeries)
+    else:
+        for series in seriesList:
+            resultValues = [safeMul(safeDiv(val, totalVal), 100.0)
+                            for val, totalVal in zip_longest(series, totalValues)]
 
-        name = "asPercent(%s, %s)" % (series.name,
-                                      totalText or series.pathExpression)
-        resultSeries = TimeSeries(name, series.start, series.end, series.step,
-                                  resultValues)
-        resultSeries.pathExpression = name
-        resultList.append(resultSeries)
+            name = "asPercent(%s, %s)" % (series.name,
+                                          totalText or series.pathExpression)
+            resultSeries = TimeSeries(name, series.start, series.end,
+                                      series.step, resultValues)
+            resultSeries.pathExpression = name
+            resultList.append(resultSeries)
 
     return resultList
 
