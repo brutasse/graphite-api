@@ -232,7 +232,7 @@ def prune_datapoints(series, max_datapoints, start, end):
         step = series.step
 
     timestamps = range(series.start, series.end + series.step, step)
-    datapoints = zip(series, timestamps)
+    datapoints = zip(iter(series), timestamps)
     return {'target': series.name, 'datapoints': datapoints}
 
 
