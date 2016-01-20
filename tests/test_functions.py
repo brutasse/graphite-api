@@ -321,8 +321,32 @@ class FunctionsTest(TestCase):
             results = functions.reduceSeries({}, copy.deepcopy(inputList),
                                              "mock", 2, "metric1", "metric2")
             self.assertEqual(results, expectedResult)
-        self.assertEqual(mock.mock_calls, [call({}, inputList[0]),
-                                           call({}, inputList[1])])
+        self.assertEqual(mock.mock_calls, [
+            call({}, *[[x] for x in inputList[0]]),
+            call({}, *[[x] for x in inputList[1]]),
+        ])
+
+    def test_reduceSeries_asPercent(self):
+        seriesList = [
+            TimeSeries('group.server1.bytes_used', 0, 1, 1, [1]),
+            TimeSeries('group.server1.total_bytes', 0, 1, 1, [2]),
+            TimeSeries('group.server2.bytes_used', 0, 1, 1, [3]),
+            TimeSeries('group.server2.total_bytes', 0, 1, 1, [4]),
+        ]
+        for series in seriesList:
+            series.pathExpression = "tempPath"
+        expectedResult = [
+            # 50 == 100 * 1 / 2
+            TimeSeries('group.server1.reduce.asPercent', 0, 1, 1, [50]),
+            # 100 * 3 / 4
+            TimeSeries('group.server2.reduce.asPercent', 0, 1, 1, [75]),
+        ]
+        mappedResult = (
+            [seriesList[0]], [seriesList[1]], [seriesList[2]], [seriesList[3]])
+        results = functions.reduceSeries(
+            {}, copy.deepcopy(mappedResult),
+            "asPercent", 2, "bytes_used", "total_bytes")
+        self.assertEqual(results, expectedResult)
 
     def test_sum_series(self):
         series = self._generate_series_list()
