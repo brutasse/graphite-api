@@ -2841,7 +2841,7 @@ def reduceSeries(requestContext, seriesLists, reduceFunction, reduceNode,
                 metaSeries[reduceSeriesName][i] = series
     for key in keys:
         metaSeries[key] = app.functions[reduceFunction](requestContext,
-                                                        metaSeries[key])[0]
+                                                        *[[s] for s in metaSeries[key]])[0]
         metaSeries[key].name = key
     return [metaSeries[key] for key in keys]
 
