@@ -28,14 +28,14 @@ of choice.
 
     respawn
 
-    exec gunicorn -w2 graphite_api.app:app -b 0.0.0.0:8888
+    exec gunicorn -w2 graphite_api.app:app -b 127.0.0.1:8888
 
 *Supervisor*
 
 ::
 
     [program:graphite-api]
-    command = gunicorn -w2 graphite_api.app:app -b 0.0.0.0:8888
+    command = gunicorn -w2 graphite_api.app:app -b 127.0.0.1:8888
     autostart = true
     autorestart = true
 
