@@ -91,12 +91,11 @@ def parseTimeReference(ref):
             y += 1900
         if y < 1970:
             y += 100
-        refDate = refDate.replace(year=y)
-        refDate = replace_date(refDate, m, d)
+        refDate = replace_date(refDate, y, m, d)
 
     elif len(ref) == 8 and ref.isdigit():  # YYYYMMDD
-        refDate = refDate.replace(year=int(ref[:4]))
-        refDate = replace_date(refDate, int(ref[4:6]), int(ref[6:8]))
+        refDate = replace_date(refDate, int(ref[:4]), int(ref[4:6]),
+                               int(ref[6:8]))
 
     elif ref[:3] in months:  # MonthName DayOfMonth
         month = months.index(ref[:3]) + 1
@@ -106,7 +105,7 @@ def parseTimeReference(ref):
             day = int(ref[-1:])
         else:
             raise Exception("Day of month required after month name")
-        refDate = replace_date(refDate, month, day)
+        refDate = replace_date(refDate, None, month, day)
     elif ref[:3] in weekdays:  # DayOfWeek (Monday, etc)
         todayDayName = refDate.strftime("%a").lower()[:3]
         today = weekdays.index(todayDayName)
@@ -120,7 +119,12 @@ def parseTimeReference(ref):
     return refDate
 
 
-def replace_date(date, month, day):
+def replace_date(date, year, month, day):
+    if year is not None:
+        try:
+            date = date.replace(year=year)
+        except ValueError:  # Feb 29.
+            date = date.replace(year=year, day=28)
     try:
         date = date.replace(month=month)
         date = date.replace(day=day)
