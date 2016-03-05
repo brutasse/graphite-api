@@ -118,6 +118,59 @@ in three steps:
   ``time_info`` is the same structure as the one returned by ``fetch()``.
   ``series`` is a dictionnary with paths as keys and datapoints as values.
 
+Computing aggregations in the storage system
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Many applications for graphite-api make use of the ``maxDataPoints`` option
+limiting the number of values in each resulting series. Normally the
+aggregation of series to reduce the number of data points is handled via
+the ``consolidateBy`` function in graphite-api. However some storage systems
+may be able to compute the needed aggregations internally, reducing IO and often
+increasing performance.
+
+To make use of this feature, graphite-api can pass the ``maxDataPoints``
+parameter through to the storage layer.
+
+To support this feature in your custom Finder/Reader you need to do the following:
+
+* Add the ``__aggregating__`` attribute to your reader class and accept a
+  third ``max_data_points`` parameter to ``fetch`` ::
+
+    from graphite_api.intervals import IntervalSet, Interval
+
+    class CustomReader(object):
+        __aggregating__ = True
+        __slots__ = ('path',)  # __slots__ is recommended to save memory on readers
+
+        def __init__(self, path):
+            self.path = path
+
+        def fetch(self, start_time, end_time, max_data_points):
+            # fetch data, rollup to max_data_points by whatever means your
+            # storage system allows
+            time_info = _from_, _to_, _step_
+            return time_info, series
+
+        def get_intervals(self):
+            return IntervalSet([Interval(start, end)])
+
+   ``max_data_points`` will either be ``None`` or an ``Integer``
+
+* If your finder supports ``__fetch_multi``, also add the ``__aggregating__``
+  attribute to your finder class and accept a ``max_data_points`` parameter
+  to ``fetch_multi``::
+
+    class CustomFinder(objects):
+          __fetch_multi__ = 'custom'
+          __aggregating__ = True
+
+          def fetch_multi(self, nodes, start_time, end_time, max_data_points):
+              paths = [node.path for node in nodes]
+              # fetch paths rolling up each to max_data_points
+              return time_info, series
+
+  ``max_data_points`` will either be ``None`` or an ``Integer``
+
 Installing custom finders
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
