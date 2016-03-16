@@ -28,16 +28,50 @@ of choice.
 
     respawn
 
-    exec gunicorn -w2 graphite_api.app:app -b 0.0.0.0:8888
+    exec gunicorn -w2 graphite_api.app:app -b 127.0.0.1:8888
 
 *Supervisor*
 
 ::
 
     [program:graphite-api]
-    command = gunicorn -w2 graphite_api.app:app -b 0.0.0.0:8888
+    command = gunicorn -w2 graphite_api.app:app -b 127.0.0.1:8888
     autostart = true
     autorestart = true
+
+*systemd*
+
+::
+
+    # This is /etc/systemd/system/graphite-api.socket
+    [Unit]
+    Description=graphite-api socket
+    
+    [Socket]
+    ListenStream=/run/graphite-api.sock
+    ListenStream=127.0.0.1:8888
+    
+    [Install]
+    WantedBy=sockets.target
+
+::
+
+    # This is /etc/systemd/system/graphite-api.service
+    [Unit]
+    Description=Graphite-API service
+    Requires=graphite-api.socket
+    
+    [Service]
+    ExecStart=/usr/bin/gunicorn -w2 graphite_api.app:app
+    Restart=on-failure
+    #User=graphite
+    #Group=graphite
+    ExecReload=/bin/kill -s HUP $MAINPID
+    ExecStop=/bin/kill -s TERM $MAINPID
+    PrivateTmp=true
+    
+    [Install]
+    WantedBy=multi-user.target
 
 .. note::
 
