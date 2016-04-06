@@ -27,7 +27,8 @@ class RenderTest(TestCase):
 
     def test_render_view(self):
         response = self.app.get(self.url, query_string={'target': 'test',
-                                                        'format': 'json'})
+                                                        'format': 'json',
+                                                        'noCache': 'true'})
         self.assertEqual(json.loads(response.data.decode('utf-8')), [])
 
         response = self.app.get(self.url, query_string={'target': 'test'})
