@@ -117,7 +117,7 @@ Extra sections
 
           $ pip install graphite-api[sentry]
 
-.. _Sentry: http://sentry.readthedocs.org/en/latest/
+.. _Sentry: https://docs.getsentry.com
 
 *allowed_origins*
 

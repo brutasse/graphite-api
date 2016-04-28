@@ -65,7 +65,7 @@ Documentation
 
 `On readthedocs.org`_ or in the ``docs/`` directory.
 
-.. _On readthedocs.org: http://graphite-api.readthedocs.org/en/latest/
+.. _On readthedocs.org: http://graphite-api.readthedocs.io/en/latest/
 
 Hacking
 -------

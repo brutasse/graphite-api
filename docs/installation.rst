@@ -70,7 +70,7 @@ extra dependencies:
   the `Flask-Cache docs`_ for supported cache types.
 
 
-.. _Sentry: http://sentry.readthedocs.org/en/latest/
+.. _Sentry: https://docs.getsentry.com
 .. _Cyanite: https://github.com/brutasse/graphite-cyanite
 .. _Flask-Cache docs: http://pythonhosted.org/Flask-Cache/#configuring-flask-cache
 
