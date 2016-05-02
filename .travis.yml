@@ -31,3 +31,4 @@ script: "./.travis.sh"
 matrix:
   allow_failures:
     - env: TOXENV=coverage
+    - env: TOXENV=docs
