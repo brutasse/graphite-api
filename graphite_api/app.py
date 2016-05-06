@@ -416,7 +416,10 @@ def render():
                                      ts.strftime("%Y-%m-%d %H:%M:%S"), value))
             response.seek(0)
             headers['Content-Type'] = 'text/csv'
-            return response.read(), 200, headers
+            resp = response.read(), 200, headers
+            if use_cache:
+                app.cache.add(request_key, resp, cache_timeout)
+            return resp
 
         if request_options['format'] == 'json':
             series_data = []
@@ -435,7 +438,10 @@ def render():
                     series_data.append({'target': series.name,
                                         'datapoints': datapoints})
 
-            return jsonify(series_data, headers=headers)
+            resp = jsonify(series_data, headers=headers)
+            if use_cache:
+                app.cache.add(request_key, resp, cache_timeout)
+            return resp
 
         if request_options['format'] == 'raw':
             response = StringIO()
@@ -446,7 +452,10 @@ def render():
                 response.write(u'\n')
             response.seek(0)
             headers['Content-Type'] = 'text/plain'
-            return response.read(), 200, headers
+            resp = response.read(), 200, headers
+            if use_cache:
+                app.cache.add(request_key, resp, cache_timeout)
+            return resp
 
         if request_options['format'] == 'svg':
             graph_options['outputFormat'] = 'svg'
