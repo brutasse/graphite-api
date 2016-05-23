@@ -8,7 +8,7 @@ Graphite-API releases
 * Fix leap year handling in ``graphite_api.render.attime``.
 * Allow colon and hash in node names in ``aliasByNode()``
 * Fix calling ``reduceFunction`` in ``reduceSeries``
-* Revert a whisper patch which broken multiple retentions handling.
+* Revert a whisper patch which broke multiple retentions handling.
 * Specify which function is invalid when providing an invalid consolidation
   function.
 
