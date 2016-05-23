@@ -24,8 +24,8 @@ master_doc = 'index'
 project = 'Graphite-API'
 copyright = u'2014, Bruno Renié'
 
-version = '1.1.2'
-release = '1.1.2'
+version = '1.1.3'
+release = '1.1.3'
 
 exclude_patterns = ['_build']
 

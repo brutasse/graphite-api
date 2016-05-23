@@ -1,6 +1,17 @@
 Graphite-API releases
 =====================
 
+1.1.3 -- 2016-05-23
+-------------------
+
+* Remove extra parenthesis from ``aliasByMetric()``.
+* Fix leap year handling in ``graphite_api.render.attime``.
+* Allow colon and hash in node names in ``aliasByNode()``
+* Fix calling ``reduceFunction`` in ``reduceSeries``
+* Revert a whisper patch which broken multiple retentions handling.
+* Specify which function is invalid when providing an invalid consolidation
+  function.
+
 1.1.2 -- 2015-11-19
 -------------------
 
