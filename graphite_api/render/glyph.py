@@ -1997,9 +1997,13 @@ def closest(number, neighbors):
     return closestNeighbor
 
 
+def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
+    return abs(a - b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
+
+
 def frange(start, end, step):
     f = start
-    while f <= end:
+    while f < end or isclose(f, end):
         yield f
         f += step
         # Protect against rounding errors on very small float ranges
