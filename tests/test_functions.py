@@ -1,4 +1,5 @@
 import copy
+import math
 import time
 
 from datetime import datetime
@@ -347,6 +348,19 @@ class FunctionsTest(TestCase):
             {}, copy.deepcopy(mappedResult),
             "asPercent", 2, "bytes_used", "total_bytes")
         self.assertEqual(results, expectedResult)
+
+    def test_pow(self):
+        seriesList = self._generate_series_list()
+        factor = 2
+        # Leave the original seriesList undisturbed for verification
+        results = functions.pow({}, copy.deepcopy(seriesList), factor)
+        for i, series in enumerate(results):
+            for counter, value in enumerate(series):
+                if value is None:
+                    continue
+                original_value = seriesList[i][counter]
+                expected_value = math.pow(original_value, factor)
+                self.assertEqual(value, expected_value)
 
     def test_sum_series(self):
         series = self._generate_series_list()

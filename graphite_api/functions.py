@@ -83,6 +83,16 @@ def safeDiv(a, b):
     return float(a) / float(b)
 
 
+def safePow(a, b):
+    if a is None or b is None:
+        return None
+    try:
+        # using math.pow in order to catch domain errors
+        return math.pow(a, b)
+    except ValueError:
+        return None
+
+
 def safeMul(*factors):
     if None in factors:
         return
@@ -808,6 +818,25 @@ def scaleToSeconds(requestContext, seriesList, seconds):
         for i, value in enumerate(series):
             factor = seconds * 1.0 / series.step
             series[i] = safeMul(value, factor)
+    return seriesList
+
+
+def pow(requestContext, seriesList, factor):
+    """
+    Takes one metric or a wildcard seriesList followed by a constant, and
+    raises the datapoint by the power of the constant provided at each point.
+
+    Example::
+
+        &target=pow(Server.instance01.threads.busy,10)
+        &target=pow(Server.instance*.threads.busy,10)
+
+    """
+    for series in seriesList:
+        series.name = "pow(%s,%g)" % (series.name, float(factor))
+        series.pathExpression = series.name
+        for i, value in enumerate(series):
+            series[i] = safePow(value, factor)
     return seriesList
 
 
