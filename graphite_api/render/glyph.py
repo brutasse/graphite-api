@@ -344,7 +344,7 @@ class Graph(object):
         if self.logBase:
             if self.logBase == 'e':
                 self.logBase = math.e
-            elif self.logBase <= 1:
+            elif self.logBase < 1:
                 self.logBase = None
                 params['logBase'] = None
             else:
@@ -402,6 +402,8 @@ class Graph(object):
             s = value
             if s.startswith('#'):
                 s = s[1:]
+            if s.startswith('%23'):
+                s = s[3:]
             r, g, b = (int(s[0:2], base=16), int(s[2:4], base=16),
                        int(s[4:6], base=16))
             if len(s) == 8 and not forceAlpha:
