@@ -3133,11 +3133,11 @@ def hitcount(requestContext, seriesList, intervalString,
             requestContext['startTime'] = tz.localize(datetime(s.year, s.month,
                                                    s.day))
         elif interval >= HOUR:
-            requestContext['startTime'] = tz.localize(datetime(s.year, s.month, s.day,
-                                                   s.hour))
+            requestContext['startTime'] = tz.localize(datetime(s.year, s.month,
+                                                   s.day, s.hour))
         elif interval >= MINUTE:
-            requestContext['startTime'] = tz.localize(datetime(s.year, s.month, s.day,
-                                                   s.hour, s.minute))
+            requestContext['startTime'] = tz.localize(datetime(s.year, s.month,
+                                                   s.day, s.hour, s.minute))
 
         # Gather all paths first, then the data
         paths = []
