@@ -999,6 +999,29 @@ class FunctionsTest(TestCase):
         self.assertEqual(grouped[0].name, 'test-db1')
         self.assertEqual(list(grouped[0])[:3], [100, 102, 104])
 
+    def test_group_by_nodes(self):
+        seriesList = [
+            TimeSeries('group1.server1.load5', 0, 2, 1, [10, 20]),
+            TimeSeries('group1.server1.load10', 0, 2, 1, [1, 2]),
+            TimeSeries('group1.server2.load5', 0, 2, 1, [30, 40]),
+            TimeSeries('group1.server2.load10', 0, 2, 1, [3, 4]),
+            TimeSeries('group2.server1.load5', 0, 2, 1, [40, 50]),
+            TimeSeries('group2.server1.load10', 0, 2, 1, [4, 5]),
+            TimeSeries('group2.server2.load5', 0, 2, 1, [60, 70]),
+            TimeSeries('group2.server2.load10', 0, 2, 1, [6, 7]),
+        ]
+        for series in seriesList:
+            series.pathExpression = series.name
+        grouped = functions.groupByNodes({}, seriesList,
+                                         'sumSeries', 0, 2)
+
+        expectedNames = ['group1.load5', 'group1.load10',
+                         'group2.load5', 'group2.load10']
+        self.assertEqual([s.name for s in grouped], expectedNames)
+
+        group1_load10 = grouped[1]
+        self.assertEqual(list(group1_load10), [4, 6])
+
     def test_exclude(self):
         series = self._generate_series_list(config=[range(100),
                                                     range(100, 200)])
