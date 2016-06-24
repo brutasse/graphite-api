@@ -27,8 +27,9 @@ class RequestParams(object):
     whatever their origin (json body, form body, request args)."""
 
     def __getitem__(self, key):
-        if request.json and key in request.json:
-            return request.json[key]
+        json = request_json()
+        if json and key in json:
+            return json[key]
         if key in request.form:
             return request.form.getlist(key)[-1]
         if key in request.args:
@@ -49,7 +50,8 @@ class RequestParams(object):
             return default
 
     def getlist(self, key):
-        if request.json and key in request.json:
+        json = request_json()
+        if json and key in json:
             value = self[key]
             if not isinstance(value, list):
                 value = [value]
@@ -60,10 +62,18 @@ class RequestParams(object):
 RequestParams = RequestParams()
 
 
+def request_json():
+    if hasattr(request, 'get_json'):
+        return request.get_json()
+    else:
+        return request.json
+
+
 def hash_request():
     keys = set()
-    if request.json:
-        keys.update(request.json.keys())
+    json = request_json()
+    if json:
+        keys.update(json.keys())
     if request.form:
         keys.update(request.form.keys())
     keys.update(request.args.keys())
