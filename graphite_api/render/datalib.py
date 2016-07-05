@@ -127,6 +127,7 @@ def fetchData(requestContext, pathExprs):
     from ..app import app
     startTime = int(epoch(requestContext['startTime']))
     endTime = int(epoch(requestContext['endTime']))
+    maxDataPoints = requestContext.get('maxDataPoints')
 
     # Convert to list if given single path
     if not isinstance(pathExprs, list):
@@ -157,14 +158,24 @@ def fetchData(requestContext, pathExprs):
         nodes = multi_nodes[finder.__fetch_multi__]
         if not nodes:
             continue
-        time_info, series = finder.fetch_multi(nodes, startTime, endTime)
+
+        if hasattr(finder, '__aggregating__'):
+            time_info, series = finder.fetch_multi(nodes,
+                                                   startTime,
+                                                   endTime,
+                                                   maxDataPoints)
+        else:
+            time_info, series = finder.fetch_multi(nodes, startTime, endTime)
+
         for path, values in series.items():
             data_store.add_data(path, time_info, values,
                                 path_to_exprs[path])
 
     # Single fetches
     fetches = [
-        (node, node.fetch(startTime, endTime)) for node in single_nodes]
+        (node, node.fetch(startTime, endTime, maxDataPoints))
+        for node in single_nodes
+    ]
     for node, results in fetches:
         if not results:
             logger.info("no results", node=node, start=startTime,

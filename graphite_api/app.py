@@ -361,6 +361,7 @@ def render():
         'startTime': request_options['startTime'],
         'endTime': request_options['endTime'],
         'tzinfo': request_options['tzinfo'],
+        'maxDataPoints': request_options.get('maxDataPoints'),
         'data': [],
     }
 

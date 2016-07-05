@@ -24,8 +24,11 @@ class LeafNode(Node):
         self.intervals = reader.get_intervals()
         self.is_leaf = True
 
-    def fetch(self, startTime, endTime):
-        return self.reader.fetch(startTime, endTime)
+    def fetch(self, startTime, endTime, maxDataPoints=None):
+        if hasattr(self.reader, '__aggregating__'):
+            return self.reader.fetch(startTime, endTime, maxDataPoints)
+        else:
+            return self.reader.fetch(startTime, endTime)
 
     def __repr__(self):
         return '<LeafNode[%x]: %s (%s)>' % (id(self), self.path, self.reader)
