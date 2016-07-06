@@ -191,17 +191,6 @@ class MetricsTests(TestCase):
         response = self.app.get(url)
         self.assertJSON(response, [])
 
-    def test_index(self):
-        parent = os.path.join(WHISPER_DIR, 'collectd')
-        os.makedirs(parent)
-
-        for metric in ['load', 'memory', 'cpu']:
-            db = os.path.join(parent, '{0}.wsp'.format(metric))
-            whisper.create(db, [(1, 60)])
-
-        response = self.app.put('/index')
-        self.assertJSON(response, {'success': True, 'entries': 3})
-
     def test_metrics_index(self):
         url = '/metrics/index.json'
         response = self.app.get(url)

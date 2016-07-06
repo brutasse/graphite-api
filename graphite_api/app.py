@@ -1,11 +1,8 @@
-import os
 import csv
 import json
 import math
 import pytz
-import shutil
 import six
-import tempfile
 import time
 
 from collections import defaultdict
@@ -45,10 +42,6 @@ class Graphite(Flask):
     @property
     def store(self):
         return self.config['GRAPHITE']['store']
-
-    @property
-    def searcher(self):
-        return self.config['GRAPHITE']['searcher']
 
     @property
     def functions(self):
@@ -195,16 +188,21 @@ def metrics_expand():
     return jsonify({'results': results})
 
 
+def recurse(query, index):
+    """
+    Recursively walk across paths, adding leaves to the index as they're found.
+    """
+    for node in app.store.find(query):
+        if node.is_leaf:
+            index.add(node.path)
+        else:
+            recurse('{0}.*'.format(node.path), index)
+
+
 @app.route('/metrics/index.json', methods=methods)
 def metrics_index():
     index = set()
-    if os.path.exists(app.searcher.index_path):
-        with open(app.searcher.index_path, 'r') as f:
-            index = set([line.strip() for line in f if line])
-        if not index:
-            recurse('*', index)
-    else:
-        recurse('*', index)
+    recurse('*', index)
     return jsonify(sorted(index))
 
 
@@ -232,28 +230,6 @@ def prune_datapoints(series, max_datapoints, start, end):
     timestamps = range(series.start, series.end + series.step, step)
     datapoints = zip(series, timestamps)
     return {'target': series.name, 'datapoints': datapoints}
-
-
-def recurse(query, index):
-    """
-    Recursively walk across paths, adding leaves to the index as they're found.
-    """
-    for node in app.store.find(query):
-        if node.is_leaf:
-            index.add(node.path)
-        else:
-            recurse('{0}.*'.format(node.path), index)
-
-
-@app.route('/index', methods=['POST', 'PUT'])
-def build_index():
-    index = set()
-    recurse('*', index)
-    with tempfile.NamedTemporaryFile(delete=False) as index_file:
-        index_file.write('\n'.join(sorted(index)).encode('utf-8'))
-    shutil.move(index_file.name, app.searcher.index_path)
-    app.searcher.reload()
-    return jsonify({'success': True, 'entries': len(index)})
 
 
 @app.route('/render', methods=methods)
