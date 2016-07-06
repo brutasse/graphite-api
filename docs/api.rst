@@ -112,30 +112,6 @@ Example::
         "collectd.host1.load.shortterm"
     ]
 
-.. _/index:
-
-``/index``
-----------
-
-Rebuilds the search index by recursively querying the storage finders for
-available paths.
-
-Parameters:
-
-*jsonp* (optional)
-  Wraps the response in a JSONP callback.
-
-Example::
-
-    POST /index
-
-    {
-        "success": true,
-        "entries": 854
-    }
-
-``POST`` or ``PUT`` are supported.
-
 .. _render:
 
 The Render API -- ``/render``

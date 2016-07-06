@@ -14,7 +14,6 @@ except ImportError:
 
 from graphite_api.app import app
 from graphite_api.finders.whisper import WhisperFinder
-from graphite_api.search import IndexSearcher
 from graphite_api.storage import Store
 from graphite_api._vendor import whisper
 
@@ -58,7 +57,6 @@ class TestCase(unittest.TestCase):
         app.config['TESTING'] = True
         whisper_conf = {'whisper': {'directories': [WHISPER_DIR]}}
         app.config['GRAPHITE']['store'] = Store([WhisperFinder(whisper_conf)])
-        app.config['GRAPHITE']['searcher'] = IndexSearcher(SEARCH_INDEX)
         self.app = app.test_client()
 
     def tearDown(self):
