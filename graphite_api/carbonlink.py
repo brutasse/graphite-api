@@ -1,5 +1,4 @@
 import bisect
-import errno
 import random
 import socket
 import struct
@@ -8,7 +7,6 @@ import time
 from hashlib import md5
 from io import BytesIO
 from importlib import import_module
-from select import select
 
 import six
 from six.moves import cPickle as pickle  # noqa
@@ -287,24 +285,6 @@ class CarbonLinkRequestError(Exception):
 
 
 # Socket helper functions
-def still_connected(sock):
-    is_readable = select([sock], [], [], 0)[0]
-    if is_readable:
-        try:
-            recv_buf = sock.recv(1, socket.MSG_DONTWAIT | socket.MSG_PEEK)
-
-        except socket.error as e:
-            if e.errno in (errno.EAGAIN, errno.EWOULDBLOCK):
-                return True
-            else:
-                raise
-        else:
-            return bool(recv_buf)
-
-    else:
-        return True
-
-
 def recv_exactly(conn, num_bytes):
     buf = b''
     while len(buf) < num_bytes:
