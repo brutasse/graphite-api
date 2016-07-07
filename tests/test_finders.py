@@ -24,6 +24,21 @@ class FinderTest(TestCase):
         self.assertEqual(time_info, (100, 200, 10))
         self.assertEqual(len(series), 10)
 
+    def test_multi_finder(self):
+        store = Store([DummyFinder(), DummyFinder()])
+        nodes = list(store.find("foo"))
+        self.assertEqual(len(nodes), 1)
+        self.assertEqual(nodes[0].path, 'foo')
+
+        nodes = list(store.find('bar.*'))
+        self.assertEqual(len(nodes), 10)
+        node = nodes[0]
+        self.assertEqual(node.path.split('.')[0], 'bar')
+
+        time_info, series = node.fetch(100, 200)
+        self.assertEqual(time_info, (100, 200, 10))
+        self.assertEqual(len(series), 10)
+
 
 class DummyReader(object):
     __slots__ = ('path',)
