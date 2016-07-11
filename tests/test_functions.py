@@ -1052,6 +1052,7 @@ class FunctionsTest(TestCase):
         ctx = {
             'startTime': parseATTime('-1min'),
             'endTime': parseATTime('now'),
+            'tzinfo': pytz.timezone('UTC'),
         }
         series = self._generate_series_list(config=[list(range(99)) + [None]])
         for s in series:
@@ -1062,6 +1063,13 @@ class FunctionsTest(TestCase):
 
         hit = functions.hitcount(ctx, series, '5s', True)[0]
         self.assertEqual(hit[:3], [220, 245, 270])
+
+        try:
+            hit = functions.hitcount(ctx, series, '1min', True)[0]
+            hit = functions.hitcount(ctx, series, '1h', True)[0]
+            hit = functions.hitcount(ctx, series, '1d', True)[0]
+        except ValueError as e:
+            self.fail("hitcount() raised ValueError: %s" % str(e))
 
     def test_random_walk(self):
         ctx = {
