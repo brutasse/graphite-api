@@ -451,25 +451,111 @@ class FunctionsTest(TestCase):
         weight = functions.weightedAverage({}, [series[0]], [series[1]], 0)
         self.assertEqual(weight[:3], [0, 1, 2])
 
-    def test_moving_median(self):
-        series = self._generate_series_list()
-        for s in series:
-            self.write_series(s)
-        median = functions.movingMedian({
-            'startTime': parseATTime('-100s')
-        }, series, '5s')[0]
-        try:
-            self.assertEqual(median[:4], [1, 0, 1, 1])
-        except AssertionError:  # time race condition
-            self.assertEqual(median[:4], [1, 1, 1, 1])
+    def test_moving_median_empty_series(self):
+        self.assertListEqual(functions.movingMedian({}, [], ""), [])
 
-        median = functions.movingMedian({
-            'startTime': parseATTime('-100s')
-        }, series, 5)[0]
-        try:
-            self.assertEqual(median[:4], [1, 0, 1, 1])
-        except AssertionError:
-            self.assertEqual(median[:4], [1, 1, 1, 1])
+    def test_moving_median_returns_none(self):
+        def gen_series_list(start=0):
+            seriesList = [
+                TimeSeries('collectd.test-db0.load.value',
+                           start+10, start+15, 1, range(start, start+15)),
+            ]
+            for series in seriesList:
+                series.pathExpression = series.name
+            return seriesList
+
+        series = gen_series_list(10)
+
+        def mock_evaluate(reqCtx, tokens, store=None):
+            seriesList = [
+                TimeSeries('collectd.test-db0.load.value', 10, 25, 1,
+                           [None] * 15)
+            ]
+            for series in seriesList:
+                series.pathExpression = series.name
+            return seriesList
+
+        expectedResults = [
+            TimeSeries('movingMedian(collectd.test-db0.load.value,60)',
+                       20, 25, 1, [None, None, None, None, None])
+        ]
+
+        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
+            result = functions.movingMedian({
+                'args': ({}, {}),
+                'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
+                'endTime': datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
+                'data': [],
+            }, series, 10)
+
+        self.assertListEqual(result, expectedResults)
+
+    def test_moving_median_returns_empty(self):
+        def gen_series_list(start=0):
+            seriesList = [
+                TimeSeries('collectd.test-db0.load.value',
+                           start+600, start+700, 1, range(start, start+100)),
+            ]
+            for series in seriesList:
+                series.pathExpression = series.name
+            return seriesList
+
+        series = gen_series_list(10)
+
+        def mock_evaluate(reqCtx, tokens, store=None):
+            return []
+
+        expectedResults = []
+
+        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
+            result = functions.movingMedian({
+                'args': ({}, {}),
+                'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
+                'endTime': datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
+                'data': [],
+            }, series, 60)
+
+        self.assertListEqual(result, expectedResults)
+
+    def test_moving_median(self):
+        def gen_series_list(start=0):
+            seriesList = [
+                TimeSeries('collectd.test-db0.load.value',
+                           start+600, start+700, 1, range(start, start+100)),
+            ]
+            for series in seriesList:
+                series.pathExpression = series.name
+            return seriesList
+
+        series = gen_series_list(10)
+
+        def mock_evaluate(reqCtx, tokens, store=None):
+            return gen_series_list()
+
+        expectedResults = [[
+            TimeSeries('movingMedian(collectd.test-db0.load.value,60)',
+                       660, 700, 1, range(30, 70)),
+        ], [
+            TimeSeries('movingMedian(collectd.test-db0.load.value,"-1min")',
+                       660, 700, 1, range(30, 70)),
+        ]]
+
+        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
+            result = functions.movingMedian({
+                'args': ({}, {}),
+                'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
+                'endTime': datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
+                'data': [],
+            }, series, 60)
+            self.assertListEqual(result, expectedResults[0])
+
+            result = functions.movingMedian({
+                'args': ({}, {}),
+                'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
+                'endTime': datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
+                'data': [],
+            }, series, "-1min")
+            self.assertListEqual(result, expectedResults[1])
 
     def test_invert(self):
         series = self._generate_series_list()
@@ -497,25 +583,116 @@ class FunctionsTest(TestCase):
         offset = functions.offsetToZero({}, series)[0]
         self.assertEqual(offset[:3], [None, 0, 1])
 
-    def test_moving_average(self):
-        series = self._generate_series_list()
-        for s in series:
-            self.write_series(s)
-        average = functions.movingAverage({
-            'startTime': parseATTime('-100s')
-        }, series, '5s')[0]
-        try:
-            self.assertEqual(list(average)[:4], [0.5, 1/3., 0.5, 0.8])
-        except AssertionError:  # time race condition
-            self.assertEqual(list(average)[:4], [1, 3/4., 0.8, 1.2])
+    def test_moving_average_empty_series(self):
+        self.assertListEqual(functions.movingAverage({}, [], ""), [])
 
-        average = functions.movingAverage({
-            'startTime': parseATTime('-100s')
-        }, series, 5)[0]
-        try:
-            self.assertEqual(average[:4], [0.5, 1/3., 0.5, 0.8])
-        except AssertionError:
-            self.assertEqual(list(average)[:4], [1, 3/4., 0.8, 1.2])
+    def test_moving_average_returns_none(self):
+        def gen_series_list(start=0):
+            seriesList = [
+                TimeSeries('collectd.test-db0.load.value',
+                           start+10, start+15, 1, range(start, start+15)),
+            ]
+            for series in seriesList:
+                series.pathExpression = series.name
+            return seriesList
+
+        series = gen_series_list(10)
+
+        def mock_evaluate(reqCtx, tokens, store=None):
+            seriesList = [
+                TimeSeries('collectd.test-db0.load.value', 10, 25, 1,
+                           [None] * 15)
+            ]
+            for series in seriesList:
+                series.pathExpression = series.name
+            return seriesList
+
+        expectedResults = [
+            TimeSeries('movingAverage(collectd.test-db0.load.value,60)',
+                       20, 25, 1, [None, None, None, None, None])
+        ]
+
+        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
+            result = functions.movingAverage({
+                'args': ({}, {}),
+                'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
+                'endTime': datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
+                'data': [],
+            }, series, 10)
+
+        self.assertListEqual(result, expectedResults)
+
+    def test_moving_average_returns_empty(self):
+        def gen_series_list(start=0):
+            seriesList = [
+                TimeSeries('collectd.test-db0.load.value',
+                           start+600, start+700, 1, range(start, start+100)),
+            ]
+            for series in seriesList:
+                series.pathExpression = series.name
+            return seriesList
+
+        series = gen_series_list(10)
+
+        def mock_evaluate(reqCtx, tokens, store=None):
+            return []
+
+        expectedResults = []
+
+        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
+            result = functions.movingAverage({
+                'args': ({}, {}),
+                'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
+                'endTime': datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
+                'data': [],
+            }, series, 60)
+
+        self.assertListEqual(result, expectedResults)
+
+    def test_moving_average(self):
+        def gen_series_list(start=0):
+            seriesList = [
+                TimeSeries('collectd.test-db0.load.value',
+                           start+600, start+700, 1, range(start, start+100)),
+            ]
+            for series in seriesList:
+                series.pathExpression = series.name
+            return seriesList
+
+        series = gen_series_list(10)
+
+        def mock_evaluate(reqCtx, tokens, store=None):
+            return gen_series_list()
+
+        def frange(x, y, jump):
+            while x < y:
+                yield x
+                x += jump
+
+        expectedResults = [[
+            TimeSeries('movingAverage(collectd.test-db0.load.value,60)',
+                       660, 700, 1, frange(29.5, 69.5, 1)),
+        ], [
+            TimeSeries('movingAverage(collectd.test-db0.load.value,"-1min")',
+                       660, 700, 1, frange(29.5, 69.5, 1)),
+        ]]
+
+        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
+            result = functions.movingAverage({
+                'args': ({}, {}),
+                'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
+                'endTime': datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
+                'data': [],
+            }, series, 60)
+            self.assertListEqual(result, expectedResults[0])
+
+            result = functions.movingAverage({
+                'args': ({}, {}),
+                'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
+                'endTime': datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
+                'data': [],
+            }, series, "-1min")
+            self.assertListEqual(result, expectedResults[1])
 
     def test_cumulative(self):
         series = self._generate_series_list(config=[range(100)])
@@ -846,33 +1023,147 @@ class FunctionsTest(TestCase):
         dev = functions.stdev({}, series, 10)[0]
         self.assertEqual(dev[1], 0.5)
 
-    def test_holt_winters(self):
-        timespan = 3600 * 24 * 8  # 8 days
-        stop = int(time.time())
-        step = 100
-        series = TimeSeries('foo.bar',
-                            stop - timespan,
-                            stop,
-                            step,
-                            [x**1.5 for x in range(0, timespan, step)])
-        series[10] = None
-        series.pathExpression = 'foo.bar'
-        self.write_series(series, [(100, timespan)])
-
-        ctx = {
-            'startTime': parseATTime('-1d'),
+    def test_holt_winters_analysis_none(self):
+        seriesList = TimeSeries('collectd.test-db0.load.value',
+                                660, 700, 1, [None])
+        expectedResults = {
+            'predictions': TimeSeries(
+                'holtWintersForecast(collectd.test-db0.load.value)',
+                660, 700, 1, [None]),
+            'deviations': TimeSeries(
+                'holtWintersDeviation(collectd.test-db0.load.value)',
+                660, 700, 1, [0]),
+            'seasonals': [0],
+            'slopes': [0],
+            'intercepts': [None]
         }
-        analysis = functions.holtWintersForecast(ctx, [series])
-        self.assertEqual(len(analysis), 1)
 
-        analysis = functions.holtWintersConfidenceBands(ctx, [series])
-        self.assertEqual(len(analysis), 2)
+        result = functions.holtWintersAnalysis(seriesList)
+        self.assertEqual(result, expectedResults)
 
-        analysis = functions.holtWintersConfidenceArea(ctx, [series])
-        self.assertEqual(len(analysis), 2)
+    def test_holt_winters_forecast(self):
+        def gen_series_list(start=0):
+            seriesList = [
+                TimeSeries('collectd.test-db0.load.value',
+                           start+600, start+700, 1, range(start, start+100)),
+            ]
+            for series in seriesList:
+                series.pathExpression = series.name
+            return seriesList
 
-        analysis = functions.holtWintersAberration(ctx, [series])
-        self.assertEqual(len(analysis), 1)
+        series = gen_series_list(10)
+
+        def mock_evaluate(reqCtx, tokens, store=None):
+            return gen_series_list()
+
+        expectedResults = [
+            TimeSeries('holtWintersForecast(collectd.test-db0.load.value)',
+                       660, 700, 1, [])
+        ]
+
+        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
+            result = functions.holtWintersForecast({
+                'args': ({}, {}),
+                'startTime': datetime(1970, 2, 1, 0, 0, 0, 0, pytz.utc),
+                'endTime': datetime(1970, 2, 1, 0, 9, 0, 0, pytz.utc),
+                'data': [],
+            }, series)
+        self.assertListEqual(result, expectedResults)
+
+    def test_holt_winters(self):
+        points = 10
+        step = 600
+        start_time = 2678400  # 1970-02-01
+        week_seconds = 7 * 86400
+
+        def hw_range(x, y, jump):
+            while x < y:
+                yield (x / jump) % 10
+                x += jump
+
+        def gen_series_list(start=0, points=10):
+            seriesList = [
+                TimeSeries('collectd.test-db0.load.value',
+                           start, start+(points*step), step,
+                           hw_range(0, points*step, step)),
+            ]
+            for series in seriesList:
+                series.pathExpression = series.name
+            return seriesList
+
+        series = gen_series_list(start_time, points)
+
+        def mock_evaluate(reqCtx, tokens, store=None):
+            return gen_series_list(start_time - week_seconds,
+                                   (week_seconds / step) + points)
+
+        expectedResults = [[
+            TimeSeries(
+                'holtWintersConfidenceLower(collectd.test-db0.load.value)',
+                start_time, start_time+(points*step), step,
+                [0.2841206166091448, 1.0581027098774411, 0.3338172102994683,
+                 0.5116859493263242, -0.18199175514936972, 0.2366173792019426,
+                 -1.2941554508809152, -0.513426806531049, -0.7970905542723132,
+                 0.09868900726536012]
+            ),
+            TimeSeries(
+                'holtWintersConfidenceUpper(collectd.test-db0.load.value)',
+                start_time, start_time+(points*step), step,
+                [8.424944558327624, 9.409422251880809, 10.607070189221787,
+                 10.288439865038768, 9.491556863132963, 9.474595784593738,
+                 8.572310478053845, 8.897670449095346, 8.941566968508148,
+                 9.409728797779282]
+            )
+        ], [
+            TimeSeries(
+                'holtWintersConfidenceArea(collectd.test-db0.load.value)',
+                start_time, start_time+(points*step), step,
+                [0.2841206166091448, 1.0581027098774411, 0.3338172102994683,
+                 0.5116859493263242, -0.18199175514936972, 0.2366173792019426,
+                 -1.2941554508809152, -0.513426806531049, -0.7970905542723132,
+                 0.09868900726536012]
+            ),
+            TimeSeries(
+                'holtWintersConfidenceArea(collectd.test-db0.load.value)',
+                start_time, start_time+(points*step), step,
+                [8.424944558327624, 9.409422251880809, 10.607070189221787,
+                 10.288439865038768, 9.491556863132963, 9.474595784593738,
+                 8.572310478053845, 8.897670449095346, 8.941566968508148,
+                 9.409728797779282]
+            )
+        ], [
+            TimeSeries(
+                'holtWintersAberration(collectd.test-db0.load.value)',
+                start_time, start_time+(points*step), step,
+                [-0.2841206166091448, -0.05810270987744115,
+                 0, 0, 0, 0, 0, 0, 0, 0]
+            )
+        ]]
+
+        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
+            result = functions.holtWintersConfidenceBands({
+                'args': ({}, {}),
+                'startTime': datetime(1970, 2, 1, 0, 0, 0, 0, pytz.utc),
+                'endTime': datetime(1970, 2, 1, 0, 9, 0, 0, pytz.utc),
+                'data': []
+                }, series)
+            self.assertListEqual(result, expectedResults[0])
+
+            result = functions.holtWintersConfidenceArea({
+                'args': ({}, {}),
+                'startTime': datetime(1970, 2, 1, 0, 0, 0, 0, pytz.utc),
+                'endTime': datetime(1970, 2, 1, 0, 9, 0, 0, pytz.utc),
+                'data': []
+                }, series)
+            self.assertListEqual(result, expectedResults[1])
+
+            result = functions.holtWintersAberration({
+                'args': ({}, {}),
+                'startTime': datetime(1970, 2, 1, 0, 0, 0, 0, pytz.utc),
+                'endTime': datetime(1970, 2, 1, 0, 9, 0, 0, pytz.utc),
+                'data': []
+                }, series)
+            self.assertListEqual(result, expectedResults[2])
 
     def test_dashed(self):
         series = self._generate_series_list(config=[range(100)])

@@ -38,7 +38,11 @@ def evaluateTarget(requestContext, target, data_store=None):
     return result
 
 
-def evaluateTokens(requestContext, tokens, data_store):
+def evaluateTokens(requestContext, tokens, data_store=None):
+    if data_store is None:
+        paths = list(pathsFromTokens(tokens))
+        data_store = fetchData(requestContext, paths)
+
     if tokens.expression:
         return evaluateTokens(requestContext, tokens.expression, data_store)
 
@@ -49,6 +53,7 @@ def evaluateTokens(requestContext, tokens, data_store):
         func = app.functions[tokens.call.funcname]
         args = [evaluateTokens(requestContext,
                                arg, data_store) for arg in tokens.call.args]
+        requestContext['args'] = tokens.call.args
         kwargs = dict([(kwarg.argname,
                         evaluateTokens(requestContext,
                                        kwarg.args[0],
