@@ -1277,5 +1277,11 @@ Set the unit system for compacting Y-axis values (e.g. 23,000,000 becomes
 ``binary``
   Use binary units (powers of 1024) - Ki, Mi, Gi, Ti, Pi.
 
+``sec``
+  Use time units (seconds) - m, H, D, M, Y.
+
+``msec``
+  Use time units (milliseconds) - s, m, H, D, M, Y.
+
 ``none``
   Dont compact values, display the raw number.
