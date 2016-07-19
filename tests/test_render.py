@@ -183,7 +183,7 @@ class RenderTest(TestCase):
             {'lineMode': 'staircase'},
             {'lineMode': 'slope'},
             {'lineMode': 'connected'},
-            {'min': 1, 'max': 1, 'thickness': 2, 'yUnitSystem': 'welp'},
+            {'min': 1, 'max': 2, 'thickness': 2, 'yUnitSystem': 'none'},
             {'yMax': 5, 'yLimit': 0.5, 'yStep': 0.1},
             {'yMax': 'max', 'yUnitSystem': 'binary'},
             {'areaMode': 'stacked', '_expr': 'stacked({0})'},
