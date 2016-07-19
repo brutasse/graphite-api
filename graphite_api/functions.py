@@ -1934,15 +1934,13 @@ def useSeriesAbove(requestContext, seriesList, value, search, replace):
 
         &target=useSeriesAbove(ganglia.metric1.reqs,10,"reqs","time")
     """
-    from .app import evaluateTarget, pathsFromTarget
+    from .app import evaluateTarget
     newSeries = []
 
     for series in seriesList:
         newname = re.sub(search, replace, series.name)
         if safeMax(series) > value:
-            paths = pathsFromTarget(newname)
-            data_store = fetchData(requestContext, paths)
-            n = evaluateTarget(requestContext, newname, data_store)
+            n = evaluateTarget(requestContext, newname)
             if n is not None and len(n) > 0:
                 newSeries.append(n[0])
 
@@ -2424,7 +2422,7 @@ def timeStack(requestContext, seriesList, timeShiftUnit, timeShiftStart,
         # create a series for today and each of the previous 7 days
         &target=timeStack(Sales.widgets.largeBlue,"1d",0,7)
     """
-    from .app import evaluateTarget, pathsFromTarget
+    from .app import evaluateTarget
     # Default to negative. parseTimeOffset defaults to +
     if timeShiftUnit[0].isdigit():
         timeShiftUnit = '-' + timeShiftUnit
@@ -2441,10 +2439,7 @@ def timeStack(requestContext, seriesList, timeShiftUnit, timeShiftStart,
         innerDelta = delta * shft
         myContext['startTime'] = requestContext['startTime'] + innerDelta
         myContext['endTime'] = requestContext['endTime'] + innerDelta
-        paths = pathsFromTarget(series.pathExpression)
-        for shiftedSeries in evaluateTarget(myContext,
-                                            series.pathExpression,
-                                            fetchData(myContext, paths)):
+        for shiftedSeries in evaluateTarget(myContext, series.pathExpression):
             shiftedSeries.name = 'timeShift(%s, %s, %s)' % (shiftedSeries.name,
                                                             timeShiftUnit,
                                                             shft)
@@ -2482,7 +2477,7 @@ def timeShift(requestContext, seriesList, timeShift, resetEnd=True):
         &target=timeShift(Sales.widgets.largeBlue,"+1h")
 
     """
-    from .app import evaluateTarget, pathsFromTarget
+    from .app import evaluateTarget
     # Default to negative. parseTimeOffset defaults to +
     if timeShift[0].isdigit():
         timeShift = '-' + timeShift
@@ -2498,10 +2493,7 @@ def timeShift(requestContext, seriesList, timeShift, resetEnd=True):
     # which is all we care about.
     series = seriesList[0]
 
-    paths = pathsFromTarget(series.pathExpression)
-    for shiftedSeries in evaluateTarget(myContext,
-                                        series.pathExpression,
-                                        fetchData(myContext, paths)):
+    for shiftedSeries in evaluateTarget(myContext, series.pathExpression):
         shiftedSeries.name = 'timeShift(%s, %s)' % (shiftedSeries.name,
                                                     timeShift)
         if resetEnd:

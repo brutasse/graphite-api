@@ -491,7 +491,11 @@ def pathsFromTokens(tokens):
         yield path
 
 
-def evaluateTarget(requestContext, target, data_store):
+def evaluateTarget(requestContext, target, data_store=None):
+    if data_store is None:
+        paths = pathsFromTarget(target)
+        data_store = fetchData(requestContext, paths)
+
     tokens = grammar.parseString(target)
     result = evaluateTokens(requestContext, tokens, data_store)
 
