@@ -27,6 +27,7 @@ import time
 
 from six.moves import zip_longest, map, reduce
 
+from .evaluator import evaluateTarget, pathsFromTarget
 from .render.attime import parseTimeOffset, parseATTime
 from .render.glyph import format_units
 from .render.datalib import TimeSeries, fetchData
@@ -1934,7 +1935,6 @@ def useSeriesAbove(requestContext, seriesList, value, search, replace):
 
         &target=useSeriesAbove(ganglia.metric1.reqs,10,"reqs","time")
     """
-    from .app import evaluateTarget
     newSeries = []
 
     for series in seriesList:
@@ -2061,7 +2061,6 @@ def _fetchWithBootstrap(requestContext, seriesList, **delta_kwargs):
     """
     Request the same data but with a bootstrap period at the beginning.
     """
-    from .app import evaluateTarget, pathsFromTarget
     bootstrapContext = requestContext.copy()
     bootstrapContext['startTime'] = (
         requestContext['startTime'] - timedelta(**delta_kwargs))
@@ -2422,7 +2421,6 @@ def timeStack(requestContext, seriesList, timeShiftUnit, timeShiftStart,
         # create a series for today and each of the previous 7 days
         &target=timeStack(Sales.widgets.largeBlue,"1d",0,7)
     """
-    from .app import evaluateTarget
     # Default to negative. parseTimeOffset defaults to +
     if timeShiftUnit[0].isdigit():
         timeShiftUnit = '-' + timeShiftUnit
@@ -2477,7 +2475,6 @@ def timeShift(requestContext, seriesList, timeShift, resetEnd=True):
         &target=timeShift(Sales.widgets.largeBlue,"+1h")
 
     """
-    from .app import evaluateTarget
     # Default to negative. parseTimeOffset defaults to +
     if timeShift[0].isdigit():
         timeShift = '-' + timeShift
@@ -2904,7 +2901,6 @@ def smartSummarize(requestContext, seriesList, intervalString, func='sum'):
     """
     Smarter experimental version of summarize.
     """
-    from .app import evaluateTarget, pathsFromTarget
     results = []
     delta = parseTimeOffset(intervalString)
     interval = to_seconds(delta)
@@ -3113,7 +3109,6 @@ def hitcount(requestContext, seriesList, intervalString,
     or coarse-grained records) and handles rarely-occurring events
     gracefully.
     """
-    from .app import evaluateTarget, pathsFromTarget
     results = []
     delta = parseTimeOffset(intervalString)
     interval = to_seconds(delta)
