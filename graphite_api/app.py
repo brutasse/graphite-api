@@ -448,6 +448,8 @@ def render():
 
         if request_options['format'] == 'svg':
             graph_options['outputFormat'] = 'svg'
+        elif request_options['format'] == 'pdf':
+            graph_options['outputFormat'] = 'pdf'
 
     graph_options['data'] = context['data']
     image = doImageRender(request_options['graphClass'], graph_options)
@@ -460,7 +462,12 @@ def render():
                                       json.dumps(image.decode('utf-8'))),
                     200, headers)
     else:
-        ctype = 'image/svg+xml' if use_svg else 'image/png'
+        if use_svg:
+            ctype = 'image/svg+xml'
+        elif graph_options.get('outputFormat') == 'pdf':
+            ctype = 'application/x-pdf'
+        else:
+            ctype = 'image/png'
         headers['Content-Type'] = ctype
         response = image, 200, headers
 

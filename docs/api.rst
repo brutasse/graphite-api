@@ -342,7 +342,7 @@ Data Display Formats
 --------------------
 
 Along with rendering an image, the api can also generate `SVG
-<http://www.w3.org/Graphics/SVG/>`_ with embedded metadata or return the raw
+<http://www.w3.org/Graphics/SVG/>`_ with embedded metadata, PDF, or return the raw
 data in various formats for external graphing, analysis or monitoring.
 
 format
@@ -358,6 +358,7 @@ Examples::
   &format=csv
   &format=json
   &format=svg
+  &format=pdf
 
 png
 ^^^
@@ -461,6 +462,11 @@ variable ``metadata`` being set to an object describing the graph.
       }
     ]]>
   </script>
+
+pdf
+^^^
+
+Renders the graph as a PDF of size determined by width_ and height_.
 
 rawData
 ```````

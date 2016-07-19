@@ -30,6 +30,10 @@ class RenderTest(TestCase):
                                                         'format': 'json'})
         self.assertEqual(json.loads(response.data.decode('utf-8')), [])
 
+        response = self.app.get(self.url, query_string={'target': 'test',
+                                                        'format': 'pdf'})
+        self.assertEqual(response.headers['Content-Type'], 'application/x-pdf')
+
         response = self.app.get(self.url, query_string={'target': 'test'})
         self.assertEqual(response.headers['Content-Type'], 'image/png')
 
