@@ -30,6 +30,15 @@ class TimeSeries(list):
         self.valuesPerPoint = 1
         self.options = {}
 
+    def __eq__(self, other):
+        if isinstance(other, TimeSeries):
+            return ((self.name, self.start, self.step, self.consolidationFunc,
+                     self.valuesPerPoint, self.options) ==
+                    (other.name, other.start, other.step,
+                     other.consolidationFunc, other.valuesPerPoint,
+                     other.options)) and list.__eq__(self, other)
+        return False
+
     def __iter__(self):
         if self.valuesPerPoint > 1:
             return self.__consolidatingGenerator(list.__iter__(self))

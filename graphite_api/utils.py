@@ -87,6 +87,10 @@ def hash_request():
 
 
 def to_seconds(delta):
+    """
+    Convert a timedelta object into seconds
+    (same as delta.total_seconds() in Python 2.7+)
+    """
     return abs(delta.seconds + delta.days * 86400)
 
 

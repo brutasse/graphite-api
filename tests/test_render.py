@@ -68,7 +68,7 @@ class RenderTest(TestCase):
         response = self.app.get(self.url, query_string={
             'target': 'constantLine(12)', 'format': 'json'})
         data = json.loads(response.data.decode('utf-8'))[0]['datapoints']
-        self.assertEqual(len(data), 2)
+        self.assertEqual(len(data), 3)
         for point, ts in data:
             self.assertEqual(point, 12)
 
@@ -76,7 +76,7 @@ class RenderTest(TestCase):
             'target': 'constantLine(12)', 'format': 'json',
             'maxDataPoints': 12})
         data = json.loads(response.data.decode('utf-8'))[0]['datapoints']
-        self.assertEqual(len(data), 2)
+        self.assertEqual(len(data), 3)
         for point, ts in data:
             self.assertEqual(point, 12)
 
@@ -93,7 +93,7 @@ class RenderTest(TestCase):
             'format': 'json',
         })
         data = json.loads(response.data.decode('utf-8'))[0]['datapoints']
-        self.assertEqual([d[0] for d in data], [17, 17])
+        self.assertEqual([d[0] for d in data], [17, 17, 17])
 
     def test_area_between(self):
         response = self.app.get(self.url, query_string={
@@ -141,7 +141,7 @@ class RenderTest(TestCase):
         data = json.loads(response.data.decode('utf-8'))[0]['datapoints']
 
         # all the from/until/tz combinations lead to the same window
-        expected = [[12, 1393398000], [12, 1393401600]]
+        expected = [[12, 1393398000], [12, 1393399800], [12, 1393401600]]
         self.assertEqual(data, expected)
 
         response = self.app.get(self.url, query_string={
