@@ -69,7 +69,8 @@ arg = Group(
 )('args*')
 kwarg = Group(argname + equal + arg)('kwargs*')
 
-args = delimitedList(~kwarg + arg)    # lookahead to prevent failing on equals
+# lookahead to prevent failing on equals
+args = delimitedList(~kwarg + arg)
 kwargs = delimitedList(kwarg)
 
 call = Group(
@@ -103,9 +104,25 @@ pathElement = Combine(
 pathExpression = delimitedList(pathElement,
                                delim='.', combine=True)('pathExpression')
 
+litarg = Group(
+    number | aString
+)('args*')
+litkwarg = Group(argname + equal + litarg)('kwargs*')
+
+# lookahead to prevent failing on equals
+litargs = delimitedList(~litkwarg + litarg)
+litkwargs = delimitedList(litkwarg)
+
+template = Group(
+    Literal('template') + leftParen +
+    (call | pathExpression) +
+    Optional(comma + (litargs | litkwargs)) +
+    rightParen
+)('template')
+
 if StrictVersion(__version__) >= StrictVersion('2.0.0'):
-    expression <<= Group(call | pathExpression)('expression')
+    expression <<= Group(template | call | pathExpression)('expression')
     grammar <<= expression
 else:
-    expression << (Group(call | pathExpression)('expression'))
+    expression << (Group(template | call | pathExpression)('expression'))
     grammar << expression

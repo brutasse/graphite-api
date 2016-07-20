@@ -314,6 +314,32 @@ Examples::
   &from=monday
   (show data since the previous monday)
 
+template
+````````
+
+The ``target`` metrics can use a special ``template`` function which
+allows the metric paths to contain variables. Values for these variables
+can be provided via the ``template`` query parameter.
+
+Example::
+
+  &target=template(hosts.$hostname.cpu)&template[hostname]=worker1
+
+Default values for the template variables can also be provided::
+
+  &target=template(hosts.$hostname.cpu, hostname="worker1")
+
+Positional arguments can be used instead of named ones::
+
+  &target=template(hosts.$1.cpu, "worker1")
+  &target=template(hosts.$1.cpu, "worker1")&template[1]=worker*
+
+In addition to path substitution, variables can be used for numeric
+and string literals::
+
+  &target=template(constantLine($number))&template[number]=123
+  &target=template(sinFunction($name))&template[name]=nameOfMySineWaveMetric
+
 Data Display Formats
 --------------------
 

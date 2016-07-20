@@ -407,3 +407,44 @@ class RenderTest(TestCase):
             },
         )
         self.assertEqual(response.status_code, 200)
+
+    def test_templates(self):
+        ts = int(time.time())
+        value = 1
+        for db in (
+            ('hosts', 'worker1', 'cpu.wsp'),
+            ('hosts', 'worker2', 'cpu.wsp'),
+        ):
+            db_path = os.path.join(WHISPER_DIR, *db)
+            if not os.path.exists(os.path.dirname(db_path)):
+                os.makedirs(os.path.dirname(db_path))
+            whisper.create(db_path, [(1, 60)])
+            whisper.update(db_path, value, ts)
+            value += 1
+
+        for query, expected in [
+            ({'target': 'template(hosts.worker1.cpu)'}, 'hosts.worker1.cpu'),
+            ({'target': 'template(constantLine($1),12)'}, '12'),
+            ({'target': 'template(constantLine($1))',
+              'template[1]': '12'}, '12.0'),
+            ({'target': 'template(constantLine($num),num=12)'}, '12'),
+            ({'target': 'template(constantLine($num))',
+              'template[num]': '12'}, '12.0'),
+            ({'target': 'template(time($1),"nameOfSeries")'}, 'nameOfSeries'),
+            ({'target': 'template(time($1))',
+              'template[1]': 'nameOfSeries'}, 'nameOfSeries'),
+            ({'target': 'template(time($name),name="nameOfSeries")'},
+             'nameOfSeries'),
+            ({'target': 'template(time($name))',
+              'template[name]': 'nameOfSeries'}, 'nameOfSeries'),
+            ({'target': 'template(sumSeries(hosts.$1.cpu),"worker1")'},
+             'sumSeries(hosts.worker1.cpu)'),
+            ({'target': 'template(sumSeries(hosts.$1.cpu))',
+              'template[1]': 'worker*'}, 'sumSeries(hosts.worker*.cpu)'),
+            ({'target': 'template(sumSeries(hosts.$host.cpu))',
+              'template[host]': 'worker*'}, 'sumSeries(hosts.worker*.cpu)'),
+        ]:
+            query['format'] = 'json'
+            response = self.app.get(self.url, query_string=query)
+            data = json.loads(response.data.decode('utf-8'))
+            self.assertEqual(data[0]['target'], expected)

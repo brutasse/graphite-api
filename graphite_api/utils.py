@@ -59,6 +59,16 @@ class RequestParams(object):
         if key in request.form:
             return request.form.getlist(key)
         return request.args.getlist(key)
+
+    def keys(self):
+        keys = set()
+        json = request_json()
+        if json:
+            keys.update(json.keys())
+        if request.form:
+            keys.update(request.form.keys())
+        keys.update(request.args.keys())
+        return keys
 RequestParams = RequestParams()
 
 

@@ -28,7 +28,7 @@ class PathsTest(TestCase):
         """
         target = 'test.simple.metric'
         expected = [target]
-        self.validate_paths(expected, pathsFromTarget(target))
+        self.validate_paths(expected, pathsFromTarget({}, target))
 
     def test_func_args(self):
         """
@@ -40,7 +40,7 @@ class PathsTest(TestCase):
         path_2 = 'test.2.metric'
         target = 'sumSeries(%s,%s)' % (path_1, path_2)
         expected = [path_1, path_2]
-        self.validate_paths(expected, pathsFromTarget(target))
+        self.validate_paths(expected, pathsFromTarget({}, target))
 
     def test_func_kwargs(self):
         """
@@ -52,7 +52,7 @@ class PathsTest(TestCase):
         path_b = 'test.b.metric'
         target = 'someFunc(%s,b=%s)' % (path_a, path_b)
         expected = [path_a, path_b]
-        self.validate_paths(expected, pathsFromTarget(target))
+        self.validate_paths(expected, pathsFromTarget({}, target))
 
     def test_func_nested(self):
         """
@@ -68,4 +68,4 @@ class PathsTest(TestCase):
         )
         target = 'outerFunc(innerFunc(%s, %s), s=innerFunc(%s, %s))' % paths
         expected = list(paths)
-        self.validate_paths(expected, pathsFromTarget(target))
+        self.validate_paths(expected, pathsFromTarget({}, target))

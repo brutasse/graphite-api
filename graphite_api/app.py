@@ -306,6 +306,12 @@ def render():
     request_options['startTime'] = start_time
     request_options['endTime'] = end_time
 
+    template = dict()
+    for key in RequestParams.keys():
+        if key.startswith('template['):
+            template[key[9:-1]] = RequestParams.get(key)
+    request_options['template'] = template
+
     use_cache = app.cache is not None and 'noCache' not in RequestParams
     cache_timeout = RequestParams.get('cacheTimeout')
     if cache_timeout is not None:
@@ -335,6 +341,7 @@ def render():
         'startTime': request_options['startTime'],
         'endTime': request_options['endTime'],
         'tzinfo': request_options['tzinfo'],
+        'template': request_options['template'],
         'data': [],
     }
 
@@ -345,7 +352,7 @@ def render():
             if ':' in target:
                 continue
         if target.strip():
-            paths += pathsFromTarget(target)
+            paths += pathsFromTarget(context, target)
     data_store = fetchData(context, paths)
 
     if request_options['graphType'] == 'pie':

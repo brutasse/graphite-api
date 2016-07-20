@@ -3236,7 +3236,7 @@ def smartSummarize(requestContext, seriesList, intervalString, func='sum'):
 
     paths = []
     for series in seriesList:
-        paths.extend(pathsFromTarget(series.pathExpression))
+        paths.extend(pathsFromTarget(requestContext, series.pathExpression))
     data_store = fetchData(requestContext, paths)
 
     for i, series in enumerate(seriesList):
@@ -3446,7 +3446,8 @@ def hitcount(requestContext, seriesList, intervalString,
         # Gather all paths first, then the data
         paths = []
         for series in seriesList:
-            paths.extend(pathsFromTarget(series.pathExpression))
+            paths.extend(pathsFromTarget(requestContext,
+                                         series.pathExpression))
         data_store = fetchData(requestContext, paths)
 
         for i, series in enumerate(seriesList):
