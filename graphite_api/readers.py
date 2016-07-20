@@ -46,7 +46,7 @@ class MultiReader(object):
         t = start
         while t < end:
             # Look for the finer precision value first if available
-            i1 = (t - start1) / step1
+            i1 = (t - start1) // step1
 
             if len(values1) > i1:
                 v1 = values1[i1]
@@ -54,7 +54,7 @@ class MultiReader(object):
                 v1 = None
 
             if v1 is None:
-                i2 = (t - start2) / step2
+                i2 = (t - start2) // step2
 
                 if len(values2) > i2:
                     v2 = values2[i2]
