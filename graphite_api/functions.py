@@ -3128,14 +3128,16 @@ def hitcount(requestContext, seriesList, intervalString,
     if alignToInterval:
         requestContext = requestContext.copy()
         s = requestContext['startTime']
+        tz = requestContext['tzinfo']
         if interval >= DAY:
-            requestContext['startTime'] = datetime(s.year, s.month, s.day)
+            requestContext['startTime'] = tz.localize(datetime(s.year, s.month,
+                                                   s.day))
         elif interval >= HOUR:
-            requestContext['startTime'] = datetime(s.year, s.month, s.day,
-                                                   s.hour)
+            requestContext['startTime'] = tz.localize(datetime(s.year, s.month,
+                                                   s.day, s.hour))
         elif interval >= MINUTE:
-            requestContext['startTime'] = datetime(s.year, s.month, s.day,
-                                                   s.hour, s.minute)
+            requestContext['startTime'] = tz.localize(datetime(s.year, s.month,
+                                                   s.day, s.hour, s.minute))
 
         # Gather all paths first, then the data
         paths = []
