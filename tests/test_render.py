@@ -37,6 +37,14 @@ class RenderTest(TestCase):
         response = self.app.get(self.url, query_string={'target': 'test'})
         self.assertEqual(response.headers['Content-Type'], 'image/png')
 
+        response = self.app.get(self.url, query_string={'target': 'test',
+                                                        'format': 'dygraph'})
+        self.assertEqual(json.loads(response.data.decode('utf-8')), {})
+
+        response = self.app.get(self.url, query_string={'target': 'test',
+                                                        'format': 'rickshaw'})
+        self.assertEqual(json.loads(response.data.decode('utf-8')), [])
+
         self.create_db()
         response = self.app.get(self.url, query_string={'target': 'test',
                                                         'format': 'json'})
@@ -63,6 +71,40 @@ class RenderTest(TestCase):
                                                         'format': 'json'})
         data = json.loads(response.data.decode('utf-8'))
         self.assertEqual(len(data[0]['datapoints']), 60)
+
+        response = self.app.get(self.url, query_string={'target': 'test',
+                                                        'format': 'dygraph'})
+        data = json.loads(response.data.decode('utf-8'))
+        end = data['data'][-4:]
+        try:
+            self.assertEqual(
+                end, [[(self.ts - 3) * 1000, None],
+                      [(self.ts - 2) * 1000, 0.5],
+                      [(self.ts - 1) * 1000, 0.4],
+                      [self.ts * 1000, 0.6]])
+        except AssertionError:
+            self.assertEqual(
+                end, [[(self.ts - 2) * 1000, 0.5],
+                      [(self.ts - 1) * 1000, 0.4],
+                      [self.ts * 1000, 0.6],
+                      [(self.ts + 1) * 1000, None]])
+
+        response = self.app.get(self.url, query_string={'target': 'test',
+                                                        'format': 'rickshaw'})
+        data = json.loads(response.data.decode('utf-8'))
+        end = data[0]['datapoints'][-4:]
+        try:
+            self.assertEqual(
+                end, [{'x': self.ts - 3, 'y': None},
+                      {'x': self.ts - 2, 'y': 0.5},
+                      {'x': self.ts - 1, 'y': 0.4},
+                      {'x': self.ts, 'y': 0.6}])
+        except AssertionError:
+            self.assertEqual(
+                end, [{'x': self.ts - 2, 'y': 0.5},
+                      {'x': self.ts - 1, 'y': 0.4},
+                      {'x': self.ts, 'y': 0.6},
+                      {'x': self.ts + 1, 'y': None}])
 
     def test_render_constant_line(self):
         response = self.app.get(self.url, query_string={

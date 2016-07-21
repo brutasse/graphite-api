@@ -418,6 +418,32 @@ def render():
 
             return jsonify(series_data, headers=headers)
 
+        if request_options['format'] == 'dygraph':
+            series_data = {}
+            labels = ['Time']
+            if any(context['data']):
+                datapoints = [[ts * 1000]
+                              for ts in range(context['data'][0].start,
+                                              context['data'][0].end,
+                                              context['data'][0].step)]
+                for series in context['data']:
+                    labels.append(series.name)
+                    for i, point in enumerate(series):
+                        datapoints[i].append(point)
+                series_data = {'labels': labels, 'data': datapoints}
+
+            return jsonify(series_data, headers=headers)
+
+        if request_options['format'] == 'rickshaw':
+            series_data = []
+            for series in context['data']:
+                timestamps = range(series.start, series.end, series.step)
+                datapoints = [{'x': x, 'y': y}
+                              for x, y in zip(timestamps, series)]
+                series_data.append(dict(target=series.name,
+                                   datapoints=datapoints))
+            return jsonify(series_data, headers=headers)
+
         if request_options['format'] == 'raw':
             response = StringIO()
             for series in context['data']:
