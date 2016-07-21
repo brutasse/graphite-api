@@ -1561,6 +1561,22 @@ class FunctionsTest(TestCase):
         dev = functions.stdev({}, series, 10)[0]
         self.assertEqual(dev[1], 0.5)
 
+    def test_stdev_math_domain(self):
+        # This data set is enough to trigger a math domain error in stdev.
+        # The last two data points should be NaN.
+        inputData = [0.9, 0.1, 0.5, 0.7, 0.5, 0.4, 0.4, 0.3, 0.6,
+                     0.6333333333333333, 1.3,
+                     0.6333333333333333, 0.6185185185185186,
+                     0.3, 0.5, 0.6, 0.3, 1.0, 0.6, 0.9, 0.4,
+                     0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        series = [
+            TimeSeries('collectd.test-db0.load.value', 600, 760, 5, inputData)
+        ]
+        series[0].pathExpression = series[0].name
+
+        result = functions.stdev({}, series, 10)[0]
+        self.assertEqual(result[-2:], [None, None])
+
     def test_holt_winters_analysis_none(self):
         seriesList = TimeSeries('collectd.test-db0.load.value',
                                 660, 700, 1, [None])
