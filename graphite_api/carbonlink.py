@@ -193,6 +193,8 @@ class CarbonLinkPool(object):
         return connection
 
     def query(self, metric):
+        if not self.hosts:
+            return []
         request = dict(type='cache-query', metric=metric)
         results = self.send_request(request)
         logger.debug("carbonlink request returned", metric=metric,

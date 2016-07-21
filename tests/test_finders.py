@@ -92,22 +92,21 @@ class WhisperFinderTest(TestCase):
         try:
             os.listdir = listdir_mock
             store = app.config['GRAPHITE']['store']
-            print("store = %s" % store)
 
             self._listdir_counter = 0
             nodes = store.find('whisper_finder.foo')
             self.assertEqual(len(list(nodes)), 2)
-            self.assertEqual(self._listdir_counter, 2)
+            self.assertEqual(self._listdir_counter, 0)
 
             self._listdir_counter = 0
             nodes = store.find('whisper_finder.foo.bar.baz')
             self.assertEqual(len(list(nodes)), 1)
-            self.assertEqual(self._listdir_counter, 4)
+            self.assertEqual(self._listdir_counter, 0)
 
             self._listdir_counter = 0
             nodes = store.find('whisper_finder.*.ba?.{baz,foo}')
             self.assertEqual(len(list(nodes)), 2)
-            self.assertEqual(self._listdir_counter, 6)
+            self.assertEqual(self._listdir_counter, 5)
 
         finally:
             os.listdir = self._original_listdir

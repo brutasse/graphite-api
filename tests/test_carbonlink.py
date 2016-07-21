@@ -126,9 +126,9 @@ class CarbonLinkPoolTest(TestCase):
 
     def test_clp_requests(self):
         hosts = [
-            '192.168.0.1:2003:cache0',
-            '192.168.0.2:2003:cache1',
-            '192.168.0.3:2003:cache2',
+            '10.0.0.1:2003:cache0',
+            '10.0.0.2:2003:cache1',
+            '10.0.0.3:2003:cache2',
         ]
         carbonlink = CarbonLinkPool(hosts, replication_factor=3)
 

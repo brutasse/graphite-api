@@ -51,6 +51,12 @@ class AtTestCase(TestCase):
             'sat',
             'sun',
             '10:00',
+            '20160229-1year',
+            '20160229-4years',
+            '20160229-1month',
+            '20130228-1year',
+            '20130228-4years',
+            '20130228-1month',
         ]:
             self.assertIsInstance(parseATTime(value), datetime.datetime)
 

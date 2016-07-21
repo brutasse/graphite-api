@@ -30,8 +30,20 @@ class RenderTest(TestCase):
                                                         'format': 'json'})
         self.assertEqual(json.loads(response.data.decode('utf-8')), [])
 
+        response = self.app.get(self.url, query_string={'target': 'test',
+                                                        'format': 'pdf'})
+        self.assertEqual(response.headers['Content-Type'], 'application/x-pdf')
+
         response = self.app.get(self.url, query_string={'target': 'test'})
         self.assertEqual(response.headers['Content-Type'], 'image/png')
+
+        response = self.app.get(self.url, query_string={'target': 'test',
+                                                        'format': 'dygraph'})
+        self.assertEqual(json.loads(response.data.decode('utf-8')), {})
+
+        response = self.app.get(self.url, query_string={'target': 'test',
+                                                        'format': 'rickshaw'})
+        self.assertEqual(json.loads(response.data.decode('utf-8')), [])
 
         self.create_db()
         response = self.app.get(self.url, query_string={'target': 'test',
@@ -60,6 +72,40 @@ class RenderTest(TestCase):
         data = json.loads(response.data.decode('utf-8'))
         self.assertEqual(len(data[0]['datapoints']), 60)
 
+        response = self.app.get(self.url, query_string={'target': 'test',
+                                                        'format': 'dygraph'})
+        data = json.loads(response.data.decode('utf-8'))
+        end = data['data'][-4:]
+        try:
+            self.assertEqual(
+                end, [[(self.ts - 3) * 1000, None],
+                      [(self.ts - 2) * 1000, 0.5],
+                      [(self.ts - 1) * 1000, 0.4],
+                      [self.ts * 1000, 0.6]])
+        except AssertionError:
+            self.assertEqual(
+                end, [[(self.ts - 2) * 1000, 0.5],
+                      [(self.ts - 1) * 1000, 0.4],
+                      [self.ts * 1000, 0.6],
+                      [(self.ts + 1) * 1000, None]])
+
+        response = self.app.get(self.url, query_string={'target': 'test',
+                                                        'format': 'rickshaw'})
+        data = json.loads(response.data.decode('utf-8'))
+        end = data[0]['datapoints'][-4:]
+        try:
+            self.assertEqual(
+                end, [{'x': self.ts - 3, 'y': None},
+                      {'x': self.ts - 2, 'y': 0.5},
+                      {'x': self.ts - 1, 'y': 0.4},
+                      {'x': self.ts, 'y': 0.6}])
+        except AssertionError:
+            self.assertEqual(
+                end, [{'x': self.ts - 2, 'y': 0.5},
+                      {'x': self.ts - 1, 'y': 0.4},
+                      {'x': self.ts, 'y': 0.6},
+                      {'x': self.ts + 1, 'y': None}])
+
     def test_render_constant_line(self):
         response = self.app.get(self.url, query_string={
             'target': 'constantLine(12)'})
@@ -68,7 +114,7 @@ class RenderTest(TestCase):
         response = self.app.get(self.url, query_string={
             'target': 'constantLine(12)', 'format': 'json'})
         data = json.loads(response.data.decode('utf-8'))[0]['datapoints']
-        self.assertEqual(len(data), 2)
+        self.assertEqual(len(data), 3)
         for point, ts in data:
             self.assertEqual(point, 12)
 
@@ -76,7 +122,7 @@ class RenderTest(TestCase):
             'target': 'constantLine(12)', 'format': 'json',
             'maxDataPoints': 12})
         data = json.loads(response.data.decode('utf-8'))[0]['datapoints']
-        self.assertEqual(len(data), 2)
+        self.assertEqual(len(data), 3)
         for point, ts in data:
             self.assertEqual(point, 12)
 
@@ -93,7 +139,7 @@ class RenderTest(TestCase):
             'format': 'json',
         })
         data = json.loads(response.data.decode('utf-8'))[0]['datapoints']
-        self.assertEqual([d[0] for d in data], [17, 17])
+        self.assertEqual([d[0] for d in data], [17, 17, 17])
 
     def test_area_between(self):
         response = self.app.get(self.url, query_string={
@@ -141,7 +187,7 @@ class RenderTest(TestCase):
         data = json.loads(response.data.decode('utf-8'))[0]['datapoints']
 
         # all the from/until/tz combinations lead to the same window
-        expected = [[12, 1393398000], [12, 1393401600]]
+        expected = [[12, 1393398000], [12, 1393399800], [12, 1393401600]]
         self.assertEqual(data, expected)
 
         response = self.app.get(self.url, query_string={
@@ -183,7 +229,7 @@ class RenderTest(TestCase):
             {'lineMode': 'staircase'},
             {'lineMode': 'slope'},
             {'lineMode': 'connected'},
-            {'min': 1, 'max': 1, 'thickness': 2, 'yUnitSystem': 'welp'},
+            {'min': 1, 'max': 2, 'thickness': 2, 'yUnitSystem': 'none'},
             {'yMax': 5, 'yLimit': 0.5, 'yStep': 0.1},
             {'yMax': 'max', 'yUnitSystem': 'binary'},
             {'areaMode': 'stacked', '_expr': 'stacked({0})'},
@@ -403,3 +449,44 @@ class RenderTest(TestCase):
             },
         )
         self.assertEqual(response.status_code, 200)
+
+    def test_templates(self):
+        ts = int(time.time())
+        value = 1
+        for db in (
+            ('hosts', 'worker1', 'cpu.wsp'),
+            ('hosts', 'worker2', 'cpu.wsp'),
+        ):
+            db_path = os.path.join(WHISPER_DIR, *db)
+            if not os.path.exists(os.path.dirname(db_path)):
+                os.makedirs(os.path.dirname(db_path))
+            whisper.create(db_path, [(1, 60)])
+            whisper.update(db_path, value, ts)
+            value += 1
+
+        for query, expected in [
+            ({'target': 'template(hosts.worker1.cpu)'}, 'hosts.worker1.cpu'),
+            ({'target': 'template(constantLine($1),12)'}, '12'),
+            ({'target': 'template(constantLine($1))',
+              'template[1]': '12'}, '12.0'),
+            ({'target': 'template(constantLine($num),num=12)'}, '12'),
+            ({'target': 'template(constantLine($num))',
+              'template[num]': '12'}, '12.0'),
+            ({'target': 'template(time($1),"nameOfSeries")'}, 'nameOfSeries'),
+            ({'target': 'template(time($1))',
+              'template[1]': 'nameOfSeries'}, 'nameOfSeries'),
+            ({'target': 'template(time($name),name="nameOfSeries")'},
+             'nameOfSeries'),
+            ({'target': 'template(time($name))',
+              'template[name]': 'nameOfSeries'}, 'nameOfSeries'),
+            ({'target': 'template(sumSeries(hosts.$1.cpu),"worker1")'},
+             'sumSeries(hosts.worker1.cpu)'),
+            ({'target': 'template(sumSeries(hosts.$1.cpu))',
+              'template[1]': 'worker*'}, 'sumSeries(hosts.worker*.cpu)'),
+            ({'target': 'template(sumSeries(hosts.$host.cpu))',
+              'template[host]': 'worker*'}, 'sumSeries(hosts.worker*.cpu)'),
+        ]:
+            query['format'] = 'json'
+            response = self.app.get(self.url, query_string=query)
+            data = json.loads(response.data.decode('utf-8'))
+            self.assertEqual(data[0]['target'], expected)
