@@ -70,7 +70,8 @@ class RenderTest(TestCase):
                                                         'maxDataPoints': 200,
                                                         'format': 'json'})
         data = json.loads(response.data.decode('utf-8'))
-        self.assertEqual(len(data[0]['datapoints']), 60)
+        # 59 is a time race cond
+        self.assertTrue(len(data[0]['datapoints']) in [59, 60])
 
         response = self.app.get(self.url, query_string={'target': 'test',
                                                         'format': 'dygraph'})
