@@ -2205,9 +2205,11 @@ def stdev(requestContext, seriesList, points, windowTolerance=0.1):
                 validPoints > 0 and
                 float(validPoints) / points >= windowTolerance
             ):
-
-                deviation = math.sqrt(validPoints * currentSumOfSquares -
-                                      currentSum**2) / validPoints
+                try:
+                    deviation = math.sqrt(validPoints * currentSumOfSquares -
+                                          currentSum**2) / validPoints
+                except ValueError:
+                    deviation = None
                 stddevSeries.append(deviation)
             else:
                 stddevSeries.append(None)
