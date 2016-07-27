@@ -3366,6 +3366,7 @@ SeriesFunctions = {
     'maximumAbove': maximumAbove,
     'minimumAbove': minimumAbove,
     'maximumBelow': maximumBelow,
+    'minimumBelow': minimumBelow,
     'nPercentile': nPercentile,
     'limit': limit,
     'sortByTotal': sortByTotal,
