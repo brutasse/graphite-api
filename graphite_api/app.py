@@ -234,12 +234,15 @@ def prune_datapoints(series, max_datapoints, start, end):
 
 @app.route('/render', methods=methods)
 def render():
+    # Start with some defaults
     errors = {}
     graph_options = {
         'width': 600,
         'height': 300,
     }
     request_options = {}
+
+    # Fill in the request_options
     graph_type = RequestParams.get('graphType', 'line')
     try:
         graph_class = GraphTypes[graph_type]
@@ -271,11 +274,14 @@ def render():
     if errors:
         return jsonify({'errors': errors}, status=400)
 
+    # Fill in the graph_options
     for opt in graph_class.customizable:
         if opt in RequestParams:
             value = RequestParams[opt]
             try:
-                value = int(value)
+                intvalue = int(value)
+                if str(intvalue) == str(value):
+                    value = intvalue
             except ValueError:
                 try:
                     value = float(value)
@@ -295,6 +301,7 @@ def render():
             errors['tz'] = "Unknown timezone: '{0}'.".format(tz)
     request_options['tzinfo'] = tzinfo
 
+    # Get the time interval for time-oriented graph types
     until_time = parseATTime(RequestParams.get('until', 'now'), tzinfo)
     from_time = parseATTime(RequestParams.get('from', '-1d'), tzinfo)
 
