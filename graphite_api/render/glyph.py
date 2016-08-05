@@ -2177,14 +2177,12 @@ def safeMin(args):
     args = list(safeArgs(args))
     if args:
         return min(args)
-    return 0
 
 
 def safeMax(args):
     args = list(safeArgs(args))
     if args:
         return max(args)
-    return 0
 
 
 def safeSum(values):
