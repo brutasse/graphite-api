@@ -1618,7 +1618,7 @@ class LineGraph(Graph):
 
             # return to the original line width
             self.ctx.set_line_width(originalWidth)
-            if 'dash' in series.options:
+            if 'dashed' in series.options:
                 # if we changed the dash setting before, change it back now
                 if dash:
                     self.ctx.set_dash(dash, 1)
