@@ -20,6 +20,8 @@ from .render.datalib import fetchData
 from .render.glyph import GraphTypes
 from .utils import RequestParams, hash_request
 
+from .events.views import fetchEvents
+
 logger = get_logger()
 
 
@@ -79,7 +81,27 @@ def dashboard_load(name):
 
 @app.route('/events/get_data', methods=methods)
 def events():
-    return json.dumps([]), 200, {'Content-Type': 'application/json'}
+
+    errors = {}
+
+    tzinfo = pytz.timezone(app.config['TIME_ZONE'])
+    tz = RequestParams.get('tz')
+    if tz:
+        try:
+            tzinfo = pytz.timezone(tz)
+        except pytz.UnknownTimeZoneError:
+            errors['tz'] = "Unknown timezone: '{0}'.".format(tz)
+
+    until_time = parseATTime(RequestParams.get('until', 'now'), tzinfo)
+    from_time = parseATTime(RequestParams.get('from', '-1d'), tzinfo)
+
+    start_time = min(from_time, until_time)
+    end_time = max(from_time, until_time)
+    if start_time == end_time:
+        errors['from'] = errors['until'] = 'Invalid empty time range'
+
+    tags = RequestParams.get('tags')
+    return json.dumps(fetchEvents(start_time, end_time, tags)), 200, {'Content-Type': 'application/json'}
 
 
 # API calls that actually do something
