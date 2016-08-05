@@ -1676,21 +1676,6 @@ class LineGraph(Graph):
             else:
                 series.xStep = bestXStep
 
-    def _adjustLimits(self, minValue, maxValue, minName, maxName, limitName):
-        if maxName in self.params and self.params[maxName] != 'max':
-            maxValue = self.params[maxName]
-
-        if limitName in self.params and self.params[limitName] < maxValue:
-            maxValue = self.params[limitName]
-
-        if minName in self.params:
-            minValue = self.params[minName]
-
-        if maxValue <= minValue:
-            maxValue = minValue + 1
-
-        return (minValue, maxValue)
-
     def setupYAxis(self):
         drawNullAsZero = self.params.get('drawNullAsZero')
         stacked = (self.areaMode == 'stacked')
