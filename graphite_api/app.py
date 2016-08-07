@@ -423,7 +423,11 @@ def render():
                     series_data.append({'target': series.name,
                                         'datapoints': datapoints})
 
-            return jsonify(series_data, headers=headers)
+            response = jsonify(series_data, headers=headers)
+
+            if use_cache:
+                app.cache.add(request_key, response, cache_timeout)
+            return response
 
         if request_options['format'] == 'dygraph':
             series_data = {}
@@ -460,6 +464,11 @@ def render():
                 response.write(u'\n')
             response.seek(0)
             headers['Content-Type'] = 'text/plain'
+            if use_cache:
+                app.cache.add(request_key,
+                              (response.read(), 200, headers),
+                              cache_timeout)
+            response.seek(0)
             return response.read(), 200, headers
 
         if request_options['format'] == 'svg':
