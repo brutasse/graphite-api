@@ -1,4 +1,4 @@
-FROM stackbrew/ubuntu:14.04
+FROM ubuntu:16.04
 
 MAINTAINER Bruno Renié <bruno@renie.fr>
 
@@ -24,4 +24,4 @@ ONBUILD RUN chmod 0644 /etc/graphite-api.yaml
 
 EXPOSE 8000
 
-CMD gunicorn -b 0.0.0.0:8000 -w 2 --log-level debug graphite_api.app:app
+CMD exec gunicorn -b 0.0.0.0:8000 -w 2 --log-level debug graphite_api.app:app
