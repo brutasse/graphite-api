@@ -613,13 +613,15 @@ Examples::
   &bgcolor=blue
   &bgcolor=#2222FF
 
-.. _param-cachetimeout:
+.. _param-cacheTimeout:
 
 cacheTimeout
 ````````````
 
 Default: the value of ``cache.default_timeout`` in your configuration file. By
 default, 60 seconds.
+
+.. _param-colorList:
 
 colorList
 `````````
@@ -715,10 +717,14 @@ Example::
 
   &fontSize=8
 
+.. _param-format:
+
 format
 ``````
 
 See: `Data Display Formats`_
+
+.. _param-from:
 
 from
 ````
@@ -733,6 +739,8 @@ graphOnly
 *Default: false*
 
 Display only the graph area with no grid lines, axes, or legend.
+
+.. _param-graphType:
 
 graphType
 `````````
@@ -768,6 +776,20 @@ to accommodate the additional text.
 Example::
 
  &hideLegend=false
+
+.. _param-hideNullFromLegend:
+
+hideNullFromLegend
+------------------
+*Default: False*
+
+If set to ``true``, series with all null values will not be reported in the legend.
+
+Example:
+
+.. code-block:: none
+
+ &hideNullFromLegend=true
 
 .. _param-hideAxes:
 
@@ -813,6 +835,8 @@ Example::
 
   &hideGrid=true
 
+.. _param-height:
+
 height
 ``````
 
@@ -826,6 +850,8 @@ Example::
 
   &width=650&height=250
 
+.. _param-jsonp:
+
 jsonp
 `````
 
@@ -833,6 +859,8 @@ jsonp
 
 If set and combined with ``format=json``, wraps the JSON response in a
 function call named by the parameter specified.
+
+.. _param-leftColor:
 
 leftColor
 `````````
@@ -842,6 +870,8 @@ leftColor
 In dual Y-axis mode, sets the color of all metrics associated with the left
 Y-axis.
 
+.. _param-leftDashed:
+
 leftDashed
 ``````````
 
@@ -849,6 +879,8 @@ leftDashed
 
 In dual Y-axis mode, draws all metrics associated with the left Y-axis using
 dashed lines.
+
+.. _param-leftWidth:
 
 leftWidth
 `````````
@@ -907,6 +939,8 @@ logBase
 If set, draws the graph with a logarithmic scale of the specified base (e.g.
 10 for common logarithm).
 
+.. _param-majorGridLineColor:
+
 majorGridLineColor
 ``````````````````
 
@@ -921,6 +955,8 @@ Example::
 
   &majorGridLineColor=#FF22FF
 
+.. _param-margin:
+
 margin
 ``````
 
@@ -932,11 +968,15 @@ Example::
 
   &margin=20
 
+.. _param-max:
+
 max
 ```
 
 .. deprecated:: 0.9.0
    See yMax_
+
+.. _param-maxDataPoints:
 
 maxDataPoints
 `````````````
@@ -972,6 +1012,8 @@ Example::
 
   &minorY=3
 
+.. _param-min:
+
 min
 ```
 
@@ -995,7 +1037,7 @@ note that series with more points than there are pixels in the graph area
 there will be a good deal of line overlap. In response, one may use lineWidth_
 to compensate for this.
 
-.. _param-nocache:
+.. _param-noCache:
 
 noCache
 ```````
@@ -1003,6 +1045,16 @@ noCache
 *Default: False*
 
 Set it to disable caching in rendered graphs.
+
+.. _param-noNullPoints:
+
+noNullPoints
+------------
+*Default: False*
+
+If set and combined with ``format=json``, removes all null datapoints from the series returned.
+
+.. _param-pieLabels:
 
 pieLabels
 `````````
@@ -1016,6 +1068,8 @@ Orientation to use for slice labels inside of a pie chart.
 
 ``rotated``
   Labels are oriented radially within each slice
+
+.. _param-pieMode:
 
 pieMode
 ```````
@@ -1034,6 +1088,8 @@ The type of aggregation to use to calculate slices of a pie when
 ``minimum``
   The minimum of non-null points in the series.
 
+.. _param-rightColor:
+
 rightColor
 ``````````
 
@@ -1042,6 +1098,8 @@ rightColor
 In dual Y-axis mode, sets the color of all metrics associated with the right
 Y-axis.
 
+.. _param-rightDashed:
+
 rightDashed
 ```````````
 
@@ -1049,6 +1107,8 @@ rightDashed
 
 In dual Y-axis mode, draws all metrics associated with the right Y-axis using
 dashed lines.
+
+.. _param-rightWidth:
 
 rightWidth
 ``````````
@@ -1071,6 +1131,8 @@ colors and graph styles.
 Example::
 
   &template=plain
+
+.. _param-thickness:
 
 thickness
 `````````
@@ -1115,12 +1177,14 @@ uniqueLegend
 
 Display only unique legend items, removing any duplicates.
 
+.. _param-until:
+
 until
 `````
 
 See: `from / until`_
 
-.. _param-vtitle:
+.. _param-valueLabels:
 
 valueLabels
 ```````````
@@ -1138,6 +1202,8 @@ Determines how slice labels are rendered within a pie chart.
 ``percent``
   Slice labels are reported as a percent of the whole
 
+.. _param-valueLabelsColor:
+
 valueLabelsColor
 ----------------
 
@@ -1145,12 +1211,16 @@ valueLabelsColor
 
 Color used to draw slice labels within a pie chart.
 
+.. _param-valueLabelsMin:
+
 valueLabelsMin
 --------------
 
 *Default: 5*
 
 Slice values below this minimum will not have their labels rendered.
+
+.. _param-vtitle:
 
 vtitle
 ``````
@@ -1163,12 +1233,16 @@ Example::
 
   &vtitle=Threads
 
+.. _param-vtitleRight:
+
 vtitleRight
 ```````````
 
 *Default: <unset>*
 
 In dual Y-axis mode, sets the title of the right Y-Axis (see: vtitle_).
+
+.. _param-width:
 
 width
 `````
@@ -1205,7 +1279,7 @@ yAxisSide
 Sets the side of the graph on which to render the Y-axis. Accepts values of
 ``left`` or ``right``.
 
-.. _param-yDivisor:
+.. _param-yDivisors:
   
 yDivisors
 `````````
@@ -1219,6 +1293,8 @@ which tries to maintain a sensible scale (e.g. preferring intermediary values
 like 25%,50%,75% over 33.3%,66.6%). To explicitly set the Y-axis values, see
 `yStep`_.
 
+.. _param-yLimit:
+
 yLimit
 ``````
 
@@ -1226,12 +1302,16 @@ yLimit
 
 See: yMax_
 
+.. _param-yLimitLeft:
+
 yLimitLeft
 ``````````
 
 *Reserved for future use*
 
 See: yMaxLeft_
+
+.. _param-yLimitRight:
 
 yLimitRight
 ```````````
@@ -1268,20 +1348,28 @@ Example::
 
   &yMax=0.2345
 
+.. _param-yMaxLeft:
+
 yMaxLeft
 ````````
 
 In dual Y-axis mode, sets the upper bound of the left Y-Axis (see: `yMax`_).
+
+.. _param-yMaxRight:
 
 yMaxRight
 `````````
 
 In dual Y-axis mode, sets the upper bound of the right Y-Axis (see: `yMax`_).
 
+.. _param-yMinLeft:
+
 yMinLeft
 ````````
 
 In dual Y-axis mode, sets the lower bound of the left Y-Axis (see: `yMin`_).
+
+.. _param-yMinRight:
 
 yMinRight
 `````````
@@ -1297,11 +1385,15 @@ yStep
 
 Manually set the value step between Y-axis labels and grid lines.
 
+.. _param-yStepLeft:
+
 yStepLeft
 `````````
 
 In dual Y-axis mode, Manually set the value step between the left Y-axis
 labels and grid lines (see: `yStep`_).
+
+.. _param-yStepRight:
 
 yStepRight
 ``````````
