@@ -73,6 +73,7 @@ class WhisperFinder(object):
         pattern = patterns[0]
         patterns = patterns[1:]
         has_wildcard = is_pattern(pattern)
+        using_globstar = pattern == "**"
 
         # This avoids os.listdir() for performance
         if has_wildcard:
@@ -80,13 +81,19 @@ class WhisperFinder(object):
         else:
             entries = [pattern]
 
-        subdirs = [e for e in entries
-                   if os.path.isdir(os.path.join(current_dir, e))]
-        matching_subdirs = match_entries(subdirs, pattern)
+        if using_globstar:
+            matching_subdirs = map(lambda x: x[0], os.walk(current_dir))
+        else:
+            subdirs = [e for e in entries
+                       if os.path.isdir(os.path.join(current_dir, e))]
+            matching_subdirs = match_entries(subdirs, pattern)
+
+        # For terminal globstar, add a pattern for all files in subdirs
+        if using_globstar and not patterns:
+            patterns = ['*']
 
         if patterns:  # we've still got more directories to traverse
             for subdir in matching_subdirs:
-
                 absolute_path = os.path.join(current_dir, subdir)
                 for match in self._find_paths(absolute_path, patterns):
                     yield match
