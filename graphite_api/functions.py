@@ -520,6 +520,57 @@ def keepLastValue(requestContext, seriesList, limit=INF):
     return seriesList
 
 
+def interpolate(requestContext, seriesList, limit=INF):
+    """
+    Takes one metric or a wildcard seriesList, and optionally a limit to the
+    number of 'None' values to skip over. Continues the line with the last
+    received value when gaps ('None' values) appear in your data, rather than
+    breaking your line.
+
+    Example::
+
+        &target=interpolate(Server01.connections.handled)
+        &target=interpolate(Server01.connections.handled, 10)
+    """
+    for series in seriesList:
+        series.name = "interpolate(%s)" % (series.name)
+        series.pathExpression = series.name
+        consecutiveNones = 0
+        for i, value in enumerate(series):
+            series[i] = value
+
+            # No 'keeping' can be done on the first value because we have no
+            # idea what came before it.
+            if i == 0:
+                continue
+
+            if value is None:
+                consecutiveNones += 1
+            elif consecutiveNones == 0:
+                # Have a value but no need to interpolate
+                continue
+            elif series[i - consecutiveNones - 1] is None:
+                # Have a value but can't interpolate: reset count
+                consecutiveNones = 0
+                continue
+            else:
+                # Have a value and can interpolate. If a non-None value is
+                # seen before the limit of Nones is hit, backfill all the
+                # missing datapoints with the last known value.
+                if consecutiveNones > 0 and consecutiveNones <= limit:
+                    lastIndex = i - consecutiveNones - 1
+                    lastValue = series[lastIndex]
+                    for index in range(i - consecutiveNones, i):
+                        nextValue = lastValue + (index - lastIndex)
+                        nextValue = nextValue * (value - lastValue)
+                        nextValue = nextValue / (consecutiveNones + 1)
+                        series[index] = nextValue
+
+                consecutiveNones = 0
+
+    return seriesList
+
+
 def changed(requestContext, seriesList):
     """
     Takes one metric or a wildcard seriesList.
@@ -550,7 +601,8 @@ def asPercent(requestContext, seriesList, total=None):
     If `total` is not specified, the sum of all points in the wildcard series
     will be used instead.
 
-    The `total` parameter may be a single series or a numeric value.
+    The `total` parameter may be a single series, reference the same number of
+    series as `seriesList` or a numeric value.
 
     Example::
 
@@ -622,7 +674,14 @@ def divideSeries(requestContext, dividendSeriesList, divisorSeriesList):
 
 
     """
-    if len(divisorSeriesList) != 1:
+    if len(divisorSeriesList) == 0:
+        for series in dividendSeriesList:
+            series.name = "divideSeries(%s,MISSING)" % series.name
+            series.pathExpression = series.name
+            for i in range(len(series)):
+                series[i] = None
+            return dividendSeriesList
+    if len(divisorSeriesList) > 1:
         raise ValueError(
             "divideSeries second argument must reference exactly 1 series"
             " (got {0})".format(len(divisorSeriesList)))
@@ -678,29 +737,38 @@ def multiplySeries(requestContext, *seriesLists):
     return [resultSeries]
 
 
-def weightedAverage(requestContext, seriesListAvg, seriesListWeight, node):
+def weightedAverage(requestContext, seriesListAvg, seriesListWeight, *nodes):
     """
     Takes a series of average values and a series of weights and
     produces a weighted average for all values.
 
-    The corresponding values should share a node as defined
-    by the node parameter, 0-indexed.
+    The corresponding values should share one or more zero-indexed nodes.
 
     Example::
 
         &target=weightedAverage(*.transactions.mean,*.transactions.count,0)
+        &target=weightedAverage(*.transactions.mean,*.transactions.count,1,3,4)
 
     """
+
+    if isinstance(nodes, int):
+        nodes = [nodes]
 
     sortedSeries = {}
 
     for seriesAvg, seriesWeight in zip_longest(
             seriesListAvg, seriesListWeight):
-        key = seriesAvg.name.split(".")[node]
+        key = ''
+        for node in nodes:
+            key += seriesAvg.name.split(".")[node]
+
         sortedSeries.setdefault(key, {})
         sortedSeries[key]['avg'] = seriesAvg
 
-        key = seriesWeight.name.split(".")[node]
+        key = ''
+        for node in nodes:
+            key += seriesWeight.name.split(".")[node]
+
         sortedSeries.setdefault(key, {})
         sortedSeries[key]['weight'] = seriesWeight
 
@@ -724,14 +792,18 @@ def weightedAverage(requestContext, seriesListAvg, seriesListWeight, node):
         productSeries.pathExpression = name
         productList.append(productSeries)
 
+    if not productList:
+        return []
+
     [sumProducts] = sumSeries(requestContext, productList)
     [sumWeights] = sumSeries(requestContext, seriesListWeight)
 
     resultValues = [safeDiv(val1, val2)
                     for val1, val2 in zip_longest(sumProducts, sumWeights)]
-    name = "weightedAverage(%s, %s)" % (
+    name = "weightedAverage(%s, %s, %s)" % (
         ','.join(sorted(set(s.pathExpression for s in seriesListAvg))),
-        ','.join(sorted(set(s.pathExpression for s in seriesListWeight))))
+        ','.join(sorted(set(s.pathExpression for s in seriesListWeight))),
+        ','.join(map(str, nodes)))
     resultSeries = TimeSeries(name, sumProducts.start, sumProducts.end,
                               sumProducts.step, resultValues)
     resultSeries.pathExpression = name
@@ -1142,11 +1214,15 @@ def perSecond(requestContext, seriesList, maxValue=None):
     for series in seriesList:
         newValues = []
         prev = None
+        step = series.step
         for val in series:
-            step = series.step
-            if None in (prev, val):
+            if prev is None:
                 newValues.append(None)
                 prev = val
+                continue
+            if val is None:
+                newValues.append(None)
+                step = step * 2
                 continue
 
             diff = val - prev
@@ -1157,8 +1233,45 @@ def perSecond(requestContext, seriesList, maxValue=None):
             else:
                 newValues.append(None)
 
+            step = series.step
             prev = val
         newName = "perSecond(%s)" % series.name
+        newSeries = TimeSeries(newName, series.start, series.end, series.step,
+                               newValues)
+        newSeries.pathExpression = newName
+        results.append(newSeries)
+    return results
+
+
+def delay(requestContext, seriesList, steps):
+    """
+    This shifts all samples later by an integer number of steps. This can be
+    used for custom derivative calculations, among other things. Note: this
+    will pad the early end of the data with None for every step shifted.
+
+    This complements other time-displacement functions such as timeShift and
+    timeSlice, in that this function is indifferent about the step intervals
+    being shifted.
+
+    Example::
+
+        &target=divideSeries(server.FreeSpace,delay(server.FreeSpace,1))
+
+    This computes the change in server free space as a percentage of the
+    previous free space.
+    """
+    results = []
+    for series in seriesList:
+        newValues = []
+        prev = []
+        for val in series:
+            if len(prev) < steps:
+                newValues.append(None)
+                prev.append(val)
+                continue
+            newValues.append(prev.pop(0))
+            prev.append(val)
+        newName = "delay(%s,%d)" % (series.name, steps)
         newSeries = TimeSeries(newName, series.start, series.end, series.step,
                                newValues)
         newSeries.pathExpression = newName
@@ -1414,24 +1527,31 @@ def alias(requestContext, seriesList, newName):
     return seriesList
 
 
-def cactiStyle(requestContext, seriesList, system=None):
+def cactiStyle(requestContext, seriesList, system=None, units=None):
     """
     Takes a series list and modifies the aliases to provide column aligned
     output with Current, Max, and Min values in the style of cacti. Optionally
     takes a "system" value to apply unit formatting in the same style as the
-    Y-axis.
+    Y-axis, or a "unit" string to append an arbitrary unit suffix.
     NOTE: column alignment only works with monospace fonts such as terminus.
 
     Example::
 
         &target=cactiStyle(ganglia.*.net.bytes_out,"si")
+        &target=cactiStyle(ganglia.*.net.bytes_out,"si","b")
 
     """
     def fmt(x):
         if system:
-            return "%.2f%s" % format_units(x, system=system)
+            if units:
+                return "%.2f %s" % format_units(x, system=system, units=units)
+            else:
+                return "%.2f%s" % format_units(x, system=system)
         else:
-            return "%.2f" % x
+            if units:
+                return "%.2f %s" % (x, units)
+            else:
+                return "%.2f" % x
     nameLen = max([0] + [len(series.name) for series in seriesList])
     lastLen = max([0] + [len(fmt(int(safeLast(series) or 3)))
                          for series in seriesList]) + 3
@@ -2167,10 +2287,10 @@ def stdev(requestContext, seriesList, points, windowTolerance=0.1):
     # For this we take the standard deviation in terms of the moving average
     # and the moving average of series squares.
     for seriesIndex, series in enumerate(seriesList):
-        stddevSeries = TimeSeries("stddev(%s,%d)" % (series.name, int(points)),
-                                  series.start, series.end, series.step, [])
-        stddevSeries.pathExpression = "stddev(%s,%d)" % (series.name,
-                                                         int(points))
+        stdevSeries = TimeSeries("stdev(%s,%d)" % (series.name, int(points)),
+                                 series.start, series.end, series.step, [])
+        stdevSeries.pathExpression = "stdev(%s,%d)" % (series.name,
+                                                       int(points))
 
         validPoints = 0
         currentSum = 0
@@ -2210,11 +2330,11 @@ def stdev(requestContext, seriesList, points, windowTolerance=0.1):
                                           currentSum**2) / validPoints
                 except ValueError:
                     deviation = None
-                stddevSeries.append(deviation)
+                stdevSeries.append(deviation)
             else:
-                stddevSeries.append(None)
+                stdevSeries.append(None)
 
-        seriesList[seriesIndex] = stddevSeries
+        seriesList[seriesIndex] = stdevSeries
 
     return seriesList
 
@@ -2788,7 +2908,8 @@ def constantLine(requestContext, value):
 
 def aggregateLine(requestContext, seriesList, func='avg'):
     """
-    Draws a horizontal line based the function applied to the series.
+    Takes a metric or wildcard seriesList and draws a horizontal line
+    based on the function applied to each series.
 
     Note: By default, the graphite renderer consolidates data points by
     averaging data points over time. If you are using the 'min' or 'max'
@@ -2801,7 +2922,8 @@ def aggregateLine(requestContext, seriesList, func='avg'):
 
     Example::
 
-        &target=aggregateLine(server.connections.total, 'avg')
+        &target=aggregateLine(server01.connections.total, 'avg')
+        &target=aggregateLine(server*.connections.total, 'avg')
 
     """
     t_funcs = {'avg': safeAvg, 'min': safeMin, 'max': safeMax}
@@ -2812,13 +2934,54 @@ def aggregateLine(requestContext, seriesList, func='avg'):
     results = []
     for series in seriesList:
         value = t_funcs[func](series)
-        name = 'aggregateLine(%s, %g)' % (series.name, value)
+        if value is not None:
+            name = 'aggregateLine(%s, %g)' % (series.name, value)
+        else:
+            name = 'aggregateLine(%s, None)' % (series.name)
 
         [series] = constantLine(requestContext, value)
         series.name = name
         series.pathExpression = series.name
         results.append(series)
     return results
+
+
+def verticalLine(requestContext, ts, label=None, color=None):
+    """
+    Takes a timestamp string ts.
+
+    Draws a vertical line at the designated timestamp with optional
+    'label' and 'color'. Supported timestamp formats include both
+    relative (e.g. -3h) and absolute (e.g. 16:00_20110501) strings,
+    such as those used with ``from`` and ``until`` parameters. When
+    set, the 'label' will appear in the graph legend.
+
+    Note: Any timestamps defined outside the requested range will
+    raise a 'ValueError' exception.
+
+    Example::
+
+        &target=verticalLine("12:3420131108","event","blue")
+        &target=verticalLine("16:00_20110501","event")
+        &target=verticalLine("-5mins")
+
+    """
+    ts = int(epoch(parseATTime(ts, requestContext['tzinfo'])))
+    start = int(epoch(requestContext['startTime']))
+    end = int(epoch(requestContext['endTime']))
+    if ts < start:
+        raise ValueError("verticalLine(): timestamp %s exists "
+                         "before start of range" % ts)
+    elif ts > end:
+        raise ValueError("verticalLine(): timestamp %s exists "
+                         "after end of range" % ts)
+    start = end = ts
+    step = 1.0
+    series = TimeSeries(label, start, end, step, [1.0, 1.0])
+    series.options['drawAsInfinite'] = True
+    if color:
+        series.color = color
+    return [series]
 
 
 def threshold(requestContext, value, label=None, color=None):
@@ -2830,16 +2993,14 @@ def threshold(requestContext, value, label=None, color=None):
 
     Example::
 
-        &target=threshold(123.456, "omgwtfbbq", red)
+        &target=threshold(123.456, "omgwtfbbq", "red")
 
     """
-
     [series] = constantLine(requestContext, value)
     if label:
         series.name = label
     if color:
         series.color = color
-
     return [series]
 
 
@@ -2875,8 +3036,8 @@ def transformNull(requestContext, seriesList, default=0, referenceSeries=None):
 
     for series in seriesList:
         if referenceSeries:
-            series.name = "transformNull(%s,%g,%s)" % (
-                series.name, default, referenceSeries)
+            series.name = "transformNull(%s,%g,referenceSeries)" % (
+                series.name, default)
         else:
             series.name = "transformNull(%s,%g)" % (series.name, default)
         series.pathExpression = series.name
@@ -3667,6 +3828,7 @@ SeriesFunctions = {
     'offset': offset,
     'offsetToZero': offsetToZero,
     'derivative': derivative,
+    'delay': delay,
     'squareRoot': squareRoot,
     'pow': pow,
     'perSecond': perSecond,
@@ -3682,6 +3844,7 @@ SeriesFunctions = {
     'smartSummarize': smartSummarize,
     'hitcount': hitcount,
     'absolute': absolute,
+    'interpolate': interpolate,
 
     # Calculate functions
     'movingAverage': movingAverage,
@@ -3761,6 +3924,7 @@ SeriesFunctions = {
     'constantLine': constantLine,
     'stacked': stacked,
     'areaBetween': areaBetween,
+    'verticalLine': verticalLine,
     'threshold': threshold,
     'transformNull': transformNull,
     'isNonNull': isNonNull,
