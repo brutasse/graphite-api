@@ -32,11 +32,20 @@ class TimeSeries(list):
 
     def __eq__(self, other):
         if isinstance(other, TimeSeries):
+            color_eq = True
+            if hasattr(self, 'color'):
+                if hasattr(other, 'color'):
+                    color_eq = (self.color == other.color)
+                else:
+                    color_eq = False
+            elif hasattr(other, 'color'):
+                color_eq = False
+
             return ((self.name, self.start, self.step, self.consolidationFunc,
                      self.valuesPerPoint, self.options) ==
                     (other.name, other.start, other.step,
                      other.consolidationFunc, other.valuesPerPoint,
-                     other.options)) and list.__eq__(self, other)
+                     other.options)) and list.__eq__(self, other) and color_eq
         return False
 
     def __iter__(self):
