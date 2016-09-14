@@ -1618,7 +1618,7 @@ class LineGraph(Graph):
 
             # return to the original line width
             self.ctx.set_line_width(originalWidth)
-            if 'dash' in series.options:
+            if 'dashed' in series.options:
                 # if we changed the dash setting before, change it back now
                 if dash:
                     self.ctx.set_dash(dash, 1)
@@ -1675,21 +1675,6 @@ class LineGraph(Graph):
                     numberOfPixels * pointsPerPixel) / numberOfDataPoints
             else:
                 series.xStep = bestXStep
-
-    def _adjustLimits(self, minValue, maxValue, minName, maxName, limitName):
-        if maxName in self.params and self.params[maxName] != 'max':
-            maxValue = self.params[maxName]
-
-        if limitName in self.params and self.params[limitName] < maxValue:
-            maxValue = self.params[limitName]
-
-        if minName in self.params:
-            minValue = self.params[minName]
-
-        if maxValue <= minValue:
-            maxValue = minValue + 1
-
-        return (minValue, maxValue)
 
     def setupYAxis(self):
         drawNullAsZero = self.params.get('drawNullAsZero')
@@ -2177,14 +2162,12 @@ def safeMin(args):
     args = list(safeArgs(args))
     if args:
         return min(args)
-    return 0
 
 
 def safeMax(args):
     args = list(safeArgs(args))
     if args:
         return max(args)
-    return 0
 
 
 def safeSum(values):

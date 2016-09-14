@@ -80,7 +80,7 @@ class glyphStandaloneFunctionTest(TestCase):
             glyph.safeMin(1)
 
     def test_safeMin_empty_string(self):
-        self.assertEqual(glyph.safeMin(''), 0)
+        self.assertEqual(glyph.safeMin(''), None)
 
     def test_safeMin_list_with_string(self):
         with self.assertRaises(TypeError):
@@ -102,7 +102,7 @@ class glyphStandaloneFunctionTest(TestCase):
             glyph.safeMax(1)
 
     def test_safeMax_empty_string(self):
-        self.assertEqual(glyph.safeMax(''), 0)
+        self.assertEqual(glyph.safeMax(''), None)
 
     def test_safeMax_list_with_string(self):
         with self.assertRaises(TypeError):
@@ -148,7 +148,7 @@ class glyphStandaloneFunctionTest(TestCase):
         self.assertEqual(glyph.dataLimits(seriesList), (1, 100))
 
     def test_dataLimits_empty_list(self):
-        self.assertEqual(glyph.dataLimits([]), (0.0, 0.0))
+        self.assertEqual(glyph.dataLimits([]), (0.0, 1.0))
 
     def test_dataLimits_drawNull(self):
         seriesList = self._generate_series_list()
