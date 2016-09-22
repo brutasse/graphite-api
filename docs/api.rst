@@ -1139,14 +1139,14 @@ Determines how slice labels are rendered within a pie chart.
   Slice labels are reported as a percent of the whole
 
 valueLabelsColor
-----------------
+````````````````
 
 *Default: black*
 
 Color used to draw slice labels within a pie chart.
 
 valueLabelsMin
---------------
+``````````````
 
 *Default: 5*
 
