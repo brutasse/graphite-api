@@ -1633,7 +1633,12 @@ def maximumAbove(requestContext, seriesList, n):
     This would only display interfaces which at one point sent more than
     1000 packets/min.
     """
-    return [s for s in seriesList if safeMax(s) > n]
+    results = []
+    for series in seriesList:
+        val = safeMax(series)
+        if val is not None and val > n:
+            results.append(series)
+    return results
 
 
 def minimumAbove(requestContext, seriesList, n):
@@ -1648,7 +1653,12 @@ def minimumAbove(requestContext, seriesList, n):
     This would only display interfaces which always sent more than 1000
     packets/min.
     """
-    return [s for s in seriesList if safeMin(s) > n]
+    results = []
+    for series in seriesList:
+        val = safeMin(series)
+        if val is not None and val > n:
+            results.append(series)
+    return results
 
 
 def maximumBelow(requestContext, seriesList, n):
@@ -1663,7 +1673,12 @@ def maximumBelow(requestContext, seriesList, n):
     This would only display interfaces which always sent less than 1000
     packets/min.
     """
-    return [s for s in seriesList if safeMax(s) <= n]
+    results = []
+    for series in seriesList:
+        val = safeMax(series)
+        if val is None or val <= n:
+            results.append(series)
+    return results
 
 
 def minimumBelow(requestContext, seriesList, n):
@@ -1678,7 +1693,12 @@ def minimumBelow(requestContext, seriesList, n):
     This would only display interfaces which sent at one point less than
     1000 packets/min.
     """
-    return [s for s in seriesList if safeMin(s) <= n]
+    results = []
+    for series in seriesList:
+        val = safeMin(series)
+        if val is None or val <= n:
+            results.append(series)
+    return results
 
 
 def highestCurrent(requestContext, seriesList, n=1):
@@ -1745,7 +1765,12 @@ def currentAbove(requestContext, seriesList, n):
     Draws the servers with more than 50 busy threads.
 
     """
-    return [series for series in seriesList if safeLast(series) >= n]
+    results = []
+    for series in seriesList:
+        val = safeLast(series)
+        if val is not None and val >= n:
+            results.append(series)
+    return results
 
 
 def currentBelow(requestContext, seriesList, n):
@@ -1761,7 +1786,12 @@ def currentBelow(requestContext, seriesList, n):
     Draws the servers with less than 3 busy threads.
 
     """
-    return [series for series in seriesList if safeLast(series) <= n]
+    results = []
+    for series in seriesList:
+        val = safeLast(series)
+        if val is None or val <= n:
+            results.append(series)
+    return results
 
 
 def highestAverage(requestContext, seriesList, n=1):
@@ -1809,7 +1839,12 @@ def averageAbove(requestContext, seriesList, n):
     Draws the servers with average values above 25.
 
     """
-    return [series for series in seriesList if safeAvg(series) >= n]
+    results = []
+    for series in seriesList:
+        val = safeAvg(series)
+        if val is not None and val >= n:
+            results.append(series)
+    return results
 
 
 def averageBelow(requestContext, seriesList, n):
@@ -1825,7 +1860,12 @@ def averageBelow(requestContext, seriesList, n):
     Draws the servers with average values below 25.
 
     """
-    return [series for series in seriesList if safeAvg(series) <= n]
+    results = []
+    for series in seriesList:
+        val = safeAvg(series)
+        if val is None or val <= n:
+            results.append(series)
+    return results
 
 
 def _getPercentile(points, n, interpolate=False):
