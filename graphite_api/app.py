@@ -525,6 +525,9 @@ def render():
                          targets=targets)
             return response
 
+        if CAIRO_DISABLED:
+            errors = {'format': 'Requested image or pdf format but cairo library is not available'}
+            return jsonify({'errors': errors}, status=400)
         if request_options['format'] == 'svg':
             graph_options['outputFormat'] = 'svg'
         elif request_options['format'] == 'pdf':
