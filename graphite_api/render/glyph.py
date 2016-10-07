@@ -19,7 +19,12 @@ import re
 from datetime import datetime, timedelta
 from io import BytesIO
 
-import cairocffi as cairo
+try:
+    import cairocffi as cairo
+except NameError:
+    pass
+except AttributeError:
+    pass
 import pytz
 import six
 from six.moves import range
