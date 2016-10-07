@@ -28,12 +28,7 @@ import time
 from six.moves import zip_longest, map, reduce
 
 from .render.attime import parseTimeOffset, parseATTime
-try:
-    from .render.glyph import format_units
-except NameError:
-    CAIRO_DISABLED=True
-else:
-    CAIRO_DISABLED=False
+from .render.glyph import format_units
 from .render.datalib import TimeSeries, fetchData
 from .utils import to_seconds, epoch
 
