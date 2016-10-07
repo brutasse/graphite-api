@@ -16,9 +16,10 @@ from .config import configure
 from .encoders import JSONEncoder
 from .render.attime import parseATTime
 from .render.datalib import fetchData
+from .render.glyph import GraphTypes
 try:
-    from .render.glyph import GraphTypes
-except NameError:
+    import cairocffi as cairo
+except (NameError, ImportError, AttributeError):
     CAIRO_DISABLED=True
 else:
     CAIRO_DISABLED=False
@@ -263,15 +264,18 @@ def render():
 
     # Fill in the request_options
     graph_type = RequestParams.get('graphType', 'line')
+    request_options['graphType'] = graph_type
     if not CAIRO_DISABLED:
         try:
             graph_class = GraphTypes[graph_type]
-            request_options['graphType'] = graph_type
-            request_options['graphClass'] = graph_class
         except KeyError:
             errors['graphType'] = (
                 "Invalid graphType '{0}', must be one of '{1}'.".format(
                     graph_type, "', '".join(sorted(GraphTypes.keys()))))
+        else:
+            request_options['graphClass'] = graph_class
+    else:
+        request_options['graphClass'] = None
     request_options['pieMode'] = RequestParams.get('pieMode', 'average')
     targets = RequestParams.getlist('target')
     if not len(targets):

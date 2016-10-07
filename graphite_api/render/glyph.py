@@ -21,10 +21,10 @@ from io import BytesIO
 
 try:
     import cairocffi as cairo
-except NameError:
-    pass
-except AttributeError:
-    pass
+except (NameError, ImportError, AttributeError):
+    CAIRO_DISABLED=True
+else:
+    CAIRO_DISABLED=False
 import pytz
 import six
 from six.moves import range
@@ -761,6 +761,8 @@ class Graph(object):
         self.drawGraph(**params)
 
     def setupCairo(self, outputFormat='png'):
+        if CAIRO_DISABLED:
+            return
         self.outputFormat = outputFormat
         if outputFormat == 'png':
             self.surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
@@ -1392,6 +1394,7 @@ class LineGraph(Graph):
 
     def drawLines(self, width=None, dash=None, linecap='butt',
                   linejoin='miter'):
+        
         if not width:
             width = self.lineWidth
         self.ctx.set_line_width(width)
