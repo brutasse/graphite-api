@@ -22,9 +22,9 @@ from io import BytesIO
 try:
     import cairocffi as cairo
 except (NameError, ImportError, AttributeError):
-    CAIRO_DISABLED=True
+    CAIRO_DISABLED = True
 else:
-    CAIRO_DISABLED=False
+    CAIRO_DISABLED = False
 import pytz
 import six
 from six.moves import range
@@ -1394,7 +1394,6 @@ class LineGraph(Graph):
 
     def drawLines(self, width=None, dash=None, linecap='butt',
                   linejoin='miter'):
-        
         if not width:
             width = self.lineWidth
         self.ctx.set_line_width(width)

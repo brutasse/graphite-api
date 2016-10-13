@@ -16,13 +16,7 @@ from .config import configure
 from .encoders import JSONEncoder
 from .render.attime import parseATTime
 from .render.datalib import fetchData
-from .render.glyph import GraphTypes
-try:
-    import cairocffi as cairo
-except (NameError, ImportError, AttributeError):
-    CAIRO_DISABLED=True
-else:
-    CAIRO_DISABLED=False
+from .render.glyph import GraphTypes, CAIRO_DISABLED
 from .utils import RequestParams, hash_request
 
 logger = get_logger()
@@ -526,7 +520,8 @@ def render():
             return response
 
         if CAIRO_DISABLED:
-            errors = {'format': 'Requested image or pdf format but cairo library is not available'}
+            errors = {'format': 'Requested image or pdf format but cairo '
+                      'library is not available'}
             return jsonify({'errors': errors}, status=400)
         if request_options['format'] == 'svg':
             graph_options['outputFormat'] = 'svg'
