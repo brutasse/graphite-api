@@ -32,4 +32,3 @@ matrix:
   allow_failures:
     - env: TOXENV=py26
     - env: TOXENV=coverage
-    - env: TOXENV=docs
