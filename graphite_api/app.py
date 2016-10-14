@@ -105,13 +105,18 @@ def metrics_find():
     except ValueError:
         errors['until'] = 'must be an epoch timestamp.'
 
+    try:
+        node_position = int(RequestParams.get('position', -1))
+    except ValueError:
+        errors['position'] = 'must be an integer,'
+
     if from_time == -1:
         from_time = None
     if until_time == -1:
         until_time = None
 
     format = RequestParams.get('format', 'treejson')
-    if format not in ['treejson', 'completer']:
+    if format not in ['treejson', 'completer', 'nodelist']:
         errors['format'] = 'unrecognized format: "{0}".'.format(format)
 
     if 'query' not in RequestParams:
@@ -135,6 +140,12 @@ def metrics_find():
             200,
             {'Content-Type': 'application/json'}
         )
+    elif format == 'nodelist':
+        found = set()
+        for metric in matches:
+            nodes = metric.path.split('.')
+            found.add(nodes[node_position])
+        return jsonify({'nodes': sorted(found)})
 
     results = []
     for node in matches:
@@ -244,6 +255,8 @@ def render():
 
     # Fill in the request_options
     graph_type = RequestParams.get('graphType', 'line')
+
+    # Fill in the request_options
     try:
         graph_class = GraphTypes[graph_type]
         request_options['graphType'] = graph_type
@@ -270,6 +283,8 @@ def render():
                 float(RequestParams['maxDataPoints']))
         except ValueError:
             errors['maxDataPoints'] = 'Must be an integer.'
+    if 'noNullPoints' in RequestParams:
+        request_options['noNullPoints'] = True
 
     if errors:
         return jsonify({'errors': errors}, status=400)
@@ -418,6 +433,16 @@ def render():
                     series_data.append(prune_datapoints(
                         series, request_options['maxDataPoints'],
                         start_time, end_time))
+            elif 'noNullPoints' in request_options and any(context['data']):
+                for series in context['data']:
+                    values = []
+                    for (index, v) in enumerate(series):
+                        if v is not None:
+                            timestamp = series.start + (index * series.step)
+                            values.append((v, timestamp))
+                    if len(values) > 0:
+                        series_data.append({'target': series.name,
+                                            'datapoints': values})
             else:
                 for series in context['data']:
                     timestamps = range(series.start, series.end + series.step,

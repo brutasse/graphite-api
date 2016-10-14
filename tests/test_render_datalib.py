@@ -9,10 +9,48 @@ class TimeSeriesTest(TestCase):
             TimeSeries()
 
     def test_TimeSeries_init_string_values(self):
-        series = TimeSeries("collectd.test-db.load.value", 0, 2, 1, "ab")
-        expected = TimeSeries("collectd.test-db.load.value", 0, 2, 1,
-                              ["a", "b"])
+        series = TimeSeries("collectd.test-db.load.value",
+                            0, 2, 1, "ab")
+        expected = TimeSeries("collectd.test-db.load.value",
+                              0, 2, 1, ["a", "b"])
         self.assertEqual(series, expected)
+
+    def test_TimeSeries_equal_list(self):
+        values = range(0, 100)
+        series = TimeSeries("collectd.test-db.load.value",
+                            0, len(values), 1, values)
+        with self.assertRaises(AssertionError):
+            self.assertEqual(values, series)
+
+    def test_TimeSeries_equal_list_color(self):
+        values = range(0, 100)
+        series1 = TimeSeries("collectd.test-db.load.value",
+                             0, len(values), 1, values)
+        series1.color = 'white'
+        series2 = TimeSeries("collectd.test-db.load.value",
+                             0, len(values), 1, values)
+        series2.color = 'white'
+        self.assertEqual(series1, series2)
+
+    def test_TimeSeries_equal_list_color_bad(self):
+        values = range(0, 100)
+        series1 = TimeSeries("collectd.test-db.load.value",
+                             0, len(values), 1, values)
+        series2 = TimeSeries("collectd.test-db.load.value",
+                             0, len(values), 1, values)
+        series2.color = 'white'
+        with self.assertRaises(AssertionError):
+            self.assertEqual(series1, series2)
+
+    def test_TimeSeries_equal_list_color_bad2(self):
+        values = range(0, 100)
+        series1 = TimeSeries("collectd.test-db.load.value",
+                             0, len(values), 1, values)
+        series2 = TimeSeries("collectd.test-db.load.value",
+                             0, len(values), 1, values)
+        series1.color = 'white'
+        with self.assertRaises(AssertionError):
+            self.assertEqual(series1, series2)
 
     def test_TimeSeries_consolidate(self):
         values = range(0, 100)

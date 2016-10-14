@@ -80,18 +80,6 @@ WEEK = DAY * 7
 MONTH = DAY * 31
 YEAR = DAY * 365
 
-# Set a flag to indicate whether the '%l' option can be used safely.
-# On Windows, in particular the %l option in strftime is not supported.
-# On Linux, the %l option can also fail silently.
-# (It is not one of the documented Python formatters).
-try:
-    if datetime.now().strftime("%a %l%p"):
-        percent_l_supported = True
-    else:
-        percent_l_supported = False
-except ValueError:
-    percent_l_supported = False
-
 xAxisConfigs = (
     dict(seconds=0.00,
          minorGridUnit=SEC,
@@ -199,7 +187,7 @@ xAxisConfigs = (
          majorGridStep=4,
          labelUnit=HOUR,
          labelStep=4,
-         format=percent_l_supported and "%a %l%p" or "%a %I%p",
+         format="%a %H:%M",
          maxInterval=6*DAY),
     dict(seconds=255,
          minorGridUnit=HOUR,
@@ -208,7 +196,7 @@ xAxisConfigs = (
          majorGridStep=12,
          labelUnit=HOUR,
          labelStep=12,
-         format=percent_l_supported and "%m/%d %l%p" or "%m/%d %I%p",
+         format="%m/%d %H:%M",
          maxInterval=10*DAY),
     dict(seconds=600,
          minorGridUnit=HOUR,
@@ -1128,7 +1116,7 @@ class LineGraph(Graph):
         'yStepRight', 'rightWidth', 'rightColor', 'rightDashed', 'leftWidth',
         'leftColor', 'leftDashed', 'xFormat', 'minorY', 'hideYAxis',
         'hideXAxis', 'uniqueLegend', 'vtitleRight', 'yDivisors',
-        'connectedLimit')
+        'connectedLimit', 'hideNullFromLegend')
     validLineModes = ('staircase', 'slope', 'connected')
     validAreaModes = ('none', 'first', 'all', 'stacked')
     validPieModes = ('maximum', 'minimum', 'average')
@@ -1187,7 +1175,7 @@ class LineGraph(Graph):
         if 'yUnitSystem' not in params:
             params['yUnitSystem'] = 'si'
         else:
-            params['yUnitSystem'] = str(params['yUnitSystem']).lower()
+            params['yUnitSystem'] = force_text(params['yUnitSystem']).lower()
             if params['yUnitSystem'] not in UnitSystems.keys():
                 params['yUnitSystem'] = 'si'
 
@@ -1202,6 +1190,7 @@ class LineGraph(Graph):
         # from the max, instead of adding to the minimum
         if self.params.get('yAxisSide') == 'right':
             self.margin = self.width
+
         # Now to setup our LineGraph specific options
         self.lineWidth = float(params.get('lineWidth', 1.2))
         self.lineMode = params.get('lineMode', 'slope').lower()
@@ -1252,15 +1241,21 @@ class LineGraph(Graph):
         if params.get('vtitle'):
             self.drawVTitle(force_text(params['vtitle']))
         if self.secondYAxis and params.get('vtitleRight'):
-            self.drawVTitle(str(params['vtitleRight']), rightAlign=True)
+            self.drawVTitle(force_text(params['vtitleRight']), rightAlign=True)
         self.setFont()
 
         if not params.get('hideLegend', len(self.data) > 10):
-            elements = [
-                (series.name, series.color,
-                 series.options.get('secondYAxis')) for series in self.data
-                if series.name]
-            self.drawLegend(elements, params.get('uniqueLegend', False))
+            elements = []
+            hideNull = params.get('hideNullFromLegend', False)
+            for series in self.data:
+                if series.name:
+                    if not(hideNull and all(v is None for v in list(series))):
+                        elements.append((
+                            unquote_plus(series.name),
+                            series.color,
+                            series.options.get('secondYAxis')))
+            if len(elements) > 0:
+                self.drawLegend(elements, params.get('uniqueLegend', False))
 
         # Setup axes, labels, and grid
         # First we adjust the drawing area size to fit X-axis labels
@@ -2128,7 +2123,7 @@ class PieGraph(Graph):
                 ):
                     label = "%.2f" % slice['value']
                 else:
-                    label = str(int(slice['value']))
+                    label = force_text(int(slice['value']))
             theta = slice['midAngle']
             x = self.x0 + (self.radius / 2.0 * math.cos(theta))
             y = self.y0 + (self.radius / 2.0 * math.sin(theta))
@@ -2221,7 +2216,7 @@ def condition(value, size, step):
         return abs(value) >= size and step >= size
 
 
-def format_units(v, step=None, system="si"):
+def format_units(v, step=None, system="si", units=None):
     """Format the given value in standardized units.
 
     ``system`` is either 'binary' or 'si'
@@ -2231,18 +2226,24 @@ def format_units(v, step=None, system="si"):
         http://en.wikipedia.org/wiki/Binary_prefix
     """
     if v is None:
-        return 0, ""
+        return 0, ''
 
     for prefix, size in UnitSystems[system]:
         if condition(v, size, step):
             v2 = v / size
             if v2 - math.floor(v2) < 0.00000000001 and v > 1:
                 v2 = float(math.floor(v2))
+            if units:
+                prefix = "%s%s" % (prefix, units)
             return v2, prefix
 
     if v - math.floor(v) < 0.00000000001 and v > 1:
         v = float(math.floor(v))
-    return v, ""
+    if units:
+        prefix = units
+    else:
+        prefix = ''
+    return v, prefix
 
 
 def find_x_times(start_dt, unit, step):

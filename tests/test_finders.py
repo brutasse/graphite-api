@@ -110,3 +110,60 @@ class WhisperFinderTest(TestCase):
 
         finally:
             os.listdir = self._original_listdir
+
+    def test_globstar(self):
+        store = app.config['GRAPHITE']['store']
+        query = "x.**.x"
+        hits = ["x.x", "x._.x", "x._._.x"]
+        misses = ["x.x.o", "o.x.x", "x._.x._.o", "o._.x._.x"]
+        for path in hits + misses:
+            db_path = os.path.join(WHISPER_DIR, path.replace(".", os.sep))
+            if not os.path.exists(os.path.dirname(db_path)):
+                os.makedirs(os.path.dirname(db_path))
+            whisper.create(db_path + '.wsp', [(1, 60)])
+
+        paths = [node.path for node in store.find(query, local=True)]
+        for hit in hits:
+            self.assertIn(hit, paths)
+        for miss in misses:
+            self.assertNotIn(miss, paths)
+
+    def test_multiple_globstars(self):
+        store = app.config['GRAPHITE']['store']
+        query = "y.**.y.**.y"
+        hits = [
+            "y.y.y", "y._.y.y", "y.y._.y", "y._.y._.y",
+            "y._._.y.y", "y.y._._.y"
+        ]
+        misses = [
+            "y.o.y", "o.y.y", "y.y.o", "o.y.y.y",  "y.y.y.o",
+            "o._.y._.y", "y._.o._.y", "y._.y._.o"
+        ]
+        for path in hits + misses:
+            db_path = os.path.join(WHISPER_DIR, path.replace(".", os.sep))
+            if not os.path.exists(os.path.dirname(db_path)):
+                os.makedirs(os.path.dirname(db_path))
+            whisper.create(db_path + '.wsp', [(1, 60)])
+
+        paths = [node.path for node in store.find(query, local=True)]
+        for hit in hits:
+            self.assertIn(hit, paths)
+        for miss in misses:
+            self.assertNotIn(miss, paths)
+
+    def test_terminal_globstar(self):
+        store = app.config['GRAPHITE']['store']
+        query = "z.**"
+        hits = ["z._", "z._._", "z._._._"]
+        misses = ["z", "o._", "o.z._", "o._.z"]
+        for path in hits + misses:
+            db_path = os.path.join(WHISPER_DIR, path.replace(".", os.sep))
+            if not os.path.exists(os.path.dirname(db_path)):
+                os.makedirs(os.path.dirname(db_path))
+            whisper.create(db_path + '.wsp', [(1, 60)])
+
+        paths = [node.path for node in store.find(query, local=True)]
+        for hit in hits:
+            self.assertIn(hit, paths)
+        for miss in misses:
+            self.assertNotIn(miss, paths)

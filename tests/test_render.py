@@ -32,6 +32,12 @@ class RenderTest(TestCase):
         self.assertEqual(json.loads(response.data.decode('utf-8')), [])
 
         response = self.app.get(self.url, query_string={'target': 'test',
+                                                        'format': 'raw',
+                                                        'noCache': 'true'})
+        self.assertEqual(response.data.decode('utf-8'), "")
+        self.assertEqual(response.headers['Content-Type'], 'text/plain')
+
+        response = self.app.get(self.url, query_string={'target': 'test',
                                                         'format': 'pdf'})
         self.assertEqual(response.headers['Content-Type'], 'application/x-pdf')
 
@@ -39,11 +45,13 @@ class RenderTest(TestCase):
         self.assertEqual(response.headers['Content-Type'], 'image/png')
 
         response = self.app.get(self.url, query_string={'target': 'test',
-                                                        'format': 'dygraph'})
+                                                        'format': 'dygraph',
+                                                        'noCache': 'true'})
         self.assertEqual(json.loads(response.data.decode('utf-8')), {})
 
         response = self.app.get(self.url, query_string={'target': 'test',
-                                                        'format': 'rickshaw'})
+                                                        'format': 'rickshaw',
+                                                        'noCache': 'true'})
         self.assertEqual(json.loads(response.data.decode('utf-8')), [])
 
         self.create_db()
@@ -73,6 +81,28 @@ class RenderTest(TestCase):
         data = json.loads(response.data.decode('utf-8'))
         # 59 is a time race cond
         self.assertTrue(len(data[0]['datapoints']) in [59, 60])
+
+        response = self.app.get(self.url, query_string={'target': 'test',
+                                                        'noNullPoints': 1,
+                                                        'format': 'json'})
+        data = json.loads(response.data.decode('utf-8'))
+        self.assertEqual(data[0]['datapoints'],
+                         [[0.5, self.ts - 2],
+                          [0.4, self.ts - 1],
+                          [0.6, self.ts]])
+
+        response = self.app.get(self.url, query_string={'target': 'test',
+                                                        'format': 'raw'})
+        try:
+            self.assertEqual(
+                response.data.decode('utf-8'),
+                'test,%d,%d,1|%s' % (self.ts - 59, self.ts + 1,
+                                     'None,' * 57 + '0.5,0.4,0.6\n'))
+        except AssertionError:
+            self.assertEqual(
+                response.data.decode('utf-8'),
+                'test,%d,%d,1|%s' % (self.ts - 58, self.ts + 2,
+                                     'None,' * 56 + '0.5,0.4,0.6,None\n'))
 
         response = self.app.get(self.url, query_string={'target': 'test',
                                                         'format': 'dygraph'})
