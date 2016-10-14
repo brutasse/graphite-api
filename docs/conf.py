@@ -70,6 +70,8 @@ class RenderFunctionDocumenter(autodoc.FunctionDocumenter):
         if args is not None:
             return re.sub('requestContext, ', '', args)
 
+suppress_warnings = ['app.add_directive']
+
 
 def setup(app):
     app.add_autodocumenter(RenderFunctionDocumenter)

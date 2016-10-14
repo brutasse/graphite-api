@@ -27,7 +27,6 @@ import time
 
 from six.moves import zip_longest, map, reduce
 
-from .evaluator import evaluateTarget, evaluateTokens, pathsFromTarget
 from .render.attime import parseTimeOffset, parseATTime
 from .render.glyph import format_units
 from .render.datalib import TimeSeries, fetchData
@@ -3941,3 +3940,4 @@ SeriesFunctions = {
 }
 
 from .app import app  # noqa
+from .evaluator import evaluateTarget, evaluateTokens, pathsFromTarget  # noqa

@@ -1205,7 +1205,7 @@ Determines how slice labels are rendered within a pie chart.
 .. _param-valueLabelsColor:
 
 valueLabelsColor
-----------------
+````````````````
 
 *Default: black*
 
@@ -1214,7 +1214,7 @@ Color used to draw slice labels within a pie chart.
 .. _param-valueLabelsMin:
 
 valueLabelsMin
---------------
+``````````````
 
 *Default: 5*
 
