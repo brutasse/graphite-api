@@ -1554,12 +1554,18 @@ class FunctionsTest(TestCase):
         max_above = functions.maximumAbove({}, series, 98)
         self.assertEqual(max_above, series)
 
+    def test_max_above_all_none(self):
+        self.assertEqual(functions.maximumAbove({}, [[None]], 1), [])
+
     def test_min_above(self):
         series = self._generate_series_list(config=[range(100, 200)])
         min_above = functions.minimumAbove({}, series, 200)
         self.assertEqual(min_above, [])
         min_above = functions.minimumAbove({}, series, 99)
         self.assertEqual(min_above, series)
+
+    def test_min_above_all_none(self):
+        self.assertEqual(functions.minimumAbove({}, [[None]], 1), [])
 
     def test_max_below(self):
         series = self._generate_series_list(config=[range(100)])
@@ -1568,12 +1574,18 @@ class FunctionsTest(TestCase):
         max_below = functions.maximumBelow({}, series, 100)
         self.assertEqual(max_below, series)
 
+    def test_max_below_all_none(self):
+        self.assertEqual(functions.maximumBelow({}, [[None]], 1), [[None]])
+
     def test_min_below(self):
         series = self._generate_series_list(config=[range(100)])
         min_below = functions.minimumBelow({}, series, -1)
         self.assertEqual(min_below, [])
         min_below = functions.minimumBelow({}, series, 0)
         self.assertEqual(min_below, series)
+
+    def test_min_below_all_none(self):
+        self.assertEqual(functions.minimumBelow({}, [[None]], 1), [[None]])
 
     def test_highest_current(self):
         series = self._generate_series_list(config=[range(100),
@@ -1600,12 +1612,18 @@ class FunctionsTest(TestCase):
         above = functions.currentAbove({}, series, 98)
         self.assertEqual(above, series)
 
+    def test_current_above_all_none(self):
+        self.assertEqual(functions.currentAbove({}, [[None]], 1), [])
+
     def test_current_below(self):
         series = self._generate_series_list(config=[range(100)])
         below = functions.currentBelow({}, series, 50)
         self.assertEqual(len(below), 0)
         below = functions.currentBelow({}, series, 100)
         self.assertEqual(below, series)
+
+    def test_current_below_all_none(self):
+        self.assertEqual(functions.currentBelow({}, [[None]], 1), [[None]])
 
     def test_highest_average(self):
         series = self._generate_series_list(config=[
@@ -1639,6 +1657,9 @@ class FunctionsTest(TestCase):
         above = functions.averageAbove({}, series, 40)
         self.assertEqual(above, series)
 
+    def test_average_above_all_none(self):
+        self.assertEqual(functions.averageAbove({}, [[None]], 1), [])
+
     def test_average_below(self):
         series = self._generate_series_list(config=[range(100)])
         below = functions.averageBelow({}, series, 40)
@@ -1646,6 +1667,9 @@ class FunctionsTest(TestCase):
 
         below = functions.averageBelow({}, series, 50)
         self.assertEqual(below, series)
+
+    def test_average_below_all_none(self):
+        self.assertEqual(functions.averageBelow({}, [[None]], 1), [[None]])
 
     def test_average_outside_percentile(self):
         series = self._generate_series_list(
