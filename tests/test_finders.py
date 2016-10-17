@@ -109,6 +109,17 @@ class WhisperFinderTest(TestCase):
             nodes = store.find('whisper_finder.*.ba?.{baz,foo}')
             self.assertEqual(len(list(nodes)), 2)
             self.assertEqual(scandir_mocked.call_count, 5)
+
+            scandir_mocked.call_count = 0
+            nodes = store.find('whisper_finder.{foo,bar}.{baz,bar}.{baz,foo}')
+            self.assertEqual(len(list(nodes)), 2)
+            self.assertEqual(scandir_mocked.call_count, 5)
+
+            scandir_mocked.call_count = 0
+            nodes = store.find('whisper_finder.foo.{ba{r,z},baz}.baz')
+            self.assertEqual(len(list(nodes)), 1)
+            self.assertEqual(scandir_mocked.call_count, 1)
+
         finally:
             scandir_mocked.call_count = 0
 
