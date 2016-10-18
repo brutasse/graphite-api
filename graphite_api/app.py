@@ -17,7 +17,7 @@ from .config import configure
 from .encoders import JSONEncoder
 from .render.attime import parseATTime
 from .render.datalib import fetchData
-from .render.glyph import GraphTypes, CAIRO_DISABLED
+from .render.glyph import GraphTypes, cairo
 from .utils import RequestParams, hash_request
 
 logger = get_logger()
@@ -256,7 +256,7 @@ def render():
     # Fill in the request_options
     graph_type = RequestParams.get('graphType', 'line')
     request_options['graphType'] = graph_type
-    if not CAIRO_DISABLED:
+    if cairo:
         try:
             graph_class = GraphTypes[graph_type]
         except KeyError:
@@ -292,7 +292,7 @@ def render():
         return jsonify({'errors': errors}, status=400)
 
     # Fill in the graph_options
-    if not CAIRO_DISABLED:
+    if cairo:
         for opt in graph_class.customizable:
             if opt in RequestParams:
                 value = RequestParams[opt]
@@ -368,6 +368,12 @@ def render():
         'template': request_options['template'],
         'data': [],
     }
+
+    # Fail early for invalid requests
+    if request_options['graphType'] == 'pie' and not cairo:
+        errors = {'format': 'Requested image or pdf format but cairo '
+                  'library is not available'}
+        return jsonify({'errors': errors}, status=400)
 
     # Gather all data to take advantage of backends with fetch_multi
     paths = []
@@ -498,7 +504,7 @@ def render():
                 app.cache.add(request_key, response, cache_timeout)
             return response
 
-        if CAIRO_DISABLED:
+        if not cairo:
             errors = {'format': 'Requested image or pdf format but cairo '
                       'library is not available'}
             return jsonify({'errors': errors}, status=400)
@@ -583,7 +589,7 @@ def tree_json(nodes, base_path, wildcards=False):
 
 
 def doImageRender(graphClass, graphOptions):
-    if CAIRO_DISABLED:
+    if not cairo:
         return
     pngData = BytesIO()
     img = graphClass(**graphOptions)

@@ -14,10 +14,8 @@ limitations under the License."""
 
 try:
     import cairocffi as cairo
-except (NameError, ImportError, AttributeError):
-    CAIRO_DISABLED = True
-else:
-    CAIRO_DISABLED = False
+except (ImportError, AttributeError):
+    cairo = None
 import itertools
 import json
 import math
@@ -761,7 +759,7 @@ class Graph(object):
         self.drawGraph(**params)
 
     def setupCairo(self, outputFormat='png'):
-        if CAIRO_DISABLED:
+        if not cairo:
             return
         self.outputFormat = outputFormat
         if outputFormat == 'png':
