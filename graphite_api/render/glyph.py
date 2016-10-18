@@ -21,10 +21,8 @@ from io import BytesIO
 
 try:
     import cairocffi as cairo
-except (NameError, ImportError, AttributeError):
-    CAIRO_DISABLED = True
-else:
-    CAIRO_DISABLED = False
+except (ImportError, AttributeError):
+    cairo = None
 import pytz
 import six
 from six.moves import range
@@ -761,7 +759,7 @@ class Graph(object):
         self.drawGraph(**params)
 
     def setupCairo(self, outputFormat='png'):
-        if CAIRO_DISABLED:
+        if not cairo:
             return
         self.outputFormat = outputFormat
         if outputFormat == 'png':
