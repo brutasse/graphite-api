@@ -1,5 +1,7 @@
+import gzip
 import os
 import random
+import shutil
 import time
 
 from . import TestCase, WHISPER_DIR
@@ -116,7 +118,74 @@ class WhisperFinderTest(TestCase):
             self.assertEqual(scandir_mocked.call_count, 5)
 
             scandir_mocked.call_count = 0
+            nodes = store.find('whisper_finder.{foo}.bar.*')
+            self.assertEqual(len(list(nodes)), 1)
+            self.assertEqual(scandir_mocked.call_count, 2)
+
+            scandir_mocked.call_count = 0
             nodes = store.find('whisper_finder.foo.{ba{r,z},baz}.baz')
+            self.assertEqual(len(list(nodes)), 1)
+            self.assertEqual(scandir_mocked.call_count, 1)
+
+            scandir_mocked.call_count = 0
+            nodes = store.find('whisper_finder.{foo,garbage}.bar.baz')
+            self.assertEqual(len(list(nodes)), 1)
+            self.assertEqual(scandir_mocked.call_count, 1)
+
+            scandir_mocked.call_count = 0
+            nodes = store.find('whisper_finder.{fo{o}}.bar.baz')
+            self.assertEqual(len(list(nodes)), 1)
+            self.assertEqual(scandir_mocked.call_count, 1)
+
+            scandir_mocked.call_count = 0
+            nodes = store.find('whisper_finder.foo{}.bar.baz')
+            self.assertEqual(len(list(nodes)), 1)
+            self.assertEqual(scandir_mocked.call_count, 1)
+
+            scandir_mocked.call_count = 0
+            nodes = store.find('whisper_finder.{fo,ba}{o}.bar.baz')
+            self.assertEqual(len(list(nodes)), 1)
+            self.assertEqual(scandir_mocked.call_count, 1)
+
+            scandir_mocked.call_count = 0
+            nodes = store.find('whisper_finder.{fo,ba}{o,o}.bar.baz')
+            self.assertEqual(len(list(nodes)), 1)
+            self.assertEqual(scandir_mocked.call_count, 1)
+
+            scandir_mocked.call_count = 0
+            nodes = store.find('whisper_finder.{fo,ba}{o,z}.bar.baz')
+            self.assertEqual(len(list(nodes)), 1)
+            self.assertEqual(scandir_mocked.call_count, 1)
+
+        finally:
+            scandir_mocked.call_count = 0
+
+    @patch('graphite_api.finders.whisper.scandir', wraps=scandir_mock)
+    def test_gzipped_whisper_finder(self, scandir_mocked):
+        for db in (
+            ('gzwhisper_finder', 'foo.wsp'),
+            ('gzwhisper_finder', 'foo', 'bar', 'baz.wsp'),
+            ('gzwhisper_finder', 'bar', 'baz', 'baz.wsp'),
+        ):
+            db_path = os.path.join(WHISPER_DIR, *db)
+            if not os.path.exists(os.path.dirname(db_path)):
+                os.makedirs(os.path.dirname(db_path))
+            whisper.create(db_path, [(1, 60)])
+            with open(db_path, 'rb') as f_in:
+                f_out = gzip.open("%s.gz" % db_path, 'wb')
+                shutil.copyfileobj(f_in, f_out)
+                f_out.close()
+            os.remove(db_path)
+
+        try:
+            store = app.config['GRAPHITE']['store']
+            scandir_mocked.call_count = 0
+            nodes = store.find('gzwhisper_finder.foo')
+            self.assertEqual(len(list(nodes)), 2)
+            self.assertEqual(scandir_mocked.call_count, 0)
+
+            scandir_mocked.call_count = 0
+            nodes = store.find('gzwhisper_finder.foo{}.bar.baz')
             self.assertEqual(len(list(nodes)), 1)
             self.assertEqual(scandir_mocked.call_count, 1)
 
