@@ -3,6 +3,7 @@ import json
 import os
 import time
 
+from graphite_api.app import app
 from graphite_api._vendor import whisper
 
 from . import TestCase, WHISPER_DIR
@@ -450,6 +451,37 @@ class RenderTest(TestCase):
             'target': ['percentileOfSeries(sin("foo bar"), 95, true)']
         })
         self.assertEqual(response.status_code, 200)
+
+    def test_graph_templates(self):
+        def get_metadata(svg):
+            prefix = 'metadata = '
+            metadata = {}
+            for line in svg.split('\n'):
+                line = line.strip()
+                if line.startswith(prefix):
+                    metadata = json.loads(line[len(prefix):])
+            return metadata
+
+        whisper.create(self.db, [(1, 60)])
+        app.config['templates'] = {
+            'default': {'linecolors': 'white,blue,red'},
+            'my_template': {'linecolors': 'blue,red,white'}
+        }
+        response = self.app.get(self.url, query_string={'target': 'test',
+                                                        'format': 'svg'})
+        svg = response.data.decode('utf-8')
+        metadata = get_metadata(svg)
+        self.assertEqual(metadata['series'][0]['name'], 'test')
+        self.assertEqual(metadata['series'][0]['color'], 'white')
+
+        response = self.app.get(self.url,
+                                query_string={'target': 'test',
+                                              'format': 'svg',
+                                              'template': 'my_template'})
+        svg = response.data.decode('utf-8')
+        metadata = get_metadata(svg)
+        self.assertEqual(metadata['series'][0]['name'], 'test')
+        self.assertEqual(metadata['series'][0]['color'], 'blue')
 
     def test_raw_data(self):
         whisper.create(self.db, [(1, 60)])

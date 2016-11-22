@@ -190,6 +190,32 @@ Extra sections
   If ``True`` (default), full tracebacks are returned in the HTTP
   response in case of application errors.
 
+*templates*
+
+  To define color/styling, of graphs, like so:
+  * values under the 'default' template key serve to override
+  the built-in defaults (see glyph.py).
+  * Other template keys provide further styling which will be used
+  via the http parameter ``template=<template_key>``.
+  The defaults are used for unspecified values.
+
+Example::
+
+    templates:
+        default:
+            background: 'white'
+            foreground: 'black'
+            minorLine: 'grey'
+            majorLine: 'rose'
+            linecolors: 'blue,green,red,purple,brown,yellow,aqua,grey,magenta,pink,gold,rose'
+            fontname: 'Sans'
+            fontsize: 10
+            fontbold: 'false'
+            fontitalic: 'false'
+        my_template:
+            background: 'pink'
+
+
 Custom location
 ---------------
 

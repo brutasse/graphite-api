@@ -211,7 +211,7 @@ than one metric in a single path.
   match ``servers.ix02ehssvc04v.cpu.total.user``, while ``servers.*.*.*.*``
   will.
 
-  
+
 Examples
 ^^^^^^^^
 
@@ -571,7 +571,7 @@ mode to use:
   plus the value of the current line.
 
 .. _param-bgcolor:
-  
+
 bgcolor
 ```````
 
@@ -647,7 +647,7 @@ drawNullAsZero
 Converts any None (null) values in the displayed metrics to zero at render
 time.
 
-.. _param-fgcolor: 
+.. _param-fgcolor:
 
 fgcolor
 ```````
@@ -981,7 +981,7 @@ max
 maxDataPoints
 `````````````
 
-Set the maximum numbers of datapoints returned when using json content. 
+Set the maximum numbers of datapoints returned when using json content.
 
 If the number of datapoints in a selected range exceeds the maxDataPoints
 value then the datapoints over the whole period are consolidated.
@@ -1125,8 +1125,7 @@ template
 
 *Default: default*
 
-Used to specify a template from ``graphTemplates.conf`` to use for default
-colors and graph styles.
+Used to specify a template to use for default colors and graph styles.
 
 Example::
 
@@ -1155,7 +1154,7 @@ Example::
   &title=Apache Busy Threads, All Servers, Past 24h
 
 .. _param-tz:
-  
+
 tz
 ``
 
@@ -1270,7 +1269,7 @@ the X-axis. See `datetime.date.strftime()
 format specification details.
 
 .. _param-yAxisSide:
-  
+
 yAxisSide
 `````````
 
@@ -1280,7 +1279,7 @@ Sets the side of the graph on which to render the Y-axis. Accepts values of
 ``left`` or ``right``.
 
 .. _param-yDivisors:
-  
+
 yDivisors
 `````````
 
@@ -1377,7 +1376,7 @@ yMinRight
 In dual Y-axis mode, sets the lower bound of the right Y-Axis (see: `yMin`_).
 
 .. _param-yStep:
-  
+
 yStep
 `````
 

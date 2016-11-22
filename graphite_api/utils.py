@@ -69,6 +69,8 @@ class RequestParams(object):
             keys.update(request.form.keys())
         keys.update(request.args.keys())
         return keys
+
+
 RequestParams = RequestParams()
 
 

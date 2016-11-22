@@ -153,6 +153,9 @@ def configure(app):
         else:
             Sentry(app, dsn=config['sentry_dsn'])
 
+    if 'templates' in config:
+        app.config['templates'] = config['templates']
+
     app.wsgi_app = TrailingSlash(CORS(app.wsgi_app,
                                       config.get('allowed_origins')))
     if config.get('render_errors', True):
