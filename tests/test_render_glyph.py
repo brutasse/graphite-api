@@ -94,8 +94,8 @@ class glyphStandaloneFunctionTest(TestCase):
 
     # Testing getExtents()
     def test_getExtents_empty_string(self):
-        extents = glyph.Graph(data=[]).getExtents('')
-        self.assertEqual(extents['width'], 0)
+        extents = glyph.LineGraph(data=[]).getExtents('')
+        self.assertEqual(extents['width'], 0.0)
 
     # Testing safeMax()
     def test_safeMax_None(self):
