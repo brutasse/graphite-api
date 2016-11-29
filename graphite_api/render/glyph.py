@@ -808,7 +808,7 @@ class Graph(object):
     def getExtents(self, text=None):
         F = self.ctx.font_extents()
         extents = {'maxHeight': F[2], 'maxAscent': F[0], 'maxDescent': F[1]}
-        if text:
+        if text is not None:
             T = self.ctx.text_extents(text)
             extents['width'] = T[4]
             extents['height'] = T[3]
