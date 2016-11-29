@@ -92,6 +92,11 @@ class glyphStandaloneFunctionTest(TestCase):
     def test_safeMin_list_with_nan(self):
         self.assertEqual(glyph.safeMin([1, 5.1, 6, float('Nan')]), 1)
 
+    # Testing getExtents()
+    def test_getExtents_empty_string(self):
+        extents = glyph.LineGraph(data=[]).getExtents('')
+        self.assertEqual(extents['width'], 0.0)
+
     # Testing safeMax()
     def test_safeMax_None(self):
         with self.assertRaises(TypeError):
