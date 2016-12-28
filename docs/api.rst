@@ -59,7 +59,7 @@ Parameters:
   The query to search for.
 
 *format*
-  The output format to use. Can be ``completer`` (default) or ``treejson``.
+  The output format to use. Can be ``completer`` or ``treejson`` (default).
 
 *wildcards* (0 or 1)
   Whether to add a wildcard result at the end or no. Default: 0.
