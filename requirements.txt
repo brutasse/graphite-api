@@ -8,3 +8,5 @@ raven[flask]
 six
 structlog
 tzlocal
+cffi
+gunicorn
