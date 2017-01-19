@@ -37,6 +37,7 @@ setup(
         'cyanite': ['cyanite'],
         'cache': ['Flask-Cache'],
         'statsd': ['statsd'],
+        ':sys_platform!="win32"': ['cairocffi'],
         'cairo': ['cairocffi'],
     },
     zip_safe=False,
