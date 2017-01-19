@@ -589,8 +589,6 @@ def tree_json(nodes, base_path, wildcards=False):
 
 
 def doImageRender(graphClass, graphOptions):
-    if not cairo:
-        return
     pngData = BytesIO()
     img = graphClass(**graphOptions)
     img.output(pngData)
