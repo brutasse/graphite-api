@@ -630,8 +630,6 @@ def json_nodes(nodes):
 
 
 def doImageRender(graphClass, graphOptions):
-    if not cairo:
-        return
     pngData = BytesIO()
     img = graphClass(**graphOptions)
     img.output(pngData)
