@@ -11,6 +11,7 @@ install_requires = [
     'pytz',
     'six',
     'tzlocal',
+    'scandir'
 ]
 
 if sys.version_info < (2, 7):

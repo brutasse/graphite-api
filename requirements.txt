@@ -8,3 +8,4 @@ raven[flask]
 six
 structlog
 tzlocal
+scandir

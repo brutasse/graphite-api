@@ -14,6 +14,11 @@ from .._vendor import whisper
 
 from . import fs_to_metric, get_real_metric_path, match_entries
 
+try:
+    from os import scandir, walk, stat
+except ImportError:
+    from scandir import scandir, walk, stat
+
 logger = get_logger()
 
 
@@ -66,6 +71,12 @@ class WhisperFinder(object):
                                                       self.carbonlink)
                         yield LeafNode(metric_path, reader)
 
+    def subdirs(self,path):
+        """Yield directory names not starting with '.' under given path."""
+        for entry in scandir(path):
+            if not entry.name.startswith('.') and entry.is_dir():
+                yield entry.name
+
     def _find_paths(self, current_dir, patterns):
         """Recursively generates absolute paths whose components
         underneath current_dir match the corresponding pattern in
@@ -82,7 +93,7 @@ class WhisperFinder(object):
             entries = [pattern]
 
         if using_globstar:
-            matching_subdirs = map(lambda x: x[0], os.walk(current_dir))
+            matching_subdirs = map(lambda x: x[0], scandir.walk(current_dir))
         else:
             subdirs = [e for e in entries
                        if os.path.isdir(os.path.join(current_dir, e))]
@@ -119,7 +130,7 @@ class WhisperReader(object):
 
     def get_intervals(self):
         start = time.time() - whisper.info(self.fs_path)['maxRetention']
-        end = max(os.stat(self.fs_path).st_mtime, start)
+        end = max(stat(self.fs_path).st_mtime, start)
         return IntervalSet([Interval(start, end)])
 
     def fetch(self, startTime, endTime):  # noqa
@@ -157,7 +168,7 @@ class GzippedWhisperReader(WhisperReader):
             fh.close()
 
         start = time.time() - info['maxRetention']
-        end = max(os.stat(self.fs_path).st_mtime, start)
+        end = max(stat(self.fs_path).st_mtime, start)
         return IntervalSet([Interval(start, end)])
 
     def fetch(self, startTime, endTime):
