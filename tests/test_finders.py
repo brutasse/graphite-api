@@ -5,7 +5,7 @@ import time
 from . import TestCase, WHISPER_DIR
 
 try:
-    import os.scandir
+    from os import scandir
     import os as scandir
 except ImportError:
     import scandir
@@ -16,7 +16,9 @@ from graphite_api.node import LeafNode, BranchNode
 from graphite_api.storage import Store
 from graphite_api._vendor import whisper
 
+
 class FinderTest(TestCase):
+
     def test_custom_finder(self):
         store = Store([DummyFinder()])
         nodes = list(store.find("foo"))
@@ -112,7 +114,6 @@ class WhisperFinderTest(TestCase):
             nodes = store.find('whisper_finder.*.ba?.{baz,foo}')
             self.assertEqual(len(list(nodes)), 2)
             self.assertEqual(self._scandir_counter, 5)
-
         finally:
             scandir.scandir = self._original_scandir
 

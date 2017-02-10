@@ -7,11 +7,10 @@ install_requires = [
     'Flask',
     'PyYAML',
     'cairocffi',
-    'pyparsing>=1.5.7',
+    'pyparsing>=2.1.10',
     'pytz',
     'six',
-    'tzlocal',
-    'scandir'
+    'tzlocal'
 ]
 
 if sys.version_info < (2, 7):
@@ -19,6 +18,8 @@ if sys.version_info < (2, 7):
     install_requires.append('logutils')
     install_requires.append('ordereddict')
     install_requires.append('structlog<=16.0.0')
+elif sys.version_info < (3, 5):
+    install_requires.append('scandir')
 else:
     install_requires.append('structlog')
 

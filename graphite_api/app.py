@@ -460,10 +460,9 @@ def render():
             series_data = {}
             labels = ['Time']
             if any(context['data']):
-                datapoints = [[ts * 1000]
-                              for ts in range(context['data'][0].start,
-                                              context['data'][0].end,
-                                              context['data'][0].step)]
+                datapoints = [[t * 1000] for t in range(context['data']
+                              [0].start, context['data'][0].end,
+                              context['data'][0].step)]
                 for series in context['data']:
                     labels.append(series.name)
                     for i, point in enumerate(series):

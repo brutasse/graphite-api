@@ -1,7 +1,7 @@
 Flask
 Flask-Cache
-cairocffi
-pyparsing>=1.5.7
+cairocffi<0.7
+pyparsing>=2.1.10
 pytz
 pyyaml
 raven[flask]

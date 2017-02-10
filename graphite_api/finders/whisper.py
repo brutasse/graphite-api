@@ -15,7 +15,7 @@ from .._vendor import whisper
 from . import fs_to_metric, get_real_metric_path, match_entries
 
 try:
-    import os.scandir
+    from os import scandir
     import os as scandir
 except ImportError:
     import scandir
@@ -83,7 +83,7 @@ class WhisperFinder(object):
 
         # This avoids os.listdir() for performance
         if has_wildcard:
-            entries = [ x.name for x in scandir.scandir(current_dir) ]
+            entries = [x.name for x in scandir.scandir(current_dir)]
         else:
             entries = [pattern]
 
@@ -114,7 +114,9 @@ class WhisperFinder(object):
             for _basename in matching_files + matching_subdirs:
                 yield os.path.join(current_dir, _basename)
 
+
 class WhisperReader(object):
+
     __slots__ = ('fs_path', 'real_metric_path', 'carbonlink')
 
     def __init__(self, fs_path, real_metric_path, carbonlink=None):
