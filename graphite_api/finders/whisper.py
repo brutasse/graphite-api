@@ -16,6 +16,7 @@ from . import fs_to_metric, get_real_metric_path, match_entries
 
 try:
     from os import scandir
+    del scandir
     import os as scandir
 except ImportError:
     import scandir

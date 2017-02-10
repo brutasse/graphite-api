@@ -6,6 +6,7 @@ from . import TestCase, WHISPER_DIR
 
 try:
     from os import scandir
+    del scandir
     import os as scandir
 except ImportError:
     import scandir

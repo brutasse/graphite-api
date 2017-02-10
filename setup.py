@@ -13,13 +13,13 @@ install_requires = [
     'tzlocal'
 ]
 
+if sys.version_info < (3, 5):
+    install_requires.append('scandir')
 if sys.version_info < (2, 7):
     install_requires.append('importlib')
     install_requires.append('logutils')
     install_requires.append('ordereddict')
     install_requires.append('structlog<=16.0.0')
-elif sys.version_info < (3, 5):
-    install_requires.append('scandir')
 else:
     install_requires.append('structlog')
 
