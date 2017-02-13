@@ -5,17 +5,16 @@ import time
 from . import TestCase, WHISPER_DIR
 
 try:
-    from os import scandir
-    del scandir
-    import os as scandir
+    from unittest.mock import patch
 except ImportError:
-    import scandir
+    from mock import patch
 
 from graphite_api.app import app
 from graphite_api.intervals import Interval, IntervalSet
 from graphite_api.node import LeafNode, BranchNode
 from graphite_api.storage import Store
 from graphite_api._vendor import whisper
+from graphite_api.finders.whisper import scandir
 
 
 class FinderTest(TestCase):
@@ -79,10 +78,12 @@ class DummyFinder(object):
 
 
 class WhisperFinderTest(TestCase):
-    _scandir_counter = 0
-    _original_scandir = scandir.scandir
 
-    def test_whisper_finder(self):
+    def scandir_mock(d):
+        return scandir(d)
+
+    @patch('graphite_api.finders.whisper.scandir', wraps=scandir_mock)
+    def test_whisper_finder(self, scandir_mocked):
         for db in (
             ('whisper_finder', 'foo.wsp'),
             ('whisper_finder', 'foo', 'bar', 'baz.wsp'),
@@ -93,30 +94,23 @@ class WhisperFinderTest(TestCase):
                 os.makedirs(os.path.dirname(db_path))
             whisper.create(db_path, [(1, 60)])
 
-        def scandir_mock(d):
-            self._scandir_counter += 1
-            return self._original_scandir(d)
-
         try:
-            scandir.scandir = scandir_mock
-
             store = app.config['GRAPHITE']['store']
-
-            self._scandir_counter = 0
+            scandir_mocked.call_count = 0
             nodes = store.find('whisper_finder.foo')
             self.assertEqual(len(list(nodes)), 2)
-            self.assertEqual(self._scandir_counter, 0)
+            self.assertEqual(scandir_mocked.call_count, 0)
 
-            self._scandir_counter = 0
+            scandir_mocked.call_count = 0
             nodes = store.find('whisper_finder.foo.bar.baz')
             self.assertEqual(len(list(nodes)), 1)
-            self.assertEqual(self._scandir_counter, 0)
-            self._scandir_counter = 0
+            self.assertEqual(scandir_mocked.call_count, 0)
+            scandir_mocked.call_count = 0
             nodes = store.find('whisper_finder.*.ba?.{baz,foo}')
             self.assertEqual(len(list(nodes)), 2)
-            self.assertEqual(self._scandir_counter, 5)
+            self.assertEqual(scandir_mocked.call_count, 5)
         finally:
-            scandir.scandir = self._original_scandir
+            scandir_mocked.call_count = 0
 
     def test_globstar(self):
         store = app.config['GRAPHITE']['store']

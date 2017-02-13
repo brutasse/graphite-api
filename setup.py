@@ -7,10 +7,10 @@ install_requires = [
     'Flask',
     'PyYAML',
     'cairocffi',
-    'pyparsing>=2.1.10',
+    'pyparsing>=2.0',
     'pytz',
     'six',
-    'tzlocal'
+    'tzlocal',
 ]
 
 if sys.version_info < (3, 5):

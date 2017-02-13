@@ -15,11 +15,9 @@ from .._vendor import whisper
 from . import fs_to_metric, get_real_metric_path, match_entries
 
 try:
-    from os import scandir
-    del scandir
-    import os as scandir
+    from os import scandir, stat, walk
 except ImportError:
-    import scandir
+    from scandir import scandir, stat, walk
 
 logger = get_logger()
 
@@ -84,12 +82,12 @@ class WhisperFinder(object):
 
         # This avoids os.listdir() for performance
         if has_wildcard:
-            entries = [x.name for x in scandir.scandir(current_dir)]
+            entries = [x.name for x in scandir(current_dir)]
         else:
             entries = [pattern]
 
         if using_globstar:
-            matching_subdirs = map(lambda x: x[0], scandir.walk(current_dir))
+            matching_subdirs = map(lambda x: x[0], walk(current_dir))
         else:
             subdirs = [e for e in entries
                        if os.path.isdir(os.path.join(current_dir, e))]
@@ -127,7 +125,7 @@ class WhisperReader(object):
 
     def get_intervals(self):
         start = time.time() - whisper.info(self.fs_path)['maxRetention']
-        end = max(scandir.stat(self.fs_path).st_mtime, start)
+        end = max(stat(self.fs_path).st_mtime, start)
         return IntervalSet([Interval(start, end)])
 
     def fetch(self, startTime, endTime):  # noqa
@@ -165,7 +163,7 @@ class GzippedWhisperReader(WhisperReader):
             fh.close()
 
         start = time.time() - info['maxRetention']
-        end = max(scandir.stat(self.fs_path).st_mtime, start)
+        end = max(stat(self.fs_path).st_mtime, start)
         return IntervalSet([Interval(start, end)])
 
     def fetch(self, startTime, endTime):
