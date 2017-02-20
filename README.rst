@@ -61,6 +61,15 @@ Documentation
 
 .. _On readthedocs.org: https://graphite-api.readthedocs.io/en/latest/
 
+CairoCFFI dependency
+---------------------
+
+Cairo is intentionally disabled on Windows platforms. It may be enabled by using the ``cairo`` extras tag on install - ``pip install graphite-api[cairo]``.
+
+Cairo is not a hard requirement and it and its dependencies can be removed post-installation, though it will still be pulled in by pip by default on non-Windows platforms.
+
+If Cairo is not available Graphite-API will only support Json or raw output formats.
+
 Hacking
 -------
 
