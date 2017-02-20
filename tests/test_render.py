@@ -41,7 +41,8 @@ class RenderTest(TestCase):
         response = self.app.get(self.url, query_string={'target': 'test',
                                                         'format': 'pdf'})
         if CAIRO_ENABLED:
-            self.assertEqual(response.headers['Content-Type'], 'application/x-pdf')
+            self.assertEqual(response.headers['Content-Type'],
+                             'application/x-pdf')
         else:
             self.assertJSON(response, self.cairo_missing_resp, status_code=400)
 
@@ -149,7 +150,7 @@ class RenderTest(TestCase):
         response = self.app.get(self.url, query_string={
             'target': 'constantLine(12)'})
         expected_content_type = 'image/png' if CAIRO_ENABLED \
-          else 'application/json'
+            else 'application/json'
         self.assertEqual(response.headers['Content-Type'],
                          expected_content_type)
 
