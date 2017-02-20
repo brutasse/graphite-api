@@ -4,6 +4,7 @@ import os
 import time
 
 from graphite_api._vendor import whisper
+from graphite_api.render.glyph import cairo as CAIRO_ENABLED
 
 from . import TestCase, WHISPER_DIR
 
@@ -39,10 +40,16 @@ class RenderTest(TestCase):
 
         response = self.app.get(self.url, query_string={'target': 'test',
                                                         'format': 'pdf'})
-        self.assertEqual(response.headers['Content-Type'], 'application/x-pdf')
+        if CAIRO_ENABLED:
+            self.assertEqual(response.headers['Content-Type'], 'application/x-pdf')
+        else:
+            self.assertJSON(response, self.cairo_missing_resp, status_code=400)
 
         response = self.app.get(self.url, query_string={'target': 'test'})
-        self.assertEqual(response.headers['Content-Type'], 'image/png')
+        if CAIRO_ENABLED:
+            self.assertEqual(response.headers['Content-Type'], 'image/png')
+        else:
+            self.assertJSON(response, self.cairo_missing_resp, status_code=400)
 
         response = self.app.get(self.url, query_string={'target': 'test',
                                                         'format': 'dygraph',
@@ -141,7 +148,10 @@ class RenderTest(TestCase):
     def test_render_constant_line(self):
         response = self.app.get(self.url, query_string={
             'target': 'constantLine(12)'})
-        self.assertEqual(response.headers['Content-Type'], 'image/png')
+        expected_content_type = 'image/png' if CAIRO_ENABLED \
+          else 'application/json'
+        self.assertEqual(response.headers['Content-Type'],
+                         expected_content_type)
 
         response = self.app.get(self.url, query_string={
             'target': 'constantLine(12)', 'format': 'json'})
@@ -233,6 +243,9 @@ class RenderTest(TestCase):
         self.assertEqual(data, expected)
 
     def test_render_options(self):
+        # No rendering to test without cairo, skip if disabled
+        if not CAIRO_ENABLED:
+            return
         self.create_db()
         db2 = os.path.join(WHISPER_DIR, 'foo.wsp')
         whisper.create(db2, [(1, 60)])
@@ -327,6 +340,7 @@ class RenderTest(TestCase):
             response = self.app.get(self.url, query_string=qs)
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.headers['Content-Type'], 'image/png')
+
             if Cache is None or qs.get('noCache'):
                 self.assertEqual(response.headers['Pragma'], 'no-cache')
                 self.assertEqual(response.headers['Cache-Control'], 'no-cache')
@@ -362,9 +376,15 @@ class RenderTest(TestCase):
 
         response = self.app.get(self.url, query_string={'graphType': 'foo',
                                                         'target': 'test'})
-        self.assertJSON(response, {'errors': {
+        render_status_code = 200 if CAIRO_ENABLED else 400
+        expected_response = {'errors': {
             'graphType': "Invalid graphType 'foo', must be one of 'line', "
-            "'pie'."}}, status_code=400)
+            "'pie'."}} if CAIRO_ENABLED else \
+            {'errors': {
+                'format': 'Requested image or pdf format but cairo library '
+                'is not available'}}
+
+        self.assertJSON(response, expected_response, status_code=400)
 
         response = self.app.get(self.url, query_string={'maxDataPoints': 'foo',
                                                         'target': 'test'})
@@ -387,7 +407,7 @@ class RenderTest(TestCase):
             'fontBold': 'true',
             'fontItalic': 'default',
         })
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, render_status_code)
 
         response = self.app.get(self.url, query_string={
             'target': 'foo', 'tz': 'Europe/Lausanne'})
@@ -397,17 +417,20 @@ class RenderTest(TestCase):
 
         response = self.app.get(self.url, query_string={'target': 'test:aa',
                                                         'graphType': 'pie'})
-        self.assertJSON(response, {'errors': {
-            'target': "Invalid target: 'test:aa'.",
-        }}, status_code=400)
+        if CAIRO_ENABLED:
+            self.assertJSON(response, {'errors': {
+                'target': "Invalid target: 'test:aa'.",
+                }}, status_code=400)
+        else:
+            self.assertJSON(response, self.cairo_missing_resp, status_code=400)
 
         response = self.app.get(self.url, query_string={
             'target': ['test', 'foo:1.2'], 'graphType': 'pie'})
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, render_status_code)
 
         response = self.app.get(self.url, query_string={'target': ['test',
                                                                    '']})
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, render_status_code)
 
         response = self.app.get(self.url, query_string={'target': 'test',
                                                         'format': 'csv'})
@@ -419,37 +442,47 @@ class RenderTest(TestCase):
         response = self.app.get(self.url, query_string={'target': 'test',
                                                         'format': 'svg',
                                                         'jsonp': 'foo'})
-        jsonpsvg = response.data.decode('utf-8')
-        self.assertTrue(jsonpsvg.startswith('foo("<?xml version=\\"1.0\\"'))
-        self.assertTrue(jsonpsvg.endswith('</script>\\n</svg>")'))
+        if CAIRO_ENABLED:
+            jsonpsvg = response.data.decode('utf-8')
+            self.assertTrue(
+                jsonpsvg.startswith('foo("<?xml version=\\"1.0\\"'))
+            self.assertTrue(jsonpsvg.endswith('</script>\\n</svg>")'))
+        else:
+            self.assertTrue(response.status_code, render_status_code)
 
         response = self.app.get(self.url, query_string={'target': 'test',
                                                         'format': 'svg'})
-        svg = response.data.decode('utf-8')
-        self.assertTrue(svg.startswith('<?xml version="1.0"'))
+        if CAIRO_ENABLED:
+            svg = response.data.decode('utf-8')
+            self.assertTrue(svg.startswith('<?xml version="1.0"'))
+        else:
+            self.assertJSON(response, self.cairo_missing_resp, status_code=400)
 
         response = self.app.get(self.url, query_string={'target': 'inexisting',
                                                         'format': 'svg'})
-        self.assertEqual(response.status_code, 200)
-        svg = response.data.decode('utf-8')
-        self.assertTrue(svg.startswith('<?xml version="1.0"'))
+        if CAIRO_ENABLED:
+            self.assertEqual(response.status_code, render_status_code)
+            svg = response.data.decode('utf-8')
+            self.assertTrue(svg.startswith('<?xml version="1.0"'))
+        else:
+            self.assertJSON(response, self.cairo_missing_resp, status_code=400)
 
         response = self.app.get(self.url, query_string={
             'target': 'sum(test)',
         })
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, render_status_code)
 
         response = self.app.get(self.url, query_string={
             'target': ['sinFunction("a test", 2)',
                        'sinFunction("other test", 2.1)',
                        'sinFunction("other test", 2e1)'],
         })
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, render_status_code)
 
         response = self.app.get(self.url, query_string={
             'target': ['percentileOfSeries(sin("foo bar"), 95, true)']
         })
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, render_status_code)
 
     def test_raw_data(self):
         whisper.create(self.db, [(1, 60)])
@@ -517,7 +550,8 @@ class RenderTest(TestCase):
                 'target': "aliasByNode(movingMedian(test, '15min'), 0)",
             },
         )
-        self.assertEqual(response.status_code, 200)
+        expected_status = 200 if CAIRO_ENABLED else 400
+        self.assertEqual(response.status_code, expected_status)
 
     def test_templates(self):
         ts = int(time.time())

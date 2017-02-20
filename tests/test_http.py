@@ -26,8 +26,8 @@ class HttpTestCase(TestCase):
             'Access-Control-Allow-Origin' in response.headers)
 
     def test_trailing_slash(self):
-        response = self.app.get('/render?target=foo')
+        response = self.app.get('/render?target=foo&format=json')
         self.assertEqual(response.status_code, 200)
 
-        response = self.app.get('/render/?target=foo')
+        response = self.app.get('/render/?target=foo&format=json')
         self.assertEqual(response.status_code, 200)
