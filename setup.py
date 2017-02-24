@@ -43,7 +43,8 @@ setup(
         'cyanite': ['cyanite'],
         'cache': ['Flask-Cache'],
         'statsd': ['statsd'],
-        ':sys_platform!="win32"': ['cairocffi'],
+        ':sys_platform!="win32" and ' \
+        'platform_python_implementation!="PyPy"': ['cairocffi'],
         'cairo': ['cairocffi'],
     },
     zip_safe=False,
