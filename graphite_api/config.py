@@ -136,7 +136,7 @@ def configure(app):
     loaded_config['carbon'] = config.get('carbon', None)
 
     finders = []
-    for finder in config['finders']:
+    for finder in [f for f in config['finders'] if f]:
         finders.append(load_by_path(finder)(config))
     loaded_config['store'] = Store(finders)
     app.config['GRAPHITE'] = loaded_config
