@@ -7,6 +7,7 @@ os.environ['GRAPHITE_API_CONFIG'] = os.path.join(
 from graphite_api.app import app
 from graphite_api.config import configure
 
+
 class NoFindersTest(unittest.TestCase):
 
     def test_app_no_finders(self):
