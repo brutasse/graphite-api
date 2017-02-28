@@ -13,6 +13,8 @@ install_requires = [
     'tzlocal',
 ]
 
+if sys.version_info < (3, 5):
+    install_requires.append('scandir')
 if sys.version_info < (2, 7):
     install_requires.append('importlib')
     install_requires.append('logutils')

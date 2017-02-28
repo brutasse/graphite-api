@@ -14,6 +14,11 @@ from .._vendor import whisper
 
 from . import fs_to_metric, get_real_metric_path, match_entries
 
+try:
+    from os import scandir, stat, walk
+except ImportError:
+    from scandir import scandir, stat, walk
+
 logger = get_logger()
 
 
@@ -77,12 +82,12 @@ class WhisperFinder(object):
 
         # This avoids os.listdir() for performance
         if has_wildcard:
-            entries = os.listdir(current_dir)
+            entries = [x.name for x in scandir(current_dir)]
         else:
             entries = [pattern]
 
         if using_globstar:
-            matching_subdirs = map(lambda x: x[0], os.walk(current_dir))
+            matching_subdirs = map(lambda x: x[0], walk(current_dir))
         else:
             subdirs = [e for e in entries
                        if os.path.isdir(os.path.join(current_dir, e))]
@@ -110,6 +115,7 @@ class WhisperFinder(object):
 
 
 class WhisperReader(object):
+
     __slots__ = ('fs_path', 'real_metric_path', 'carbonlink')
 
     def __init__(self, fs_path, real_metric_path, carbonlink=None):
@@ -119,7 +125,7 @@ class WhisperReader(object):
 
     def get_intervals(self):
         start = time.time() - whisper.info(self.fs_path)['maxRetention']
-        end = max(os.stat(self.fs_path).st_mtime, start)
+        end = max(stat(self.fs_path).st_mtime, start)
         return IntervalSet([Interval(start, end)])
 
     def fetch(self, startTime, endTime):  # noqa
@@ -157,7 +163,7 @@ class GzippedWhisperReader(WhisperReader):
             fh.close()
 
         start = time.time() - info['maxRetention']
-        end = max(os.stat(self.fs_path).st_mtime, start)
+        end = max(stat(self.fs_path).st_mtime, start)
         return IntervalSet([Interval(start, end)])
 
     def fetch(self, startTime, endTime):
