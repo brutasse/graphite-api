@@ -18,6 +18,7 @@ class CORS(object):
         if netloc in self.origins or '*' in self.origins:
             allow_origin = [
                 ('Access-Control-Allow-Origin', origin),
+                ('Access-Control-Allow-Headers', 'origin,authorization, accept'),
                 ('Access-Control-Allow-Credentials', 'true'),
             ]
             if environ['REQUEST_METHOD'] == 'OPTIONS':
