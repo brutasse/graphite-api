@@ -111,7 +111,8 @@ in three steps:
 
       class CustomFinder(objects):
           def fetch_multi(self, nodes, start_time, end_time):
-              paths = [node.path for node in nodes]
+              # there may be multiple nodes with the same path
+              paths = set([node.path for node in nodes])
               # fetch paths
               return time_info, series
 
