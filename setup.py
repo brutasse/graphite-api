@@ -11,6 +11,7 @@ install_requires = [
     'pytz',
     'six',
     'tzlocal',
+    'setuptools',
 ]
 
 if sys.version_info < (3, 5):
