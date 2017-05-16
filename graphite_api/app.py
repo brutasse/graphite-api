@@ -317,8 +317,9 @@ def render():
     request_options['tzinfo'] = tzinfo
 
     # Get the time interval for time-oriented graph types
-    until_time = parseATTime(RequestParams.get('until', 'now'), tzinfo)
-    from_time = parseATTime(RequestParams.get('from', '-1d'), tzinfo)
+    now = parseATTime(RequestParams.get('now', 'now'), tzinfo)
+    until_time = parseATTime(RequestParams.get('until', 'now'), tzinfo, now)
+    from_time = parseATTime(RequestParams.get('from', '-1d'), tzinfo, now)
 
     start_time = min(from_time, until_time)
     end_time = max(from_time, until_time)
@@ -327,6 +328,7 @@ def render():
 
     request_options['startTime'] = start_time
     request_options['endTime'] = end_time
+    request_options['now'] = now
 
     template = dict()
     for key in RequestParams.keys():
@@ -362,6 +364,7 @@ def render():
     context = {
         'startTime': request_options['startTime'],
         'endTime': request_options['endTime'],
+        'now': request_options['now'],
         'tzinfo': request_options['tzinfo'],
         'template': request_options['template'],
         'data': [],

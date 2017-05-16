@@ -145,6 +145,10 @@ def fetchData(requestContext, pathExprs):
     from ..app import app
     startTime = int(epoch(requestContext['startTime']))
     endTime = int(epoch(requestContext['endTime']))
+    if 'now' in requestContext:
+        now = int(epoch(requestContext['now']))
+    else:
+        now = None
 
     # Convert to list if given single path
     if not isinstance(pathExprs, list):
@@ -175,14 +179,20 @@ def fetchData(requestContext, pathExprs):
         nodes = multi_nodes[finder.__fetch_multi__]
         if not nodes:
             continue
-        time_info, series = finder.fetch_multi(nodes, startTime, endTime)
+        try:
+            time_info, series = finder.fetch_multi(nodes, startTime, endTime,
+                                                   now, requestContext)
+        except TypeError:
+            time_info, series = finder.fetch_multi(nodes, startTime, endTime)
         for path, values in series.items():
             data_store.add_data(path, time_info, values,
                                 path_to_exprs[path])
 
     # Single fetches
     fetches = [
-        (node, node.fetch(startTime, endTime)) for node in single_nodes]
+        (node, node.fetch(startTime, endTime, now, requestContext))
+        for node in single_nodes
+    ]
     for node, results in fetches:
         if not results:
             logger.info("no results", node=node, start=startTime,
