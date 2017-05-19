@@ -248,6 +248,7 @@ def prune_datapoints(series, max_datapoints, start, end):
 
 @app.route('/render', methods=methods)
 def render():
+    start = time.time()
     # Start with some defaults
     errors = {}
     graph_options = {
@@ -353,6 +354,8 @@ def render():
         request_key = hash_request()
         response = app.cache.get(request_key)
         if response is not None:
+            logger.debug("cached response", time=(time.time() - start),
+                         targets=targets)
             return response
 
     headers = {
@@ -374,6 +377,7 @@ def render():
     }
 
     # Gather all data to take advantage of backends with fetch_multi
+    fdstart = time.time()
     paths = []
     for target in request_options['targets']:
         if request_options['graphType'] == 'pie':
@@ -382,6 +386,7 @@ def render():
         if target.strip():
             paths += pathsFromTarget(context, target)
     data_store = fetchData(context, paths)
+    logger.debug("fetched data", time=(time.time() - fdstart), paths=paths)
 
     if request_options['graphType'] == 'pie':
         for target in request_options['targets']:
@@ -407,7 +412,10 @@ def render():
         for target in request_options['targets']:
             if not target.strip():
                 continue
+            emstart = time.time()
             series_list = evaluateTarget(context, target, data_store)
+            logger.debug("evaluated metric", time=(time.time() - emstart),
+                         target=target)
             context['data'].extend(series_list)
 
         request_options['format'] = request_options.get('format')
@@ -460,6 +468,8 @@ def render():
             response = jsonify(series_data, headers=headers)
             if use_cache:
                 app.cache.add(request_key, response, cache_timeout)
+            logger.debug("rendered json", time=(time.time() - start),
+                         targets=targets)
             return response
 
         if request_options['format'] == 'dygraph':
@@ -476,6 +486,8 @@ def render():
                         datapoints[i].append(point)
                 series_data = {'labels': labels, 'data': datapoints}
 
+            logger.debug("rendered dygraph", time=(time.time() - start),
+                         targets=targets)
             return jsonify(series_data, headers=headers)
 
         if request_options['format'] == 'rickshaw':
@@ -486,6 +498,8 @@ def render():
                               for x, y in zip(timestamps, series)]
                 series_data.append(dict(target=series.name,
                                    datapoints=datapoints))
+            logger.debug("rendered rickshaw", time=(time.time() - start),
+                         targets=targets)
             return jsonify(series_data, headers=headers)
 
         if request_options['format'] == 'raw':
@@ -500,6 +514,8 @@ def render():
             response = (response.read(), 200, headers)
             if use_cache:
                 app.cache.add(request_key, response, cache_timeout)
+            logger.debug("rendered rawData", time=(time.time() - start),
+                         targets=targets)
             return response
 
         if request_options['format'] == 'svg':
@@ -529,6 +545,7 @@ def render():
 
     if use_cache:
         app.cache.add(request_key, response, cache_timeout)
+    logger.debug("rendered graph", time=(time.time() - start), targets=targets)
     return response
 
 
