@@ -116,7 +116,7 @@ def metrics_find():
         until_time = None
 
     format = RequestParams.get('format', 'treejson')
-    if format not in ['treejson', 'completer', 'nodelist']:
+    if format not in ['treejson', 'completer', 'nodelist', 'json']:
         errors['format'] = 'unrecognized format: "{0}".'.format(format)
 
     if 'query' not in RequestParams:
@@ -146,6 +146,9 @@ def metrics_find():
             nodes = metric.path.split('.')
             found.add(nodes[node_position])
         return jsonify({'nodes': sorted(found)})
+    elif format == 'json':
+        content = json_nodes(matches)
+        return jsonify(content)
 
     results = []
     for node in matches:
@@ -578,6 +581,25 @@ def tree_json(nodes, base_path, wildcards=False):
     results.extend(results_branch)
     results.extend(results_leaf)
     return results
+
+
+def json_nodes(nodes):
+    nodes_info = []
+
+    for node in nodes:
+        info = {
+            'path': node.path,
+            'is_leaf': node.is_leaf,
+            'intervals': [],
+        }
+        if node.is_leaf:
+            for i in node.intervals:
+                interval = {'start': i.start, 'end': i.end}
+                info['intervals'].append(interval)
+
+        nodes_info.append(info)
+
+    return sorted(nodes_info, key=lambda item: item['path'])
 
 
 def doImageRender(graphClass, graphOptions):
