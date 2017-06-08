@@ -29,6 +29,7 @@ class TimeSeries(list):
         self.consolidationFunc = consolidate
         self.valuesPerPoint = 1
         self.options = {}
+        self.pathExpression = name
 
     def __eq__(self, other):
         if isinstance(other, TimeSeries):
@@ -190,12 +191,12 @@ def fetchData(requestContext, pathExprs):
 
     # Single fetches
     fetches = [
-        (node, node.fetch(startTime, endTime, now, requestContext))
+        (node.path, node.fetch(startTime, endTime, now, requestContext))
         for node in single_nodes
     ]
-    for node, results in fetches:
+    for path, results in fetches:
         if not results:
-            logger.info("no results", node=node, start=startTime,
+            logger.info("no results", path=path, start=startTime,
                         end=endTime)
             continue
 
@@ -203,9 +204,8 @@ def fetchData(requestContext, pathExprs):
             time_info, values = results
         except ValueError as e:
             raise Exception("could not parse timeInfo/values from metric "
-                            "'%s': %s" % (node.path, e))
-        data_store.add_data(node.path, time_info, values,
-                            path_to_exprs[node.path])
+                            "'%s': %s" % (path, e))
+        data_store.add_data(path, time_info, values, path_to_exprs[path])
 
     return data_store
 
