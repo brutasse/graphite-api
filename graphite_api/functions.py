@@ -1020,7 +1020,7 @@ def powSeries(requestContext, *seriesLists):
     Takes two or more series and pows their points. A constant line may be
     used.
 
-    Example:
+    Example::
 
         &target=powSeries(Server.instance01.app.requests,
                           Server.instance01.app.replies)
