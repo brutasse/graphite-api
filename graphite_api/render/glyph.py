@@ -910,8 +910,8 @@ class Graph(object):
             numberOfLines = max(len(elements) - numRight, numRight)
             columns = math.floor(columns / 2.0)
             columns = max(columns, 1)
-            legendHeight = max(
-                1, (numberOfLines / columns)) * (lineHeight + padding)
+            legendHeight = (
+                max(1, (numberOfLines / columns)) * lineHeight) + padding
             # scoot the drawing area up to fit the legend
             self.area['ymax'] -= legendHeight
             self.ctx.set_line_width(1.0)
@@ -956,7 +956,7 @@ class Graph(object):
             columns = math.floor(self.width / labelWidth)
             columns = max(columns, 1)
             numberOfLines = math.ceil(float(len(elements)) / columns)
-            legendHeight = numberOfLines * (lineHeight + padding)
+            legendHeight = (numberOfLines * lineHeight) + padding
             # scoot the drawing area up to fit the legend
             self.area['ymax'] -= legendHeight
             self.ctx.set_line_width(1.0)

@@ -21,9 +21,9 @@ class RenderTest(TestCase):
         whisper.create(self.db, [(1, 60)])
 
         self.ts = int(time.time())
-        whisper.update(self.db, 0.5, self.ts - 2)
-        whisper.update(self.db, 0.4, self.ts - 1)
-        whisper.update(self.db, 0.6, self.ts)
+        whisper.update(self.db, 1.0, self.ts - 2)
+        whisper.update(self.db, 0.5, self.ts - 1)
+        whisper.update(self.db, 1.5, self.ts)
 
     def test_render_view(self):
         response = self.app.get(self.url, query_string={'target': 'test',
@@ -61,12 +61,12 @@ class RenderTest(TestCase):
         end = data[0]['datapoints'][-4:]
         try:
             self.assertEqual(
-                end, [[None, self.ts - 3], [0.5, self.ts - 2],
-                      [0.4, self.ts - 1], [0.6, self.ts]])
+                end, [[None, self.ts - 3], [1.0, self.ts - 2],
+                      [0.5, self.ts - 1], [1.5, self.ts]])
         except AssertionError:
             self.assertEqual(
-                end, [[0.5, self.ts - 2], [0.4, self.ts - 1],
-                      [0.6, self.ts], [None, self.ts + 1]])
+                end, [[1.0, self.ts - 2], [0.5, self.ts - 1],
+                      [1.5, self.ts], [None, self.ts + 1]])
 
         response = self.app.get(self.url, query_string={'target': 'test',
                                                         'maxDataPoints': 2,
@@ -87,9 +87,9 @@ class RenderTest(TestCase):
                                                         'format': 'json'})
         data = json.loads(response.data.decode('utf-8'))
         self.assertEqual(data[0]['datapoints'],
-                         [[0.5, self.ts - 2],
-                          [0.4, self.ts - 1],
-                          [0.6, self.ts]])
+                         [[1.0, self.ts - 2],
+                          [0.5, self.ts - 1],
+                          [1.5, self.ts]])
 
         response = self.app.get(self.url, query_string={'target': 'test',
                                                         'format': 'raw'})
@@ -97,12 +97,12 @@ class RenderTest(TestCase):
             self.assertEqual(
                 response.data.decode('utf-8'),
                 'test,%d,%d,1|%s' % (self.ts - 59, self.ts + 1,
-                                     'None,' * 57 + '0.5,0.4,0.6\n'))
+                                     'None,' * 57 + '1.0,0.5,1.5\n'))
         except AssertionError:
             self.assertEqual(
                 response.data.decode('utf-8'),
                 'test,%d,%d,1|%s' % (self.ts - 58, self.ts + 2,
-                                     'None,' * 56 + '0.5,0.4,0.6,None\n'))
+                                     'None,' * 56 + '1.0,0.5,1.5,None\n'))
 
         response = self.app.get(self.url, query_string={'target': 'test',
                                                         'format': 'dygraph'})
@@ -111,14 +111,14 @@ class RenderTest(TestCase):
         try:
             self.assertEqual(
                 end, [[(self.ts - 3) * 1000, None],
-                      [(self.ts - 2) * 1000, 0.5],
-                      [(self.ts - 1) * 1000, 0.4],
-                      [self.ts * 1000, 0.6]])
+                      [(self.ts - 2) * 1000, 1.0],
+                      [(self.ts - 1) * 1000, 0.5],
+                      [self.ts * 1000, 1.5]])
         except AssertionError:
             self.assertEqual(
-                end, [[(self.ts - 2) * 1000, 0.5],
-                      [(self.ts - 1) * 1000, 0.4],
-                      [self.ts * 1000, 0.6],
+                end, [[(self.ts - 2) * 1000, 1.0],
+                      [(self.ts - 1) * 1000, 0.5],
+                      [self.ts * 1000, 1.5],
                       [(self.ts + 1) * 1000, None]])
 
         response = self.app.get(self.url, query_string={'target': 'test',
@@ -128,14 +128,14 @@ class RenderTest(TestCase):
         try:
             self.assertEqual(
                 end, [{'x': self.ts - 3, 'y': None},
-                      {'x': self.ts - 2, 'y': 0.5},
-                      {'x': self.ts - 1, 'y': 0.4},
-                      {'x': self.ts, 'y': 0.6}])
+                      {'x': self.ts - 2, 'y': 1.0},
+                      {'x': self.ts - 1, 'y': 0.5},
+                      {'x': self.ts, 'y': 1.5}])
         except AssertionError:
             self.assertEqual(
-                end, [{'x': self.ts - 2, 'y': 0.5},
-                      {'x': self.ts - 1, 'y': 0.4},
-                      {'x': self.ts, 'y': 0.6},
+                end, [{'x': self.ts - 2, 'y': 1.0},
+                      {'x': self.ts - 1, 'y': 0.5},
+                      {'x': self.ts, 'y': 1.5},
                       {'x': self.ts + 1, 'y': None}])
 
     def test_render_constant_line(self):

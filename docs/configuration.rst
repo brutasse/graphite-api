@@ -81,6 +81,13 @@ Extra sections
     consistent hashing and a custom function, you need to point to the same
     hashing function.
 
+  *hashing_type*
+    Type of metric hashing function. The default ``carbon_ch`` is Graphite's
+    traditional consistent-hashing implementation. Alternatively, you can use
+    ``fnv1a_ch``, which supports the Fowler-Noll-Vo hash function (FNV-1a) hash
+    implementation offered by the carbon-c-relay project.
+    Default: ``carbon_ch``
+
   *carbon_prefix*
     Prefix for carbon's internal metrics. When querying metrics starting with
     this prefix, requests are made to all carbon-cache instances instead of

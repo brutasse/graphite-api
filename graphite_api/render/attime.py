@@ -21,7 +21,7 @@ months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun',
 weekdays = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
 
 
-def parseATTime(s, tzinfo=None):
+def parseATTime(s, tzinfo=None, now=None):
     if tzinfo is None:
         from ..app import app
         tzinfo = pytz.timezone(app.config['TIME_ZONE'])
@@ -46,11 +46,13 @@ def parseATTime(s, tzinfo=None):
         offset = '-' + offset
     else:
         ref, offset = s, ''
-    return (parseTimeReference(ref) +
+    return (parseTimeReference(ref or now) +
             parseTimeOffset(offset)).astimezone(tzinfo)
 
 
 def parseTimeReference(ref):
+    if isinstance(ref, datetime):
+        return ref
     if not ref or ref == 'now':
         return datetime.utcnow().replace(tzinfo=pytz.utc)
 

@@ -1,24 +1,19 @@
 from distutils.version import StrictVersion
 from pyparsing import (
-    ParserElement, Forward, Combine, Optional, Word, Literal, CaselessKeyword,
+    Forward, Combine, Optional, Word, Literal, CaselessKeyword,
     CaselessLiteral, Group, FollowedBy, LineEnd, OneOrMore, ZeroOrMore,
-    nums, alphas, alphanums, printables, delimitedList, quotedString,
+    alphas, alphanums, printables, delimitedList, quotedString, Regex,
     __version__
 )
 
-ParserElement.enablePackrat()
 grammar = Forward()
 
 expression = Forward()
 
 # Literals
-intNumber = Combine(
-    Optional('-') + Word(nums)
-)('integer')
+intNumber = Regex(r'-?\d+')('integer')
 
-floatNumber = Combine(
-    Optional('-') + Word(nums) + Literal('.') + Word(nums)
-)('float')
+floatNumber = Regex(r'-?\d+\.\d+')('float')
 
 sciNumber = Combine(
     (floatNumber | intNumber) + CaselessLiteral('e') + intNumber

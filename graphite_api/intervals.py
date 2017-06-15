@@ -22,6 +22,12 @@ class IntervalSet(object):
     def __iter__(self):
         return iter(self.intervals)
 
+    def __len__(self):
+        return len(self.intervals)
+
+    def __getitem__(self, i):
+        return self.intervals[i]
+
     def __bool__(self):
         return self.size != 0
     __nonzero__ = __bool__  # python 2

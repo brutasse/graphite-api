@@ -25,6 +25,27 @@ renames = {
 }
 
 
+try:
+    import pyhash
+    hasher = pyhash.fnv1a_32()
+
+    def fnv32a(string, seed=0x811c9dc5):
+        return hasher(string, seed=seed)
+except ImportError:
+    def fnv32a(string, seed=0x811c9dc5):
+        """
+        FNV-1a Hash (http://isthe.com/chongo/tech/comp/fnv/) in Python.
+        Taken from https://gist.github.com/vaiorabbit/5670985
+        """
+        hval = seed
+        fnv_32_prime = 0x01000193
+        uint32_max = 2 ** 32
+        for s in string:
+            hval = hval ^ ord(s)
+            hval = (hval * fnv_32_prime) % uint32_max
+        return hval
+
+
 def allowed_module(module, name):
     if module not in pickle_safe:
         raise pickle.UnpicklingError(
@@ -61,25 +82,33 @@ else:
 
 
 class ConsistentHashRing(object):
-    def __init__(self, nodes, replica_count=100):
+    def __init__(self, nodes, replica_count=100, hash_type='carbon_ch'):
         self.ring = []
         self.ring_len = len(self.ring)
         self.nodes = set()
         self.nodes_len = len(self.nodes)
         self.replica_count = replica_count
+        self.hash_type = hash_type
         for node in nodes:
             self.add_node(node)
 
     def compute_ring_position(self, key):
-        big_hash = md5(str(key).encode()).hexdigest()
-        small_hash = int(big_hash[:4], 16)
+        if self.hash_type == 'fnv1a_ch':
+            big_hash = '{0:x}'.format(int(fnv32a(str(key))))
+            small_hash = int(big_hash[:4], 16) ^ int(big_hash[4:], 16)
+        else:
+            big_hash = md5(str(key).encode()).hexdigest()
+            small_hash = int(big_hash[:4], 16)
         return small_hash
 
     def add_node(self, key):
         self.nodes.add(key)
         self.nodes_len = len(self.nodes)
         for i in range(self.replica_count):
-            replica_key = "%s:%d" % (key, i)
+            if self.hash_type == 'fnv1a_ch':
+                replica_key = "%d-%s" % (i, key[1])
+            else:
+                replica_key = "%s:%d" % (key, i)
             position = self.compute_ring_position(replica_key)
             entry = position, key
             bisect.insort(self.ring, entry)
@@ -118,7 +147,7 @@ class ConsistentHashRing(object):
 class CarbonLinkPool(object):
     def __init__(self, hosts, timeout=1, retry_delay=15,
                  carbon_prefix='carbon', replication_factor=1,
-                 hashing_keyfunc=lambda x: x):
+                 hashing_keyfunc=lambda x: x, hashing_type='carbon_ch'):
         self.carbon_prefix = carbon_prefix
         self.retry_delay = retry_delay
         self.hosts = []
@@ -140,7 +169,7 @@ class CarbonLinkPool(object):
                     replication_factor, len(servers)))
         self.replication_factor = replication_factor
 
-        self.hash_ring = ConsistentHashRing(self.hosts)
+        self.hash_ring = ConsistentHashRing(self.hosts, hash_type=hashing_type)
         self.keyfunc = hashing_keyfunc
         self.connections = {}
         self.last_failure = {}

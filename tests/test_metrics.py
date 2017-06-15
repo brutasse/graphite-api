@@ -1,11 +1,15 @@
+import json
 import os.path
+import time
+
 from graphite_api._vendor import whisper
 
 from . import TestCase, WHISPER_DIR
 
 
 class MetricsTests(TestCase):
-    def _create_dbs(self):
+    def _create_dbs(self, ts=None):
+        ts = ts or int(time.time())
         for db in (
             ('test', 'foo.wsp'),
             ('test', 'wat', 'welp.wsp'),
@@ -14,6 +18,8 @@ class MetricsTests(TestCase):
             db_path = os.path.join(WHISPER_DIR, *db)
             os.makedirs(os.path.dirname(db_path))
             whisper.create(db_path, [(1, 60)])
+            whisper.update(db_path, 1, ts)
+            whisper.update(db_path, 2, ts)
 
     def test_find(self):
         url = '/metrics/find'
@@ -32,7 +38,8 @@ class MetricsTests(TestCase):
                                                    'format': 'nodelist'})
         self.assertJSON(response, {'nodes': []})
 
-        self._create_dbs()
+        ts = int(time.time())
+        self._create_dbs(ts)
 
         for _url in ['/metrics/find', '/metrics']:
             response = self.app.get(_url, query_string={'query': 'test.*',
@@ -120,6 +127,33 @@ class MetricsTests(TestCase):
         }, {
             'name': '*',
         }]})
+
+        response = self.app.get(url, query_string={'query': 'test.*',
+                                                   'format': 'json'})
+        data = json.loads(response.data.decode('utf-8'))
+        self.assertEqual(len(data), 3)
+        self.assertEqual(data[0]['is_leaf'], False)
+        self.assertEqual(len(data[0]['intervals']), 0)
+        self.assertEqual(data[0]['path'], 'test.bar')
+
+        self.assertEqual(data[1]['is_leaf'], True)
+        self.assertEqual(len(data[1]['intervals']), 1)
+        # Adjustment by 1 is a race condition.
+        self.assertTrue(int(data[1]['intervals'][0]['start']) in [ts - 60,
+                                                                  ts - 59])
+        self.assertTrue(int(data[1]['intervals'][0]['end']) in [ts, ts + 1])
+        self.assertEqual(data[1]['path'], 'test.foo')
+
+        self.assertEqual(data[2]['is_leaf'], False)
+        self.assertEqual(len(data[2]['intervals']), 0)
+        self.assertEqual(data[2]['path'], 'test.wat')
+
+        response = self.app.get(url, query_string={'query': '*',
+                                                   'jsonp': 'foo',
+                                                   'format': 'json'})
+        data = response.data.decode('utf-8')
+        self.assertEqual(json.loads(data.split("(")[1].strip(")")),
+                         [{'is_leaf': False, 'intervals': [], 'path': 'test'}])
 
         response = self.app.get(url, query_string={'query': '*',
                                                    'format': 'nodelist'})

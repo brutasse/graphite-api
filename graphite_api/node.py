@@ -16,16 +16,24 @@ class BranchNode(Node):
 
 
 class LeafNode(Node):
-    __slots__ = ('reader', 'intervals')
+    __slots__ = ('reader', 'is_leaf')
 
     def __init__(self, path, reader):
         super(LeafNode, self).__init__(path)
         self.reader = reader
-        self.intervals = reader.get_intervals()
         self.is_leaf = True
 
-    def fetch(self, startTime, endTime):
-        return self.reader.fetch(startTime, endTime)
+    def fetch(self, startTime, endTime, now=None, requestContext=None):
+        try:
+            result = self.reader.fetch(startTime, endTime, now, requestContext)
+        except TypeError:
+            result = self.reader.fetch(startTime, endTime)
+
+        return result
+
+    @property
+    def intervals(self):
+        return self.reader.get_intervals()
 
     def __repr__(self):
         return '<LeafNode[%x]: %s (%s)>' % (id(self), self.path, self.reader)

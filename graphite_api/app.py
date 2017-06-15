@@ -116,7 +116,7 @@ def metrics_find():
         until_time = None
 
     format = RequestParams.get('format', 'treejson')
-    if format not in ['treejson', 'completer', 'nodelist']:
+    if format not in ['treejson', 'completer', 'nodelist', 'json']:
         errors['format'] = 'unrecognized format: "{0}".'.format(format)
 
     if 'query' not in RequestParams:
@@ -146,6 +146,9 @@ def metrics_find():
             nodes = metric.path.split('.')
             found.add(nodes[node_position])
         return jsonify({'nodes': sorted(found)})
+    elif format == 'json':
+        content = json_nodes(matches)
+        return jsonify(content)
 
     results = []
     for node in matches:
@@ -245,6 +248,7 @@ def prune_datapoints(series, max_datapoints, start, end):
 
 @app.route('/render', methods=methods)
 def render():
+    start = time.time()
     # Start with some defaults
     errors = {}
     graph_options = {
@@ -317,8 +321,9 @@ def render():
     request_options['tzinfo'] = tzinfo
 
     # Get the time interval for time-oriented graph types
-    until_time = parseATTime(RequestParams.get('until', 'now'), tzinfo)
-    from_time = parseATTime(RequestParams.get('from', '-1d'), tzinfo)
+    now = parseATTime(RequestParams.get('now', 'now'), tzinfo)
+    until_time = parseATTime(RequestParams.get('until', 'now'), tzinfo, now)
+    from_time = parseATTime(RequestParams.get('from', '-1d'), tzinfo, now)
 
     start_time = min(from_time, until_time)
     end_time = max(from_time, until_time)
@@ -327,6 +332,7 @@ def render():
 
     request_options['startTime'] = start_time
     request_options['endTime'] = end_time
+    request_options['now'] = now
 
     template = dict()
     for key in RequestParams.keys():
@@ -348,6 +354,8 @@ def render():
         request_key = hash_request()
         response = app.cache.get(request_key)
         if response is not None:
+            logger.debug("cached response", time=(time.time() - start),
+                         targets=targets)
             return response
 
     headers = {
@@ -362,12 +370,14 @@ def render():
     context = {
         'startTime': request_options['startTime'],
         'endTime': request_options['endTime'],
+        'now': request_options['now'],
         'tzinfo': request_options['tzinfo'],
         'template': request_options['template'],
         'data': [],
     }
 
     # Gather all data to take advantage of backends with fetch_multi
+    fdstart = time.time()
     paths = []
     for target in request_options['targets']:
         if request_options['graphType'] == 'pie':
@@ -376,6 +386,7 @@ def render():
         if target.strip():
             paths += pathsFromTarget(context, target)
     data_store = fetchData(context, paths)
+    logger.debug("fetched data", time=(time.time() - fdstart), paths=paths)
 
     if request_options['graphType'] == 'pie':
         for target in request_options['targets']:
@@ -401,7 +412,10 @@ def render():
         for target in request_options['targets']:
             if not target.strip():
                 continue
+            emstart = time.time()
             series_list = evaluateTarget(context, target, data_store)
+            logger.debug("evaluated metric", time=(time.time() - emstart),
+                         target=target)
             context['data'].extend(series_list)
 
         request_options['format'] = request_options.get('format')
@@ -454,6 +468,8 @@ def render():
             response = jsonify(series_data, headers=headers)
             if use_cache:
                 app.cache.add(request_key, response, cache_timeout)
+            logger.debug("rendered json", time=(time.time() - start),
+                         targets=targets)
             return response
 
         if request_options['format'] == 'dygraph':
@@ -470,6 +486,8 @@ def render():
                         datapoints[i].append(point)
                 series_data = {'labels': labels, 'data': datapoints}
 
+            logger.debug("rendered dygraph", time=(time.time() - start),
+                         targets=targets)
             return jsonify(series_data, headers=headers)
 
         if request_options['format'] == 'rickshaw':
@@ -480,6 +498,8 @@ def render():
                               for x, y in zip(timestamps, series)]
                 series_data.append(dict(target=series.name,
                                    datapoints=datapoints))
+            logger.debug("rendered rickshaw", time=(time.time() - start),
+                         targets=targets)
             return jsonify(series_data, headers=headers)
 
         if request_options['format'] == 'raw':
@@ -494,6 +514,8 @@ def render():
             response = (response.read(), 200, headers)
             if use_cache:
                 app.cache.add(request_key, response, cache_timeout)
+            logger.debug("rendered rawData", time=(time.time() - start),
+                         targets=targets)
             return response
 
         if request_options['format'] == 'svg':
@@ -523,6 +545,7 @@ def render():
 
     if use_cache:
         app.cache.add(request_key, response, cache_timeout)
+    logger.debug("rendered graph", time=(time.time() - start), targets=targets)
     return response
 
 
@@ -575,6 +598,25 @@ def tree_json(nodes, base_path, wildcards=False):
     results.extend(results_branch)
     results.extend(results_leaf)
     return results
+
+
+def json_nodes(nodes):
+    nodes_info = []
+
+    for node in nodes:
+        info = {
+            'path': node.path,
+            'is_leaf': node.is_leaf,
+            'intervals': [],
+        }
+        if node.is_leaf:
+            for i in node.intervals:
+                interval = {'start': i.start, 'end': i.end}
+                info['intervals'].append(interval)
+
+        nodes_info.append(info)
+
+    return sorted(nodes_info, key=lambda item: item['path'])
 
 
 def doImageRender(graphClass, graphOptions):
