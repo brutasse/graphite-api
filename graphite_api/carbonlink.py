@@ -5,8 +5,8 @@ import struct
 import time
 
 from hashlib import md5
-from io import BytesIO
 from importlib import import_module
+from io import BytesIO
 
 import six
 from six.moves import cPickle as pickle  # noqa
@@ -215,7 +215,7 @@ class CarbonLinkPool(object):
         connection.settimeout(self.timeout)
         try:
             connection.connect((server, int(port)))
-        except:
+        except Exception:
             self.last_failure[host] = time.time()
             raise
         connection.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)

@@ -1,19 +1,19 @@
 import logging
 import os
-import structlog
 import traceback
 import warnings
-import yaml
-
-from flask import make_response
-from tzlocal import get_localzone
 from importlib import import_module
+
+import structlog
+import yaml
+from flask import make_response
 from structlog.processors import (format_exc_info, JSONRenderer,
                                   KeyValueRenderer)
+from tzlocal import get_localzone
 
+from . import DEBUG
 from .middleware import CORS, TrailingSlash
 from .storage import Store
-from . import DEBUG
 
 try:
     from logging.config import dictConfig

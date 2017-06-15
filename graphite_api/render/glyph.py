@@ -12,16 +12,16 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License."""
 
-import cairocffi as cairo
 import itertools
 import json
 import math
-import pytz
 import re
-import six
-
 from datetime import datetime, timedelta
 from io import BytesIO
+
+import cairocffi as cairo
+import pytz
+import six
 from six.moves import range
 from six.moves.urllib.parse import unquote_plus
 

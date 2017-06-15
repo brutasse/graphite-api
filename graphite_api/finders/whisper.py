@@ -6,13 +6,12 @@ import time
 
 from structlog import get_logger
 
+from . import fs_to_metric, get_real_metric_path, match_entries
+from .._vendor import whisper
 from ..carbonlink import CarbonLinkPool
 from ..intervals import Interval, IntervalSet
 from ..node import BranchNode, LeafNode
 from ..utils import is_pattern
-from .._vendor import whisper
-
-from . import fs_to_metric, get_real_metric_path, match_entries
 
 try:
     from os import scandir, stat, walk

@@ -11,7 +11,7 @@ class JSONEncoder(json.JSONEncoder):
         elif hasattr(o, '__getitem__'):
             try:
                 return dict(o)
-            except:
+            except TypeError:
                 pass
         elif hasattr(o, '__iter__'):
             return [i for i in o]

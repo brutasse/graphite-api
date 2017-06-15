@@ -1,5 +1,6 @@
 import itertools
 import re
+
 import six
 
 from .render.datalib import fetchData, TimeSeries

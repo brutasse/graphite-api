@@ -13,25 +13,23 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import math
+import random
+import re
+import time
 from collections import defaultdict
 from datetime import datetime, timedelta
 from functools import partial
 from operator import is_not, itemgetter
 
-import math
-import re
-import random
 import six
-import time
+from six.moves import map, reduce, zip_longest
 
-from six.moves import zip_longest, map, reduce
-
-from .render.attime import parseTimeOffset, parseATTime
+from .render.attime import parseATTime, parseTimeOffset
+from .render.datalib import fetchData, TimeSeries
 from .render.glyph import format_units
-from .render.datalib import TimeSeries, fetchData
 from .render.grammar import grammar
-from .utils import to_seconds, epoch
+from .utils import epoch, to_seconds
 
 NAN = float('NaN')
 INF = float('inf')
@@ -2913,12 +2911,12 @@ def holtWintersAberration(requestContext, seriesList, delta=3):
         upperBand = confidenceBands[1]
         aberration = list()
         for i, actual in enumerate(series):
-            if series[i] is None:
+            if actual is None:
                 aberration.append(0)
-            elif upperBand[i] is not None and series[i] > upperBand[i]:
-                aberration.append(series[i] - upperBand[i])
-            elif lowerBand[i] is not None and series[i] < lowerBand[i]:
-                aberration.append(series[i] - lowerBand[i])
+            elif upperBand[i] is not None and actual > upperBand[i]:
+                aberration.append(actual - upperBand[i])
+            elif lowerBand[i] is not None and actual < lowerBand[i]:
+                aberration.append(actual - lowerBand[i])
             else:
                 aberration.append(0)
 
@@ -3759,7 +3757,7 @@ def smartSummarize(requestContext, seriesList, intervalString, func='sum'):
         paths.extend(pathsFromTarget(requestContext, series.pathExpression))
     data_store = fetchData(requestContext, paths)
 
-    for i, series in enumerate(seriesList):
+    for series in seriesList:
         # XXX: breaks with summarize(metric.{a,b})
         #            each series.pathExpression == metric.{a,b}
         newSeries = evaluateTarget(requestContext,
@@ -3970,7 +3968,7 @@ def hitcount(requestContext, seriesList, intervalString,
                                          series.pathExpression))
         data_store = fetchData(requestContext, paths)
 
-        for i, series in enumerate(seriesList):
+        for series in seriesList:
             newSeries = evaluateTarget(requestContext,
                                        series.pathExpression,
                                        data_store)[0]

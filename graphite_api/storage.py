@@ -2,10 +2,10 @@ import time
 
 from collections import defaultdict
 
-from .utils import is_pattern
-from .node import LeafNode
 from .intervals import Interval
+from .node import LeafNode
 from .readers import MultiReader
+from .utils import is_pattern
 
 
 class Store(object):

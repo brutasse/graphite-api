@@ -1,9 +1,9 @@
 from distutils.version import StrictVersion
+
 from pyparsing import (
-    Forward, Combine, Optional, Word, Literal, CaselessKeyword,
-    CaselessLiteral, Group, FollowedBy, LineEnd, OneOrMore, ZeroOrMore,
-    alphas, alphanums, printables, delimitedList, quotedString, Regex,
-    __version__
+    __version__, alphanums, alphas, CaselessKeyword, CaselessLiteral, Combine,
+    delimitedList, FollowedBy, Forward, Group, LineEnd, Literal, OneOrMore,
+    Optional, printables, quotedString, Regex, Word, ZeroOrMore,
 )
 
 grammar = Forward()

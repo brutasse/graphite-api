@@ -1,14 +1,13 @@
 import csv
 import json
 import math
-import pytz
-import six
 import time
-
 from collections import defaultdict
 from datetime import datetime
-from io import StringIO, BytesIO
+from io import BytesIO, StringIO
 
+import pytz
+import six
 from flask import Flask
 from structlog import get_logger
 from werkzeug.http import http_date
@@ -18,7 +17,7 @@ from .encoders import JSONEncoder
 from .render.attime import parseATTime
 from .render.datalib import fetchData
 from .render.glyph import GraphTypes
-from .utils import RequestParams, hash_request
+from .utils import hash_request, RequestParams
 
 logger = get_logger()
 

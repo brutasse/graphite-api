@@ -1,5 +1,6 @@
-from .intervals import IntervalSet
 from structlog import get_logger
+
+from .intervals import IntervalSet
 
 logger = get_logger()
 
