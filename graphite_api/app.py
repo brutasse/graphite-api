@@ -17,7 +17,7 @@ from .config import configure
 from .encoders import JSONEncoder
 from .render.attime import parseATTime
 from .render.datalib import fetchData
-from .render.glyph import GraphTypes
+from .render.glyph import GraphTypes, cairo
 from .utils import RequestParams, hash_request
 
 logger = get_logger()
@@ -259,16 +259,18 @@ def render():
 
     # Fill in the request_options
     graph_type = RequestParams.get('graphType', 'line')
-
-    # Fill in the request_options
-    try:
-        graph_class = GraphTypes[graph_type]
-        request_options['graphType'] = graph_type
-        request_options['graphClass'] = graph_class
-    except KeyError:
-        errors['graphType'] = (
-            "Invalid graphType '{0}', must be one of '{1}'.".format(
-                graph_type, "', '".join(sorted(GraphTypes.keys()))))
+    request_options['graphType'] = graph_type
+    if cairo:
+        try:
+            graph_class = GraphTypes[graph_type]
+        except KeyError:
+            errors['graphType'] = (
+                "Invalid graphType '{0}', must be one of '{1}'.".format(
+                    graph_type, "', '".join(sorted(GraphTypes.keys()))))
+        else:
+            request_options['graphClass'] = graph_class
+    else:
+        request_options['graphClass'] = None
     request_options['pieMode'] = RequestParams.get('pieMode', 'average')
     targets = RequestParams.getlist('target')
     if not len(targets):
@@ -294,23 +296,23 @@ def render():
         return jsonify({'errors': errors}, status=400)
 
     # Fill in the graph_options
-    for opt in graph_class.customizable:
-        if opt in RequestParams:
-            value = RequestParams[opt]
-            try:
-                intvalue = int(value)
-                if str(intvalue) == str(value):
-                    value = intvalue
-            except ValueError:
+    if cairo:
+        for opt in graph_class.customizable:
+            if opt in RequestParams:
+                value = RequestParams[opt]
                 try:
-                    value = float(value)
+                    intvalue = int(value)
+                    if str(intvalue) == str(value):
+                        value = intvalue
                 except ValueError:
-                    if value.lower() in ('true', 'false'):
-                        value = value.lower() == 'true'
-                    elif value.lower() == 'default' or not value:
-                        continue
-            graph_options[opt] = value
-
+                    try:
+                        value = float(value)
+                    except ValueError:
+                        if value.lower() in ('true', 'false'):
+                            value = value.lower() == 'true'
+                        elif value.lower() == 'default' or not value:
+                            continue
+                graph_options[opt] = value
     tzinfo = pytz.timezone(app.config['TIME_ZONE'])
     tz = RequestParams.get('tz')
     if tz:
@@ -375,6 +377,12 @@ def render():
         'template': request_options['template'],
         'data': [],
     }
+
+    # Fail early for invalid requests
+    if request_options['graphType'] == 'pie' and not cairo:
+        errors = {'format': 'Requested image or pdf format but cairo '
+                  'library is not available'}
+        return jsonify({'errors': errors}, status=400)
 
     # Gather all data to take advantage of backends with fetch_multi
     fdstart = time.time()
@@ -518,6 +526,10 @@ def render():
                          targets=targets)
             return response
 
+        if not cairo:
+            errors = {'format': 'Requested image or pdf format but cairo '
+                      'library is not available'}
+            return jsonify({'errors': errors}, status=400)
         if request_options['format'] == 'svg':
             graph_options['outputFormat'] = 'svg'
         elif request_options['format'] == 'pdf':
@@ -525,7 +537,6 @@ def render():
 
     graph_options['data'] = context['data']
     image = doImageRender(request_options['graphClass'], graph_options)
-
     use_svg = graph_options.get('outputFormat') == 'svg'
 
     if use_svg and 'jsonp' in request_options:

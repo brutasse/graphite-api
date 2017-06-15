@@ -58,6 +58,9 @@ class TestCase(unittest.TestCase):
         whisper_conf = {'whisper': {'directories': [WHISPER_DIR]}}
         app.config['GRAPHITE']['store'] = Store([WhisperFinder(whisper_conf)])
         self.app = app.test_client()
+        self.cairo_missing_resp = {'errors': {
+            'format': 'Requested image or pdf format but cairo library '
+            'is not available'}}
 
     def tearDown(self):
         self._cleanup()

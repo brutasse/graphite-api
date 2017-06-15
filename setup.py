@@ -6,7 +6,6 @@ from setuptools import setup, find_packages
 install_requires = [
     'Flask',
     'PyYAML',
-    'cairocffi',
     'pyparsing>=1.5.7',
     'pytz',
     'six',
@@ -44,6 +43,9 @@ setup(
         'cyanite': ['cyanite'],
         'cache': ['Flask-Cache'],
         'statsd': ['statsd'],
+        ':sys_platform!="win32" and ' \
+        'platform_python_implementation!="PyPy"': ['cairocffi'],
+        'cairo': ['cairocffi'],
     },
     zip_safe=False,
     platforms='any',

@@ -12,7 +12,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License."""
 
-import cairocffi as cairo
+try:
+    import cairocffi as cairo
+except (ImportError, AttributeError):
+    cairo = None
 import itertools
 import json
 import math
@@ -756,6 +759,8 @@ class Graph(object):
         self.drawGraph(**params)
 
     def setupCairo(self, outputFormat='png'):
+        if not cairo:
+            return
         self.outputFormat = outputFormat
         if outputFormat == 'png':
             self.surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
