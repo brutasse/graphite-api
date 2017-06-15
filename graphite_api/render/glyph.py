@@ -1176,7 +1176,7 @@ class LineGraph(Graph):
             params['yUnitSystem'] = 'si'
         else:
             params['yUnitSystem'] = force_text(params['yUnitSystem']).lower()
-            if params['yUnitSystem'] not in UnitSystems.keys():
+            if params['yUnitSystem'] not in UnitSystems:
                 params['yUnitSystem'] = 'si'
 
         self.params = params

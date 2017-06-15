@@ -3698,7 +3698,7 @@ def groupByNodes(requestContext, seriesList, callback, *nodes):
             keys.append(key)
         else:
             metaSeries[key].append(series)
-    for key in metaSeries.keys():
+    for key in metaSeries:
         metaSeries[key] = app.functions[callback](requestContext,
                                                   metaSeries[key])[0]
         metaSeries[key].name = key

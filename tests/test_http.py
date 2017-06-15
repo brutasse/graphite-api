@@ -5,7 +5,7 @@ class HttpTestCase(TestCase):
     def test_cors(self):
         response = self.app.options('/render')
         self.assertFalse(
-            'Access-Control-Allow-Origin' in response.headers.keys())
+            'Access-Control-Allow-Origin' in response.headers)
 
         response = self.app.options('/render', headers=(
             ('Origin', 'https://example.com'),
@@ -23,7 +23,7 @@ class HttpTestCase(TestCase):
             ('Origin', 'http://foo.example.com'),
         ))
         self.assertFalse(
-            'Access-Control-Allow-Origin' in response.headers.keys())
+            'Access-Control-Allow-Origin' in response.headers)
 
     def test_trailing_slash(self):
         response = self.app.get('/render?target=foo')

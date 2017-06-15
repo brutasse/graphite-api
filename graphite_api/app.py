@@ -268,7 +268,7 @@ def render():
     except KeyError:
         errors['graphType'] = (
             "Invalid graphType '{0}', must be one of '{1}'.".format(
-                graph_type, "', '".join(sorted(GraphTypes.keys()))))
+                graph_type, "', '".join(sorted(GraphTypes))))
     request_options['pieMode'] = RequestParams.get('pieMode', 'average')
     targets = RequestParams.getlist('target')
     if not len(targets):
