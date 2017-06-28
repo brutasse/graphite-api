@@ -1006,6 +1006,9 @@ Example::
 minorY
 ``````
 
+
+*Default: 1*
+
 Sets the number of minor grid lines per major line on the y-axis.
 
 Example::
