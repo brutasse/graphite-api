@@ -226,15 +226,21 @@ def sumSeriesWithRegex(requestContext, seriesList, pos, reg):
 
     Example:
 
-    sumSeriesWithRegex(*.kafka.group-$consumer_group-$topic-*.consumed.AVERAGE, 2, "group
--(.*?)-(.*?)-.*")
+    sumSeriesWithRegex(
+        *.kafka.group-$consumer_group-$topic-*.consumed.AVERAGE,
+        2,
+        "group-(.*?)-(.*?)-.*"
+    )
 
     with:
     $consumer_group = {kafkaimport1, kafkaimport2}
     $topic = {test1, test2}
 
     results in 4 sumSeries:
-    kafkaimport1-test1, kafkaimport1-test2, kafkaimport2-test1, kafkaimport2-test2
+    kafkaimport1-test1,
+    kafkaimport1-test2,
+    kafkaimport2-test1,
+    kafkaimport2-test2
 
     """
     newSeries = {}
@@ -249,7 +255,7 @@ def sumSeriesWithRegex(requestContext, seriesList, pos, reg):
 
         if newname in newSeries:
             newSeries[newname] = sumSeries(requestContext,
-                                        (series, newSeries[newname]))[0]
+                                           (series, newSeries[newname]))[0]
         else:
             newSeries[newname] = series
             newNames.append(newname)

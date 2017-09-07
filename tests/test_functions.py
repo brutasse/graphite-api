@@ -867,7 +867,8 @@ class FunctionsTest(TestCase):
             TimeSeries('collectd.test1.metric-cat2-0', 0, 1, 1, [None]),
             TimeSeries('collectd.test1.metric-cat2-1', 0, 1, 1, [None]),
         ]
-        sum_ = functions.sumSeriesWithRegex({}, seriesList, 2, "metric-(.*?)-.*")
+        reg = "metric-(.*?)-.*"
+        sum_ = functions.sumSeriesWithRegex({}, seriesList, 2, reg)
         expected = [
             TimeSeries('cat1', 0, 1, 1, [None]),
             TimeSeries('cat2', 0, 1, 1, [None]),
