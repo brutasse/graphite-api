@@ -847,6 +847,33 @@ class FunctionsTest(TestCase):
                          "collectd.test-db4.load.value)")
         self.assertEqual(sum_[:3], [3, 5, 6])
 
+    def test_sum_series_regex_empty_series_int_position(self):
+        self.assertEqual(functions.sumSeriesWithRegex({}, [], 0, ""), [])
+
+    def test_sum_series_regex_not_found(self):
+        seriesList = [
+            TimeSeries('collectd.test1.metric-cat1-0', 0, 1, 1, [None]),
+            TimeSeries('collectd.test1.metric-cat1-1', 0, 1, 1, [None]),
+            TimeSeries('collectd.test1.metric-cat2-0', 0, 1, 1, [None]),
+            TimeSeries('collectd.test1.metric-cat2-1', 0, 1, 1, [None]),
+        ]
+        sum_ = functions.sumSeriesWithRegex({}, seriesList, 2, "randomregex")
+        self.assertEqual(sum_, seriesList)
+
+    def test_sum_series_regex(self):
+        seriesList = [
+            TimeSeries('collectd.test1.metric-cat1-0', 0, 1, 1, [None]),
+            TimeSeries('collectd.test1.metric-cat1-1', 0, 1, 1, [None]),
+            TimeSeries('collectd.test1.metric-cat2-0', 0, 1, 1, [None]),
+            TimeSeries('collectd.test1.metric-cat2-1', 0, 1, 1, [None]),
+        ]
+        sum_ = functions.sumSeriesWithRegex({}, seriesList, 2, "metric-(.*?)-.*")
+        expected = [
+            TimeSeries('cat1', 0, 1, 1, [None]),
+            TimeSeries('cat2', 0, 1, 1, [None]),
+        ]
+        self.assertEqual(sum_, expected)
+
     def test_sum_series_wildcards_empty_series_int_position(self):
         self.assertEqual(functions.sumSeriesWithWildcards({}, [], 0), [])
 

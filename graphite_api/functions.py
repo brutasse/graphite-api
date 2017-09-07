@@ -220,6 +220,44 @@ def sumSeries(requestContext, *seriesLists):
     return [series]
 
 
+def sumSeriesWithRegex(requestContext, seriesList, pos, reg):
+    """
+    Call sumSeries after running a regex at the given position.
+
+    Example:
+
+    sumSeriesWithRegex(*.kafka.group-$consumer_group-$topic-*.consumed.AVERAGE, 2, "group
+-(.*?)-(.*?)-.*")
+
+    with:
+    $consumer_group = {kafkaimport1, kafkaimport2}
+    $topic = {test1, test2}
+
+    results in 4 sumSeries:
+    kafkaimport1-test1, kafkaimport1-test2, kafkaimport2-test1, kafkaimport2-test2
+
+    """
+    newSeries = {}
+    newNames = list()
+
+    for series in seriesList:
+        newname = series.name.split('.')[pos]
+
+        result = re.search(reg, newname)
+        if result:
+            newname = "-".join(result.groups())
+
+        if newname in newSeries:
+            newSeries[newname] = sumSeries(requestContext,
+                                        (series, newSeries[newname]))[0]
+        else:
+            newSeries[newname] = series
+            newNames.append(newname)
+        newSeries[newname].name = newname
+
+    return [newSeries[name] for name in newNames]
+
+
 def sumSeriesWithWildcards(requestContext, seriesList, *positions):
     """
     Call sumSeries after inserting wildcards at the given position(s).
@@ -4168,6 +4206,7 @@ SeriesFunctions = {
     'stddevSeries': stddevSeries,
     'avg': averageSeries,
     'sumSeriesWithWildcards': sumSeriesWithWildcards,
+    'sumSeriesWithRegex': sumSeriesWithRegex,
     'averageSeriesWithWildcards': averageSeriesWithWildcards,
     'multiplySeriesWithWildcards': multiplySeriesWithWildcards,
     'minSeries': minSeries,
