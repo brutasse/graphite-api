@@ -661,6 +661,40 @@ def asPercent(requestContext, seriesList, total=None):
     return resultList
 
 
+def divideSeriesLists(requestContext, dividendSeriesList, divisorSeriesList):
+    """
+    Iterates over a two lists and divides list1[0] by list2[0], list1[1] by
+    list2[1] and so on. The lists need to be the same length
+    """
+
+    if len(dividendSeriesList) != len(divisorSeriesList):
+        raise ValueError("dividendSeriesList and divisorSeriesList argument\
+                         must have equal length")
+
+    results = []
+
+    for dividendSeries, divisorSeries in zip(dividendSeriesList,
+                                             divisorSeriesList):
+        name = "divideSeries(%s,%s)" % (dividendSeries.name,
+                                        divisorSeries.name)
+        bothSeries = (dividendSeries, divisorSeries)
+        step = reduce(lcm, [s.step for s in bothSeries])
+
+        for s in bothSeries:
+            s.consolidate(step // s.step)
+
+        start = min([s.start for s in bothSeries])
+        end = max([s.end for s in bothSeries])
+        end -= (end - start) % step
+
+        values = (safeDiv(v1, v2) for v1, v2 in zip(*bothSeries))
+
+        quotientSeries = TimeSeries(name, start, end, step, values)
+        results.append(quotientSeries)
+
+    return results
+
+
 def divideSeries(requestContext, dividendSeriesList, divisorSeriesList):
     """
     Takes a dividend metric and a divisor metric and draws the division result.
@@ -4217,6 +4251,7 @@ SeriesFunctions = {
     'asPercent': asPercent,
     'pct': asPercent,
     'diffSeries': diffSeries,
+    'divideSeriesLists': divideSeriesLists,
     'divideSeries': divideSeries,
     'exponentialMovingAverage': exponentialMovingAverage,
 
