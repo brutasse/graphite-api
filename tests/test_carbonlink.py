@@ -1,5 +1,4 @@
 import struct
-from six.moves import cPickle as pickle
 
 try:
     from unittest.mock import patch
@@ -7,7 +6,8 @@ except ImportError:
     from mock import patch
 
 from graphite_api import carbonlink
-from graphite_api.carbonlink import ConsistentHashRing, CarbonLinkPool
+from graphite_api.carbonlink import CarbonLinkPool, ConsistentHashRing
+from six.moves import cPickle as pickle
 
 from . import TestCase
 

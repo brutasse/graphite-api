@@ -4,19 +4,19 @@ import random
 import shutil
 import time
 
-from . import TestCase, WHISPER_DIR
-
 try:
     from unittest.mock import patch
 except ImportError:
     from mock import patch
 
-from graphite_api.app import app
-from graphite_api.intervals import Interval, IntervalSet
-from graphite_api.node import LeafNode, BranchNode
-from graphite_api.storage import Store
 from graphite_api._vendor import whisper
+from graphite_api.app import app
 from graphite_api.finders.whisper import scandir
+from graphite_api.intervals import Interval, IntervalSet
+from graphite_api.node import BranchNode, LeafNode
+from graphite_api.storage import Store
+
+from . import TestCase, WHISPER_DIR
 
 
 class FinderTest(TestCase):

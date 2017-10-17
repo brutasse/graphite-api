@@ -327,7 +327,7 @@ class FunctionsTest(TestCase):
 
     def test_match_series_empty(self):
         results = functions.matchSeries([], [])
-        for i, (series1, series2) in enumerate(results):
+        for series1, series2 in results:
             self.assertEqual(series1, [])
             self.assertEqual(series2, [])
 
@@ -593,9 +593,9 @@ class FunctionsTest(TestCase):
         seriesList = self._generate_series_list()
         transform = -5
         referenceSeries = copy.deepcopy(seriesList[0])
-        for k, v in enumerate(referenceSeries):
-            if k % 2 != 0:
-                referenceSeries[k] = None
+        for index in range(len(referenceSeries)):
+            if index % 2 != 0:
+                referenceSeries[index] = None
 
         results = functions.transformNull({}, copy.deepcopy(seriesList),
                                           transform, [referenceSeries])
