@@ -334,7 +334,7 @@ def validateArchiveList(archiveList):
   if not archiveList:
     raise InvalidConfiguration("You must specify at least one archive configuration!")
 
-  archiveList.sort(key=lambda a: a[0]) #sort by precision (secondsPerPoint)
+  archiveList = sorted(archiveList, key=lambda a: a[0]) #sort by precision (secondsPerPoint)
 
   for i,archive in enumerate(archiveList):
     if i == len(archiveList) - 1:
