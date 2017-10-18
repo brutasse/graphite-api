@@ -35,14 +35,10 @@ matrix:
     - python: 2.7
       env:
       - TOXENV=py27
-    - python: 2.6
-      env:
-      - TOXENV=py26
     - python: pypy
       env:
       - TOXENV=pypy
   allow_failures:
-    - env: TOXENV=py26
     - env: TOXENV=coverage
     - env: TOXENV=pyparsing1
     - env: TOXENV=pypy

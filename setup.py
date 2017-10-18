@@ -10,18 +10,12 @@ install_requires = [
     'pyparsing>=1.5.7',
     'pytz',
     'six',
+    'structlog',
     'tzlocal',
 ]
 
 if sys.version_info < (3, 5):
     install_requires.append('scandir')
-if sys.version_info < (2, 7):
-    install_requires.append('importlib')
-    install_requires.append('logutils')
-    install_requires.append('ordereddict')
-    install_requires.append('structlog<=16.0.0')
-else:
-    install_requires.append('structlog')
 
 with open('README.rst') as f:
     long_description = f.read()

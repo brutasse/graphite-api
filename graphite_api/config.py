@@ -3,6 +3,7 @@ import os
 import traceback
 import warnings
 from importlib import import_module
+from logging.config import dictConfig
 
 import structlog
 import yaml
@@ -14,11 +15,6 @@ from tzlocal import get_localzone
 from . import DEBUG
 from .middleware import CORS, TrailingSlash
 from .storage import Store
-
-try:
-    from logging.config import dictConfig
-except ImportError:
-    from logutils.dictconfig import dictConfig
 
 if DEBUG:
     processors = (format_exc_info, KeyValueRenderer())
