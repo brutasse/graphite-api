@@ -1,5 +1,6 @@
-from . import TestCase
 from graphite_api.app import pathsFromTarget
+
+from . import TestCase
 
 
 class PathsTest(TestCase):

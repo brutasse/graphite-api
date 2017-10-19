@@ -1,4 +1,4 @@
-from graphite_api.render.datalib import TimeSeries, nonempty
+from graphite_api.render.datalib import nonempty, TimeSeries
 
 from . import TestCase
 

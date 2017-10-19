@@ -147,7 +147,7 @@ class RenderTest(TestCase):
             'target': 'constantLine(12)', 'format': 'json'})
         data = json.loads(response.data.decode('utf-8'))[0]['datapoints']
         self.assertEqual(len(data), 3)
-        for point, ts in data:
+        for point, _ts in data:
             self.assertEqual(point, 12)
 
         response = self.app.get(self.url, query_string={
@@ -155,7 +155,7 @@ class RenderTest(TestCase):
             'maxDataPoints': 12})
         data = json.loads(response.data.decode('utf-8'))[0]['datapoints']
         self.assertEqual(len(data), 3)
-        for point, ts in data:
+        for point, _ts in data:
             self.assertEqual(point, 12)
 
     def test_float_maxdatapoints(self):

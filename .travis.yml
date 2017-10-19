@@ -1,15 +1,8 @@
 language: python
-python: 3.5
+python: 3.6
 sudo: false
 cache: pip
-
 env:
-  - TOXENV=py26
-  - TOXENV=py27
-  - TOXENV=py33
-  - TOXENV=py34
-  - TOXENV=py35
-  - TOXENV=pypy
   - TOXENV=pyparsing1
   - TOXENV=flask08
   - TOXENV=flask09
@@ -29,8 +22,23 @@ install:
 script: "./.travis.sh"
 
 matrix:
+  include:
+    - python: 3.6
+      env:
+      - TOXENV=py36
+    - python: 3.5
+      env:
+      - TOXENV=py35
+    - python: 3.4
+      env:
+      - TOXENV=py34
+    - python: 2.7
+      env:
+      - TOXENV=py27
+    - python: pypy
+      env:
+      - TOXENV=pypy
   allow_failures:
-    - env: TOXENV=py26
     - env: TOXENV=coverage
     - env: TOXENV=pyparsing1
     - env: TOXENV=pypy

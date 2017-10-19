@@ -1,10 +1,10 @@
 import copy
 
-from . import TestCase
-
 from graphite_api.render import glyph
 from graphite_api.render.datalib import TimeSeries
 from graphite_api.utils import to_seconds
+
+from . import TestCase
 
 
 class glyphStandaloneFunctionTest(TestCase):
