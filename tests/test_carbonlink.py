@@ -116,6 +116,14 @@ class ConsistentHashRingTest(TestCase):
         ]
         self.assertEqual(node, expected)
 
+    def test_chr_break_get_node(self):
+        hosts = [
+            ("127.0.0.1",None)
+        ]
+        carbonlink = ConsistentHashRing(hosts)
+        node = carbonlink.get_node('hosts.worker44.cpu')
+        self.assertEqual(node, ('127.0.0.1', None))
+
 
 class ConsistentHashRingTestFNV1A(TestCase):
     def test_chr_compute_ring_position_fnv1a(self):
