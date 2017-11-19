@@ -422,23 +422,20 @@ def render():
         if request_options['format'] == 'json':
             series_data = []
             if 'noNullPoints' in request_options and any(context['data']):
-                for series in context['data']:
-                    values = []
-                    for (index, v) in enumerate(series):
-                        if v is not None:
-                            timestamp = series.start + (index * series.step)
-                            values.append((v, timestamp))
-                    if len(values) > 0:
-                        series_data.append({'target': series.name,
-                                            'datapoints': values})
+                series_data = [{'target': series.name,
+                                'datapoints': [
+                                    (val, series.start + (index * series.step))
+                                    for index, val in enumerate(series)
+                                    if val is not None]}
+                               for series in context['data']
+                               if len(series) > 0]
             else:
-                for series in context['data']:
-                    timestamps = range(series.start, series.end + series.step,
-                                       series.step)
-                    datapoints = zip(series, timestamps)
-                    series_data.append({'target': series.name,
-                                        'datapoints': datapoints})
-
+                series_data = [{'target': series.name,
+                                'datapoints': zip(
+                                    series,
+                                    range(series.start, series.end + series.step,
+                                          series.step))}
+                               for series in context['data']]
             response = jsonify(series_data, headers=headers)
             if use_cache:
                 app.cache.add(request_key, response, cache_timeout)
