@@ -77,20 +77,6 @@ class RenderTest(TestCase):
                       [1.5, self.ts], [None, self.ts + 1]])
 
         response = self.app.get(self.url, query_string={'target': 'test',
-                                                        'maxDataPoints': 2,
-                                                        'format': 'json'})
-        data = json.loads(response.data.decode('utf-8'))
-        # 1 is a time race cond
-        self.assertTrue(len(data[0]['datapoints']) in [1, 2])
-
-        response = self.app.get(self.url, query_string={'target': 'test',
-                                                        'maxDataPoints': 200,
-                                                        'format': 'json'})
-        data = json.loads(response.data.decode('utf-8'))
-        # 59 is a time race cond
-        self.assertTrue(len(data[0]['datapoints']) in [59, 60])
-
-        response = self.app.get(self.url, query_string={'target': 'test',
                                                         'noNullPoints': 1,
                                                         'format': 'json'})
         data = json.loads(response.data.decode('utf-8'))
@@ -169,13 +155,6 @@ class RenderTest(TestCase):
         for point, _ts in data:
             self.assertEqual(point, 12)
 
-    def test_float_maxdatapoints(self):
-        response = self.app.get(self.url, query_string={
-            'target': 'sin("foo")', 'format': 'json',
-            'maxDataPoints': 5.5})  # rounded to int
-        data = json.loads(response.data.decode('utf-8'))[0]['datapoints']
-        self.assertEqual(len(data), 5)
-
     def test_constantline_pathexpr(self):
         response = self.app.get(self.url, query_string={
             'target': 'sumSeries(constantLine(12), constantLine(5))',
@@ -209,12 +188,10 @@ class RenderTest(TestCase):
             'target': ['sumSeries(sin("foo"), sin("bar", 2))',
                        'sin("baz", 3)'],
             'format': 'json',
-            'maxDataPoints': 100,
         })
         data = json.loads(response.data.decode('utf-8'))
         agg = {}
         for series in data:
-            self.assertTrue(len(series['datapoints']) <= 100)
             agg[series['target']] = series['datapoints']
         for index, value in enumerate(agg['baz']):
             self.assertEqual(value, agg['sumSeries(sin(bar),sin(foo))'][index])
