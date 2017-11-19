@@ -219,32 +219,6 @@ def metrics_index():
     return jsonify(sorted(index))
 
 
-def prune_datapoints(series, max_datapoints, start, end):
-    time_range = end - start
-    points = time_range // series.step
-    if max_datapoints < points:
-        values_per_point = int(
-            math.ceil(float(points) / float(max_datapoints))
-        )
-        seconds_per_point = values_per_point * series.step
-        nudge = (
-            seconds_per_point +
-            (series.start % series.step) -
-            (series.start % seconds_per_point)
-        )
-        series.start += nudge
-        values_to_lose = nudge // series.step
-        del series[:values_to_lose-1]
-        series.consolidate(values_per_point)
-        step = seconds_per_point
-    else:
-        step = series.step
-
-    timestamps = range(series.start, series.end + series.step, step)
-    datapoints = zip(series, timestamps)
-    return {'target': series.name, 'datapoints': datapoints}
-
-
 @app.route('/render', methods=methods)
 def render():
     start = time.time()
@@ -447,14 +421,7 @@ def render():
 
         if request_options['format'] == 'json':
             series_data = []
-            if 'maxDataPoints' in request_options and any(context['data']):
-                start_time = min([s.start for s in context['data']])
-                end_time = max([s.end for s in context['data']])
-                for series in context['data']:
-                    series_data.append(prune_datapoints(
-                        series, request_options['maxDataPoints'],
-                        start_time, end_time))
-            elif 'noNullPoints' in request_options and any(context['data']):
+            if 'noNullPoints' in request_options and any(context['data']):
                 for series in context['data']:
                     values = []
                     for (index, v) in enumerate(series):
