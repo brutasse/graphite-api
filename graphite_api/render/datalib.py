@@ -135,11 +135,15 @@ class DataStore(object):
     def get_series_list(self, path_expr):
         series_list = []
         for path in self.get_paths(path_expr):
-            for data in self.data.get(path):
-                start, end, step = data['time_info']
-                series = TimeSeries(path, start, end, step, data['values'])
-                series.pathExpression = path_expr
-                series_list.append(series)
+            try:
+                for data in self.data.get(path):
+                    start, end, step = data['time_info']
+                    series = TimeSeries(path, start, end, step, data['values'])
+                    series.pathExpression = path_expr
+                    series_list.append(series)
+            except Exception as e:
+                import traceback
+                logger.error(traceback.format_exc())
         return series_list
 
 
