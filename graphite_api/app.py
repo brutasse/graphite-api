@@ -270,6 +270,11 @@ def render():
                 graph_type, "', '".join(sorted(GraphTypes))))
     request_options['pieMode'] = RequestParams.get('pieMode', 'average')
     targets = RequestParams.getlist('target')
+
+    # Rails/PHP/jQuery common practice format: ?target[]=path.1&target[]=path.2
+    if not len(targets):
+        targets = RequestParams.getlist('target[]')
+
     if not len(targets):
         errors['target'] = 'This parameter is required.'
     request_options['targets'] = targets
