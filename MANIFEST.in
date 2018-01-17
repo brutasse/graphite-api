@@ -1,2 +1,4 @@
 include README.rst LICENSE
 recursive-exclude tests *
+include versioneer.py
+include graphite_api/_version.py

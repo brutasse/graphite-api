@@ -729,6 +729,8 @@ class Graph(object):
         if self.margin < 0:
             self.margin = 10
 
+        if cairo is None:
+            return
         self.setupCairo(params.get('outputFormat', 'png').lower())
 
         self.area = {
@@ -811,6 +813,8 @@ class Graph(object):
         self.ctx.set_font_size(float(p['size']))
 
     def getExtents(self, text=None):
+        if cairo is None:
+            return {'width': 0, 'height': 0}
         F = self.ctx.font_extents()
         extents = {'maxHeight': F[2], 'maxAscent': F[0], 'maxDescent': F[1]}
         if text is not None:
