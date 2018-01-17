@@ -1,19 +1,12 @@
 Graphite-API
 ============
 
-.. image:: https://travis-ci.org/brutasse/graphite-api.svg?branch=master
-   :alt: Build Status
-   :target: https://travis-ci.org/brutasse/graphite-api
-
-.. image:: https://img.shields.io/coveralls/brutasse/graphite-api/master.svg
-   :alt: Coverage Status
-   :target: https://coveralls.io/r/brutasse/graphite-api?branch=master
-
 Graphite-web, without the interface. Just the rendering HTTP API.
 
+Fork of ``graphite-api`` specifically for use with an `InfluxDB backend <https://github.com/InfluxGraph/influxgraph>`_.
+
 This is a minimalistic API server that replicates the behavior of
-Graphite-web. I removed everything I could and simplified as much code as
-possible while keeping the basic functionality.
+Graphite-web.
 
 Implemented API calls:
 
@@ -27,6 +20,18 @@ No-ops:
 * ``/dashboard/load/<name>``
 * ``/events/get_data``
 
+Changes from graphite-api
+---------------------------
+
+* Hardcoded `average` consolidation of all data points removed - consolidation handled by storage back-end.
+* Cairo optional dependency - Json/raw formats by default.
+* Hardcoded legacy whisper *index* file requirement removed. (``/srv/index``)
+* ``maxdatapoints`` render query parameter removed - handled by storage back-end.
+* Whisper hardcoded default configuration removed.
+* Various fixes from pending graphite-api pull requests and back-ported fixes from graphite-web, ``asPercent`` among others.
+* Performance improvements.
+
+
 Difference from graphite-web
 ----------------------------
 
@@ -35,7 +40,6 @@ Difference from graphite-web
 * No remote rendering.
 * JSON data in request bodies is supported, additionally to form data and
   querystring parameters.
-* Ceres integration will be as an external backend.
 * Compatibility with python 2 and 3.
 * Easy to install and configure.
 
@@ -49,8 +53,7 @@ Goals
 Non-goals
 ---------
 
-* Support for very old Python versions (Python 2.6 is still supported but
-  maybe not for long).
+* Support for Python versions older than ``2.7``.
 * Built-in support for every metric storage system in the world. Whisper is
   included by default, other storages are added via 3rd-party backends.
 
@@ -64,11 +67,9 @@ Documentation
 CairoCFFI dependency
 ---------------------
 
-Cairo is intentionally disabled on Windows platforms. It may be enabled by using the ``cairo`` extras tag on install - ``pip install graphite-api[cairo]``.
+Cairo is used to render graphs server side when target format is an image. By default, only Json and raw format outputs are enabled. Attempts to render image formats without Cairo will result in an error message that it is not installed.
 
-Cairo is not a hard requirement and it and its dependencies can be removed post-installation, though it will still be pulled in by pip by default on non-Windows platforms.
-
-If Cairo is not available Graphite-API will only support Json or raw output formats.
+It can be pulled in via extras - ``pip install influxgraph-graphite-api[cairo]``.
 
 Hacking
 -------
