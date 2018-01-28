@@ -3,8 +3,8 @@ import json
 import os
 import time
 
-from graphite_api._vendor import whisper
-from graphite_api.render.glyph import cairo as CAIRO_ENABLED
+from influxgraph_graphite_api._vendor import whisper
+from influxgraph_graphite_api.render.glyph import cairo as CAIRO_ENABLED
 
 from . import TestCase, WHISPER_DIR
 

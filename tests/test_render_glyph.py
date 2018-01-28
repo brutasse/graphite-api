@@ -1,8 +1,8 @@
 import copy
 
-from graphite_api.render import glyph
-from graphite_api.render.datalib import TimeSeries
-from graphite_api.utils import to_seconds
+from influxgraph_graphite_api.render import glyph
+from influxgraph_graphite_api.render.datalib import TimeSeries
+from influxgraph_graphite_api.utils import to_seconds
 
 from . import TestCase
 

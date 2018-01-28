@@ -1,4 +1,4 @@
-from graphite_api.encoders import JSONEncoder
+from influxgraph_graphite_api.encoders import JSONEncoder
 
 from . import TestCase
 

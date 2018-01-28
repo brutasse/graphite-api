@@ -11,10 +11,10 @@ try:
 except ImportError:
     from mock import patch, call, MagicMock
 
-from graphite_api import functions
-from graphite_api.app import app
-from graphite_api.render.attime import parseATTime
-from graphite_api.render.datalib import TimeSeries
+from influxgraph_graphite_api import functions
+from influxgraph_graphite_api.app import app
+from influxgraph_graphite_api.render.attime import parseATTime
+from influxgraph_graphite_api.render.datalib import TimeSeries
 
 from . import TestCase
 
@@ -1069,7 +1069,7 @@ class FunctionsTest(TestCase):
                 20, 25, 1, [None, None, None, None, None])
         ]
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
+        with patch('influxgraph_graphite_api.functions.evaluateTokens', mock_evaluate):
             result = functions.exponentialMovingAverage({
                 'args': ({}, {}),
                 'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
@@ -1107,7 +1107,7 @@ class FunctionsTest(TestCase):
                             1.517, 2.15, 2.85, 3.604, 4.404])
         ]
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
+        with patch('influxgraph_graphite_api.functions.evaluateTokens', mock_evaluate):
             result = functions.exponentialMovingAverage({
                 'args': ({}, {}),
                 'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
@@ -1134,7 +1134,7 @@ class FunctionsTest(TestCase):
 
         expectedResults = []
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
+        with patch('influxgraph_graphite_api.functions.evaluateTokens', mock_evaluate):
             result = functions.exponentialMovingAverage({
                 'args': ({}, {}),
                 'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
@@ -1174,7 +1174,7 @@ class FunctionsTest(TestCase):
                 '"-1min")', 660, 700, 1, frange(29.5, 69.5, 1)),
         ]]
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
+        with patch('influxgraph_graphite_api.functions.evaluateTokens', mock_evaluate):
             result = functions.exponentialMovingAverage({
                 'args': ({}, {}),
                 'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
@@ -1220,7 +1220,7 @@ class FunctionsTest(TestCase):
                        20, 25, 1, [None, None, None, None, None])
         ]
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
+        with patch('influxgraph_graphite_api.functions.evaluateTokens', mock_evaluate):
             result = functions.movingMedian({
                 'args': ({}, {}),
                 'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
@@ -1256,7 +1256,7 @@ class FunctionsTest(TestCase):
                        20, 30, 1, [None, 0, 1, 1, 2, 2, 3, 3, 4, 4])
         ]
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
+        with patch('influxgraph_graphite_api.functions.evaluateTokens', mock_evaluate):
             result = functions.movingMedian({
                 'args': ({}, {}),
                 'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
@@ -1283,7 +1283,7 @@ class FunctionsTest(TestCase):
 
         expectedResults = []
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
+        with patch('influxgraph_graphite_api.functions.evaluateTokens', mock_evaluate):
             result = functions.movingMedian({
                 'args': ({}, {}),
                 'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
@@ -1316,7 +1316,7 @@ class FunctionsTest(TestCase):
                        660, 700, 1, range(30, 70)),
         ]]
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
+        with patch('influxgraph_graphite_api.functions.evaluateTokens', mock_evaluate):
             result = functions.movingMedian({
                 'args': ({}, {}),
                 'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
@@ -1415,7 +1415,7 @@ class FunctionsTest(TestCase):
                        20, 25, 1, [None, None, None, None, None])
         ]
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
+        with patch('influxgraph_graphite_api.functions.evaluateTokens', mock_evaluate):
             result = functions.movingAverage({
                 'args': ({}, {}),
                 'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
@@ -1452,7 +1452,7 @@ class FunctionsTest(TestCase):
                                    2.0, 2.5, 3.0, 3.5, 4.0])
         ]
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
+        with patch('influxgraph_graphite_api.functions.evaluateTokens', mock_evaluate):
             result = functions.movingAverage({
                 'args': ({}, {}),
                 'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
@@ -1479,7 +1479,7 @@ class FunctionsTest(TestCase):
 
         expectedResults = []
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
+        with patch('influxgraph_graphite_api.functions.evaluateTokens', mock_evaluate):
             result = functions.movingAverage({
                 'args': ({}, {}),
                 'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
@@ -1517,7 +1517,7 @@ class FunctionsTest(TestCase):
                        660, 700, 1, frange(29.5, 69.5, 1)),
         ]]
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
+        with patch('influxgraph_graphite_api.functions.evaluateTokens', mock_evaluate):
             result = functions.movingAverage({
                 'args': ({}, {}),
                 'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
@@ -1563,7 +1563,7 @@ class FunctionsTest(TestCase):
                        20, 25, 1, [None, None, None, None, None])
         ]
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
+        with patch('influxgraph_graphite_api.functions.evaluateTokens', mock_evaluate):
             result = functions.movingMin({
                 'args': ({}, {}),
                 'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
@@ -1599,7 +1599,7 @@ class FunctionsTest(TestCase):
                        20, 30, 1, [None, 0, 0, 0, 0, 0, 0, 0, 0, 0])
         ]
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
+        with patch('influxgraph_graphite_api.functions.evaluateTokens', mock_evaluate):
             result = functions.movingMin({
                 'args': ({}, {}),
                 'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
@@ -1626,7 +1626,7 @@ class FunctionsTest(TestCase):
 
         expectedResults = []
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
+        with patch('influxgraph_graphite_api.functions.evaluateTokens', mock_evaluate):
             result = functions.movingMin({
                 'args': ({}, {}),
                 'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
@@ -1659,7 +1659,7 @@ class FunctionsTest(TestCase):
                        660, 700, 1, range(0, 40)),
         ]]
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
+        with patch('influxgraph_graphite_api.functions.evaluateTokens', mock_evaluate):
             result = functions.movingMin({
                 'args': ({}, {}),
                 'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
@@ -1705,7 +1705,7 @@ class FunctionsTest(TestCase):
                        20, 25, 1, [None, None, None, None, None])
         ]
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
+        with patch('influxgraph_graphite_api.functions.evaluateTokens', mock_evaluate):
             result = functions.movingMax({
                 'args': ({}, {}),
                 'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
@@ -1741,7 +1741,7 @@ class FunctionsTest(TestCase):
                        20, 30, 1, [None, 0, 1, 2, 3, 4, 5, 6, 7, 8])
         ]
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
+        with patch('influxgraph_graphite_api.functions.evaluateTokens', mock_evaluate):
             result = functions.movingMax({
                 'args': ({}, {}),
                 'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
@@ -1768,7 +1768,7 @@ class FunctionsTest(TestCase):
 
         expectedResults = []
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
+        with patch('influxgraph_graphite_api.functions.evaluateTokens', mock_evaluate):
             result = functions.movingMax({
                 'args': ({}, {}),
                 'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
@@ -1801,7 +1801,7 @@ class FunctionsTest(TestCase):
                        660, 700, 1, range(59, 99)),
         ]]
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
+        with patch('influxgraph_graphite_api.functions.evaluateTokens', mock_evaluate):
             result = functions.movingMax({
                 'args': ({}, {}),
                 'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
@@ -1847,7 +1847,7 @@ class FunctionsTest(TestCase):
                        20, 25, 1, [None, None, None, None, None])
         ]
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
+        with patch('influxgraph_graphite_api.functions.evaluateTokens', mock_evaluate):
             result = functions.movingSum({
                 'args': ({}, {}),
                 'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
@@ -1883,7 +1883,7 @@ class FunctionsTest(TestCase):
                        20, 30, 1, [None, 0, 1, 3, 6, 10, 15, 21, 28, 36])
         ]
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
+        with patch('influxgraph_graphite_api.functions.evaluateTokens', mock_evaluate):
             result = functions.movingSum({
                 'args': ({}, {}),
                 'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
@@ -1910,7 +1910,7 @@ class FunctionsTest(TestCase):
 
         expectedResults = []
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
+        with patch('influxgraph_graphite_api.functions.evaluateTokens', mock_evaluate):
             result = functions.movingSum({
                 'args': ({}, {}),
                 'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
@@ -1943,7 +1943,7 @@ class FunctionsTest(TestCase):
                        660, 700, 1, range(1770, 4170, 60)),
         ]]
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
+        with patch('influxgraph_graphite_api.functions.evaluateTokens', mock_evaluate):
             result = functions.movingSum({
                 'args': ({}, {}),
                 'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
@@ -2427,7 +2427,7 @@ class FunctionsTest(TestCase):
                        605400, 700, 1, [])
         ]
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
+        with patch('influxgraph_graphite_api.functions.evaluateTokens', mock_evaluate):
             result = functions.holtWintersForecast({
                 'args': ({}, {}),
                 'startTime': datetime(1970, 2, 1, 0, 0, 0, 0, pytz.utc),
@@ -2508,7 +2508,7 @@ class FunctionsTest(TestCase):
         expectedResults[1][0].options = {'invisible': True, 'stacked': True}
         expectedResults[1][1].options = {'stacked': True}
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
+        with patch('influxgraph_graphite_api.functions.evaluateTokens', mock_evaluate):
             result = functions.holtWintersConfidenceBands({
                 'args': ({}, {}),
                 'startTime': datetime(1970, 2, 1, 0, 0, 0, 0, pytz.utc),

@@ -12,10 +12,10 @@ try:
 except ImportError:
     import unittest
 
-from graphite_api._vendor import whisper
-from graphite_api.app import app
-from graphite_api.finders.whisper import WhisperFinder
-from graphite_api.storage import Store
+from influxgraph_graphite_api._vendor import whisper
+from influxgraph_graphite_api.app import app
+from influxgraph_graphite_api.finders.whisper import WhisperFinder
+from influxgraph_graphite_api.storage import Store
 
 
 DATA_DIR = '/tmp/graphite-api-data.{0}'.format(os.getpid())
