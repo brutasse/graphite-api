@@ -24,19 +24,11 @@ else:
 logger = structlog.get_logger()
 
 default_conf = {
-    'search_index': '/srv/graphite/index',
-    'finders': [
-        'graphite_api.finders.whisper.WhisperFinder',
-    ],
+    'finders': [],
     'functions': [
-        'graphite_api.functions.SeriesFunctions',
-        'graphite_api.functions.PieFunctions',
+        'influxgraph_graphite_api.functions.SeriesFunctions',
+        'influxgraph_graphite_api.functions.PieFunctions',
     ],
-    'whisper': {
-        'directories': [
-            '/srv/graphite/whisper',
-        ],
-    },
     'time_zone': get_localzone().zone,
 }
 if default_conf['time_zone'] == 'local':  # tzlocal didn't find anything
@@ -55,7 +47,7 @@ class StructlogFormatter(logging.Formatter):
         self._bound = structlog.BoundLoggerBase(None, processors, {})
 
     def format(self, record):
-        if not record.name.startswith('graphite_api'):
+        if not record.name.startswith('influxgraph_graphite_api'):
             kw = dict(((k, v) for k, v in record.__dict__.items()
                        if k not in NON_EXTRA))
             kw['logger'] = record.name
@@ -175,7 +167,7 @@ def configure_logging(config):
         'level': 'DEBUG',
         'propagate': False,
     })
-    config['logging']['loggers'].setdefault('graphite_api', {
+    config['logging']['loggers'].setdefault('influxgraph_graphite_api', {
         'handlers': ['raw'],
         'level': 'DEBUG',
     })

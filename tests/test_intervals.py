@@ -1,4 +1,4 @@
-from graphite_api.intervals import Interval, IntervalSet, union_overlapping
+from influxgraph_graphite_api.intervals import Interval, IntervalSet, union_overlapping
 
 from . import TestCase
 

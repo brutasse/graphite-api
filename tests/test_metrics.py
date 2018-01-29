@@ -2,7 +2,7 @@ import json
 import os.path
 import time
 
-from graphite_api._vendor import whisper
+from influxgraph_graphite_api._vendor import whisper
 
 from . import TestCase, WHISPER_DIR
 

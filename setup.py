@@ -2,11 +2,11 @@
 import sys
 
 from setuptools import setup, find_packages
+import versioneer
 
 install_requires = [
     'Flask',
     'PyYAML',
-    'cairocffi',
     'pyparsing>=1.5.7',
     'pytz',
     'six',
@@ -21,9 +21,10 @@ with open('README.rst') as f:
     long_description = f.read()
 
 setup(
-    name='graphite-api',
-    version='1.1.3',
-    url='https://github.com/brutasse/graphite-api',
+    name='influxgraph-graphite-api',
+    version=versioneer.get_version(),
+    cmdclass=versioneer.get_cmdclass(),
+    url='https://github.com/InfluxGraph/graphite-api',
     author="Bruno Renié, based on Chris Davis's graphite-web",
     author_email='bruno@renie.fr',
     license='Apache Software License 2.0',
@@ -38,6 +39,7 @@ setup(
         'cyanite': ['cyanite'],
         'cache': ['Flask-Cache'],
         'statsd': ['statsd'],
+        'cairo': ['cairocffi'],
     },
     zip_safe=False,
     platforms='any',

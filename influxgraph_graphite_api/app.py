@@ -16,8 +16,8 @@ from .config import configure
 from .encoders import JSONEncoder
 from .render.attime import parseATTime
 from .render.datalib import fetchData
-from .render.glyph import GraphTypes
-from .utils import hash_request, RequestParams
+from .render.glyph import GraphTypes, cairo
+from .utils import RequestParams, hash_request
 
 logger = get_logger()
 
@@ -219,32 +219,6 @@ def metrics_index():
     return jsonify(sorted(index))
 
 
-def prune_datapoints(series, max_datapoints, start, end):
-    time_range = end - start
-    points = time_range // series.step
-    if max_datapoints < points:
-        values_per_point = int(
-            math.ceil(float(points) / float(max_datapoints))
-        )
-        seconds_per_point = values_per_point * series.step
-        nudge = (
-            seconds_per_point +
-            (series.start % series.step) -
-            (series.start % seconds_per_point)
-        )
-        series.start += nudge
-        values_to_lose = nudge // series.step
-        del series[:values_to_lose-1]
-        series.consolidate(values_per_point)
-        step = seconds_per_point
-    else:
-        step = series.step
-
-    timestamps = range(series.start, series.end + series.step, step)
-    datapoints = zip(series, timestamps)
-    return {'target': series.name, 'datapoints': datapoints}
-
-
 @app.route('/render', methods=methods)
 def render():
     start = time.time()
@@ -258,16 +232,18 @@ def render():
 
     # Fill in the request_options
     graph_type = RequestParams.get('graphType', 'line')
-
-    # Fill in the request_options
-    try:
-        graph_class = GraphTypes[graph_type]
-        request_options['graphType'] = graph_type
-        request_options['graphClass'] = graph_class
-    except KeyError:
-        errors['graphType'] = (
-            "Invalid graphType '{0}', must be one of '{1}'.".format(
-                graph_type, "', '".join(sorted(GraphTypes))))
+    request_options['graphType'] = graph_type
+    if cairo:
+        try:
+            graph_class = GraphTypes[graph_type]
+        except KeyError:
+            errors['graphType'] = (
+                "Invalid graphType '{0}', must be one of '{1}'.".format(
+                    graph_type, "', '".join(sorted(GraphTypes.keys()))))
+        else:
+            request_options['graphClass'] = graph_class
+    else:
+        request_options['graphClass'] = None
     request_options['pieMode'] = RequestParams.get('pieMode', 'average')
     targets = RequestParams.getlist('target')
     if not len(targets):
@@ -293,23 +269,23 @@ def render():
         return jsonify({'errors': errors}, status=400)
 
     # Fill in the graph_options
-    for opt in graph_class.customizable:
-        if opt in RequestParams:
-            value = RequestParams[opt]
-            try:
-                intvalue = int(value)
-                if str(intvalue) == str(value):
-                    value = intvalue
-            except ValueError:
+    if cairo:
+        for opt in graph_class.customizable:
+            if opt in RequestParams:
+                value = RequestParams[opt]
                 try:
-                    value = float(value)
+                    intvalue = int(value)
+                    if str(intvalue) == str(value):
+                        value = intvalue
                 except ValueError:
-                    if value.lower() in ('true', 'false'):
-                        value = value.lower() == 'true'
-                    elif value.lower() == 'default' or not value:
-                        continue
-            graph_options[opt] = value
-
+                    try:
+                        value = float(value)
+                    except ValueError:
+                        if value.lower() in ('true', 'false'):
+                            value = value.lower() == 'true'
+                        elif value.lower() == 'default' or not value:
+                            continue
+                graph_options[opt] = value
     tzinfo = pytz.timezone(app.config['TIME_ZONE'])
     tz = RequestParams.get('tz')
     if tz:
@@ -375,6 +351,12 @@ def render():
         'data': [],
     }
 
+    # Fail early for invalid requests
+    if request_options['graphType'] == 'pie' and not cairo:
+        errors = {'format': 'Requested image or pdf format but cairo '
+                  'library is not available'}
+        return jsonify({'errors': errors}, status=400)
+
     # Gather all data to take advantage of backends with fetch_multi
     fdstart = time.time()
     paths = []
@@ -439,31 +421,21 @@ def render():
 
         if request_options['format'] == 'json':
             series_data = []
-            if 'maxDataPoints' in request_options and any(context['data']):
-                start_time = min([s.start for s in context['data']])
-                end_time = max([s.end for s in context['data']])
-                for series in context['data']:
-                    series_data.append(prune_datapoints(
-                        series, request_options['maxDataPoints'],
-                        start_time, end_time))
-            elif 'noNullPoints' in request_options and any(context['data']):
-                for series in context['data']:
-                    values = []
-                    for (index, v) in enumerate(series):
-                        if v is not None:
-                            timestamp = series.start + (index * series.step)
-                            values.append((v, timestamp))
-                    if len(values) > 0:
-                        series_data.append({'target': series.name,
-                                            'datapoints': values})
+            if 'noNullPoints' in request_options and any(context['data']):
+                series_data = [{'target': series.name,
+                                'datapoints': [
+                                    (val, series.start + (index * series.step))
+                                    for index, val in enumerate(series)
+                                    if val is not None]}
+                               for series in context['data']
+                               if len(series) > 0]
             else:
-                for series in context['data']:
-                    timestamps = range(series.start, series.end + series.step,
-                                       series.step)
-                    datapoints = zip(series, timestamps)
-                    series_data.append({'target': series.name,
-                                        'datapoints': datapoints})
-
+                series_data = [{'target': series.name,
+                                'datapoints': zip(
+                                    series,
+                                    range(series.start, series.end + series.step,
+                                          series.step))}
+                               for series in context['data']]
             response = jsonify(series_data, headers=headers)
             if use_cache:
                 app.cache.add(request_key, response, cache_timeout)
@@ -517,6 +489,10 @@ def render():
                          targets=targets)
             return response
 
+        if not cairo:
+            errors = {'format': 'Requested image or pdf format but cairo '
+                      'library is not available'}
+            return jsonify({'errors': errors}, status=400)
         if request_options['format'] == 'svg':
             graph_options['outputFormat'] = 'svg'
         elif request_options['format'] == 'pdf':
@@ -524,7 +500,6 @@ def render():
 
     graph_options['data'] = context['data']
     image = doImageRender(request_options['graphClass'], graph_options)
-
     use_svg = graph_options.get('outputFormat') == 'svg'
 
     if use_svg and 'jsonp' in request_options:

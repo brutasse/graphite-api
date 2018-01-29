@@ -27,9 +27,14 @@ from six.moves import map, reduce, zip_longest
 
 from .render.attime import parseATTime, parseTimeOffset
 from .render.datalib import fetchData, TimeSeries
-from .render.glyph import format_units
 from .render.grammar import grammar
 from .utils import epoch, to_seconds
+try:
+    from .render.glyph import format_units
+except NameError:
+    CAIRO_DISABLED=True
+else:
+    CAIRO_DISABLED=False
 
 NAN = float('NaN')
 INF = float('inf')

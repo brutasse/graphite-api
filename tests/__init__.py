@@ -12,10 +12,10 @@ try:
 except ImportError:
     import unittest
 
-from graphite_api._vendor import whisper
-from graphite_api.app import app
-from graphite_api.finders.whisper import WhisperFinder
-from graphite_api.storage import Store
+from influxgraph_graphite_api._vendor import whisper
+from influxgraph_graphite_api.app import app
+from influxgraph_graphite_api.finders.whisper import WhisperFinder
+from influxgraph_graphite_api.storage import Store
 
 
 DATA_DIR = '/tmp/graphite-api-data.{0}'.format(os.getpid())
@@ -45,6 +45,9 @@ class TestCase(unittest.TestCase):
         whisper_conf = {'whisper': {'directories': [WHISPER_DIR]}}
         app.config['GRAPHITE']['store'] = Store([WhisperFinder(whisper_conf)])
         self.app = app.test_client()
+        self.cairo_missing_resp = {'errors': {
+            'format': 'Requested image or pdf format but cairo library '
+            'is not available'}}
 
     def tearDown(self):
         self._cleanup()

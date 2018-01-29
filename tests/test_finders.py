@@ -9,12 +9,12 @@ try:
 except ImportError:
     from mock import patch
 
-from graphite_api._vendor import whisper
-from graphite_api.app import app
-from graphite_api.finders.whisper import scandir
-from graphite_api.intervals import Interval, IntervalSet
-from graphite_api.node import BranchNode, LeafNode
-from graphite_api.storage import Store
+from influxgraph_graphite_api._vendor import whisper
+from influxgraph_graphite_api.app import app
+from influxgraph_graphite_api.finders.whisper import scandir
+from influxgraph_graphite_api.intervals import Interval, IntervalSet
+from influxgraph_graphite_api.node import BranchNode, LeafNode
+from influxgraph_graphite_api.storage import Store
 
 from . import TestCase, WHISPER_DIR
 
@@ -84,7 +84,7 @@ class WhisperFinderTest(TestCase):
     def scandir_mock(d):
         return scandir(d)
 
-    @patch('graphite_api.finders.whisper.scandir', wraps=scandir_mock)
+    @patch('influxgraph_graphite_api.finders.whisper.scandir', wraps=scandir_mock)
     def test_whisper_finder(self, scandir_mocked):
         for db in (
             ('whisper_finder', 'foo.wsp'),
@@ -160,7 +160,7 @@ class WhisperFinderTest(TestCase):
         finally:
             scandir_mocked.call_count = 0
 
-    @patch('graphite_api.finders.whisper.scandir', wraps=scandir_mock)
+    @patch('influxgraph_graphite_api.finders.whisper.scandir', wraps=scandir_mock)
     def test_gzipped_whisper_finder(self, scandir_mocked):
         for db in (
             ('gzwhisper_finder', 'foo.wsp'),

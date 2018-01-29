@@ -1,4 +1,4 @@
-from graphite_api.app import pathsFromTarget
+from influxgraph_graphite_api.app import pathsFromTarget
 
 from . import TestCase
 
