@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import gzip
+import operator
 import os.path
 import time
 
@@ -77,24 +78,30 @@ class WhisperFinder(object):
         pattern = patterns[0]
         patterns = patterns[1:]
         has_wildcard = is_pattern(pattern)
-        using_globstar = pattern == "**"
 
+        matching_subdirs = []
+        files = []
         # This avoids os.listdir() for performance
         if has_wildcard:
-            entries = [x.name for x in scandir(current_dir)]
+            subdirs = []
+            for x in scandir(current_dir):
+                if x.is_file():
+                    files.append(x.name)
+                if x.is_dir():
+                    subdirs.append(x.name)
+
+            if pattern == "**":
+                matching_subdirs = map(operator.itemgetter(0), walk(current_dir))
+
+                # if this is a terminal globstar, add a pattern for all files in subdirs
+                if not patterns:
+                    patterns = ["*"]
+            else:
+                matching_subdirs = match_entries(subdirs, pattern)
+        elif os.path.isdir(os.path.join(current_dir, pattern)):
+            matching_subdirs.append(pattern)
         else:
             entries = [pattern]
-
-        if using_globstar:
-            matching_subdirs = map(lambda x: x[0], walk(current_dir))
-        else:
-            subdirs = [e for e in entries
-                       if os.path.isdir(os.path.join(current_dir, e))]
-            matching_subdirs = match_entries(subdirs, pattern)
-
-        # For terminal globstar, add a pattern for all files in subdirs
-        if using_globstar and not patterns:
-            patterns = ['*']
 
         if patterns:  # we've still got more directories to traverse
             for subdir in matching_subdirs:
@@ -105,9 +112,9 @@ class WhisperFinder(object):
         else:  # we've got the last pattern
             if not has_wildcard:
                 entries = [pattern + '.wsp', pattern + '.wsp.gz']
-            files = [e for e in entries
-                     if os.path.isfile(os.path.join(current_dir, e))]
-            matching_files = match_entries(files, pattern + '.*')
+                matching_files = [entry for entry in entries if os.path.isfile(os.path.join(current_dir, entry))]
+            else:
+                matching_files = match_entries(files, pattern + '.*')
 
             for _basename in matching_files + matching_subdirs:
                 yield os.path.join(current_dir, _basename)
