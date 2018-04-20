@@ -856,8 +856,8 @@ class FunctionsTest(TestCase):
         self.assertEqual(sum_.pathExpression,
                          "sumSeries(collectd.test-db4.load.value,"
                          "sumSeries(collectd.test-db3.load.value,"
-                         "sumSeries(collectd.test-db1.load.value,"
-                         "collectd.test-db2.load.value)))")
+                         "sumSeries(collectd.test-db2.load.value,"
+                         "collectd.test-db1.load.value)))")
         self.assertEqual(sum_[:3], [3, 5, 6])
 
     def test_diff_series_empty(self):
@@ -867,6 +867,9 @@ class FunctionsTest(TestCase):
     def test_diff_series(self):
         series = self._generate_series_list()[:2]
         diff = functions.diffSeries({}, [series[0]], [series[1]])[0]
+        self.assertEqual(diff.pathExpression,
+                         "diffSeries(collectd.test-db1.load.value,"
+                         "collectd.test-db2.load.value)")
         self.assertEqual(diff[:3], [-2, -2, -2])
 
     def test_average_series_empty(self):

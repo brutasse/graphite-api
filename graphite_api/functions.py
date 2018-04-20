@@ -186,7 +186,9 @@ def formatPathExpressions(seriesList):
     """
     Returns a comma-separated list of unique path expressions.
     """
-    pathExpressions = sorted(set([s.pathExpression for s in seriesList]))
+    pathExpressions = []
+    [pathExpressions.append(s.pathExpression)
+     for s in seriesList if not pathExpressions.count(s.pathExpression)]
     return ','.join(pathExpressions)
 
 # Series Functions
