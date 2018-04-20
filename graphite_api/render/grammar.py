@@ -39,14 +39,6 @@ argname = Word(alphas + '_', alphanums + '_')('argname')
 funcname = Word(alphas + '_', alphanums + '_')('funcname')
 
 # Symbols
-leftParen = Literal('(').suppress()
-rightParen = Literal(')').suppress()
-comma = Literal(',').suppress()
-equal = Literal('=').suppress()
-
-# Function calls
-
-# Symbols
 leftBrace = Literal('{')
 rightBrace = Literal('}')
 leftParen = Literal('(').suppress()
