@@ -1,6 +1,9 @@
 """Main entry point"""
 
 import sys
+
+from unittest.main import main
+
 if sys.argv[0].endswith("__main__.py"):
     import os.path
     # We change sys.argv[0] to make help message more useful
@@ -12,7 +15,5 @@ if sys.argv[0].endswith("__main__.py"):
     del os
 
 __unittest = True
-
-from unittest.main import main, TestProgram
 
 main(module=None)

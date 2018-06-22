@@ -15,7 +15,6 @@ import calendar
 import hashlib
 
 import pytz
-
 from flask import request
 
 

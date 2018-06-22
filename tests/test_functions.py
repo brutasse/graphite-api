@@ -1,16 +1,14 @@
 import copy
 import math
 import time
-
 from datetime import datetime
-
-import pytz
 
 try:
     from unittest.mock import patch, call, MagicMock
 except ImportError:
     from mock import patch, call, MagicMock
 
+import pytz
 from graphite_api import functions
 from graphite_api.app import app
 from graphite_api.render.attime import parseATTime

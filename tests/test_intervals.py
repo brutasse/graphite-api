@@ -8,33 +8,33 @@ class IntervalTestCase(TestCase):
         with self.assertRaises(ValueError):
             Interval(1, 0)
 
-        i = Interval(0, 1)
-        j = Interval(1, 2)
-        k = Interval(0, 1)
-        l = Interval(0, 0)
-        self.assertNotEqual(i, j)
-        self.assertEqual(i, k)
-        self.assertEqual(hash(i), hash(k))
+        a = Interval(0, 1)
+        b = Interval(1, 2)
+        c = Interval(0, 1)
+        d = Interval(0, 0)
+        self.assertNotEqual(a, b)
+        self.assertEqual(a, c)
+        self.assertEqual(hash(a), hash(c))
 
         with self.assertRaises(TypeError):
-            len(i)
+            len(a)
 
-        self.assertTrue(j > i)
+        self.assertTrue(b > a)
 
-        self.assertTrue(i)
-        self.assertFalse(l)
+        self.assertTrue(a)
+        self.assertFalse(d)
 
-        self.assertEqual(repr(i), '<Interval: (0, 1)>')
+        self.assertEqual(repr(a), '<Interval: (0, 1)>')
 
-        self.assertIsNone(i.intersect(j))
-        self.assertEqual(i.intersect(k), k)
-        self.assertTrue(i.overlaps(j))
-        self.assertEqual(i.union(j), Interval(0, 2))
+        self.assertIsNone(a.intersect(b))
+        self.assertEqual(a.intersect(c), c)
+        self.assertTrue(a.overlaps(b))
+        self.assertEqual(a.union(b), Interval(0, 2))
 
         with self.assertRaises(TypeError):
-            j.union(l)
+            b.union(d)
 
-        self.assertEqual(union_overlapping([i, j, k, l]),
+        self.assertEqual(union_overlapping([a, b, c, d]),
                          [Interval(0, 2)])
 
     def test_interval_set(self):

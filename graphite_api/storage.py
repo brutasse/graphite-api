@@ -1,5 +1,4 @@
 import time
-
 from collections import defaultdict
 
 from .intervals import Interval
