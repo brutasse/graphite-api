@@ -107,11 +107,11 @@ def configure(app):
     app.cache = None
     if 'cache' in config:
         try:
-            from flask.ext.cache import Cache
+            from flask_caching import Cache
         except ImportError:
             warnings.warn("'cache' is provided in the configuration but "
-                          "Flask-Cache is not installed. Please `pip install "
-                          "Flask-Cache`.")
+                          "flask-caching is not installed. Please `pip "
+                          "install flask-caching`.")
         else:
             cache_conf = {'CACHE_DEFAULT_TIMEOUT': 60,
                           'CACHE_KEY_PREFIX': 'graphite-api:'}

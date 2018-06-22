@@ -36,7 +36,7 @@ setup(
     extras_require={
         'sentry': ['raven[flask]'],
         'cyanite': ['cyanite'],
-        'cache': ['Flask-Cache'],
+        'cache': ['Flask-Caching'],
         'statsd': ['statsd'],
     },
     zip_safe=False,

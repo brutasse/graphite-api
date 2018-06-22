@@ -8,7 +8,7 @@ from graphite_api._vendor import whisper
 from . import TestCase, WHISPER_DIR
 
 try:
-    from flask.ext.cache import Cache
+    from flask_caching import Cache
 except ImportError:
     Cache = None
 

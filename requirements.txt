@@ -1,5 +1,5 @@
 Flask
-Flask-Cache
+Flask-Caching
 cairocffi
 pyparsing>=1.5.7
 pytz
