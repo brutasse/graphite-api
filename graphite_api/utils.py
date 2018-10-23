@@ -15,12 +15,11 @@ import calendar
 import hashlib
 
 import pytz
-
 from flask import request
 
 
 def is_pattern(s):
-    return '*' in s or '?' in s or '[' in s or '{' in s
+    return "*" in s or "?" in s or "[" in s or "{" in s
 
 
 class RequestParams(object):
@@ -76,7 +75,7 @@ RequestParams = RequestParams()
 
 
 def request_json():
-    if hasattr(request, 'get_json'):
+    if hasattr(request, "get_json"):
         return request.get_json()
     else:
         return request.json
@@ -90,12 +89,17 @@ def hash_request():
     if request.form:
         keys.update(request.form.keys())
     keys.update(request.args.keys())
-    params = u",".join([
-        u"{0}={1}".format(key, u"&".join(sorted(RequestParams.getlist(key))))
-        for key in sorted(keys) if not key.startswith('_')
-    ])
+    params = u",".join(
+        [
+            u"{0}={1}".format(
+                key, u"&".join(sorted(RequestParams.getlist(key)))
+            )
+            for key in sorted(keys)
+            if not key.startswith("_")
+        ]
+    )
     md5 = hashlib.md5()
-    md5.update(params.encode('utf-8'))
+    md5.update(params.encode("utf-8"))
     return md5.hexdigest()
 
 

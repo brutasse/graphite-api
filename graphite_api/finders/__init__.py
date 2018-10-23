@@ -2,17 +2,17 @@ import fnmatch
 import os.path
 import re
 
-EXPAND_BRACES_RE = re.compile(r'.*(\{.*?[^\\]?\})')
+EXPAND_BRACES_RE = re.compile(r".*(\{.*?[^\\]?\})")
 
 
 def get_real_metric_path(absolute_path, metric_path):
     # Support symbolic links (real_metric_path ensures proper cache queries)
     real_fs_path = os.path.realpath(absolute_path)
     if absolute_path != real_fs_path:
-        relative_fs_path = metric_path.replace('.', os.sep)
-        abs_fs_path = os.path.dirname(absolute_path[:-len(relative_fs_path)])
+        relative_fs_path = metric_path.replace(".", os.sep)
+        abs_fs_path = os.path.dirname(absolute_path[: -len(relative_fs_path)])
         base_fs_path = os.path.realpath(abs_fs_path)
-        relative_real_fs_path = real_fs_path[len(base_fs_path):].lstrip('/')
+        relative_real_fs_path = real_fs_path[len(base_fs_path) :].lstrip("/")
         return fs_to_metric(relative_real_fs_path)
 
     return metric_path
@@ -21,7 +21,7 @@ def get_real_metric_path(absolute_path, metric_path):
 def fs_to_metric(path):
     dirpath = os.path.dirname(path)
     filename = os.path.basename(path)
-    return os.path.join(dirpath, filename.split('.')[0]).replace(os.sep, '.')
+    return os.path.join(dirpath, filename.split(".")[0]).replace(os.sep, ".")
 
 
 def _deduplicate(entries):
@@ -34,10 +34,10 @@ def _deduplicate(entries):
 
 def extract_variants(pattern):
     """Extract the pattern variants (ie. {foo,bar}baz = foobaz or barbaz)."""
-    v1, v2 = pattern.find('{'), pattern.find('}')
+    v1, v2 = pattern.find("{"), pattern.find("}")
     if v1 > -1 and v2 > v1:
-        variations = pattern[v1+1:v2].split(',')
-        variants = [pattern[:v1] + v + pattern[v2+1:] for v in variations]
+        variations = pattern[v1 + 1 : v2].split(",")
+        variants = [pattern[:v1] + v + pattern[v2 + 1 :] for v in variations]
     else:
         variants = [pattern]
     return list(_deduplicate(variants))
@@ -66,7 +66,7 @@ def expand_braces(pattern):
     # Used instead of s.strip('{}') because strip is greedy.
     # We want to remove only ONE leading { and ONE trailing }, if both exist
     def remove_outer_braces(s):
-        if s[0] == '{' and s[-1] == '}':
+        if s[0] == "{" and s[-1] == "}":
             return s[1:-1]
         return s
 
@@ -75,13 +75,15 @@ def expand_braces(pattern):
         sub = match.group(1)
         v1, v2 = match.span(1)
         if "," in sub:
-            for pat in sub.strip('{}').split(','):
+            for pat in sub.strip("{}").split(","):
                 subpattern = pattern[:v1] + pat + pattern[v2:]
                 res.update(expand_braces(subpattern))
         else:
-            subpattern = pattern[:v1] + remove_outer_braces(sub) + pattern[v2:]
+            subpattern = (
+                pattern[:v1] + remove_outer_braces(sub) + pattern[v2:]
+            )
             res.update(expand_braces(subpattern))
     else:
-        res.add(pattern.replace('\\}', '}'))
+        res.add(pattern.replace("\\}", "}"))
 
     return list(res)

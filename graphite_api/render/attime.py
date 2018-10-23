@@ -16,79 +16,98 @@ from time import daylight
 
 import pytz
 
-months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun',
-          'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
-weekdays = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
+months = [
+    "jan",
+    "feb",
+    "mar",
+    "apr",
+    "may",
+    "jun",
+    "jul",
+    "aug",
+    "sep",
+    "oct",
+    "nov",
+    "dec",
+]
+weekdays = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"]
 
 
 def parseATTime(s, tzinfo=None, now=None):
     if tzinfo is None:
         from ..app import app
-        tzinfo = pytz.timezone(app.config['TIME_ZONE'])
-    s = s.strip().lower().replace('_', '').replace(',', '').replace(' ', '')
+
+        tzinfo = pytz.timezone(app.config["TIME_ZONE"])
+    s = s.strip().lower().replace("_", "").replace(",", "").replace(" ", "")
     if s.isdigit():
         if (
-            len(s) == 8 and
-            int(s[:4]) > 1900 and
-            int(s[4:6]) < 13 and
-            int(s[6:]) < 32
+            len(s) == 8
+            and int(s[:4]) > 1900
+            and int(s[4:6]) < 13
+            and int(s[6:]) < 32
         ):
             pass  # Fall back because its not a timestamp, its YYYYMMDD form
         else:
             return datetime.fromtimestamp(int(s), tzinfo)
-    elif ':' in s and len(s) == 13:
-        return tzinfo.localize(datetime.strptime(s, '%H:%M%Y%m%d'), daylight)
-    if '+' in s:
-        ref, offset = s.split('+', 1)
-        offset = '+' + offset
-    elif '-' in s:
-        ref, offset = s.split('-', 1)
-        offset = '-' + offset
+    elif ":" in s and len(s) == 13:
+        return tzinfo.localize(datetime.strptime(s, "%H:%M%Y%m%d"), daylight)
+    if "+" in s:
+        ref, offset = s.split("+", 1)
+        offset = "+" + offset
+    elif "-" in s:
+        ref, offset = s.split("-", 1)
+        offset = "-" + offset
     else:
-        ref, offset = s, ''
-    return (parseTimeReference(ref or now) +
-            parseTimeOffset(offset)).astimezone(tzinfo)
+        ref, offset = s, ""
+    return (
+        parseTimeReference(ref or now) + parseTimeOffset(offset)
+    ).astimezone(tzinfo)
 
 
 def parseTimeReference(ref):
     if isinstance(ref, datetime):
         return ref
-    if not ref or ref == 'now':
+    if not ref or ref == "now":
         return datetime.utcnow().replace(tzinfo=pytz.utc)
 
     # Time-of-day reference
-    i = ref.find(':')
+    i = ref.find(":")
     hour, min = 0, 0
     if i != -1:
         hour = int(ref[:i])
-        min = int(ref[i+1:i+3])
-        ref = ref[i+3:]
-        if ref[:2] == 'am':
+        min = int(ref[i + 1 : i + 3])
+        ref = ref[i + 3 :]
+        if ref[:2] == "am":
             ref = ref[2:]
-        elif ref[:2] == 'pm':
+        elif ref[:2] == "pm":
             hour = (hour + 12) % 24
             ref = ref[2:]
-    if ref.startswith('noon'):
+    if ref.startswith("noon"):
         hour, min = 12, 0
         ref = ref[4:]
-    elif ref.startswith('midnight'):
+    elif ref.startswith("midnight"):
         hour, min = 0, 0
         ref = ref[8:]
-    elif ref.startswith('teatime'):
+    elif ref.startswith("teatime"):
         hour, min = 16, 0
         ref = ref[7:]
 
-    refDate = datetime.utcnow().replace(hour=hour, minute=min, second=0,
-                                        tzinfo=pytz.utc)
+    refDate = datetime.utcnow().replace(
+        hour=hour, minute=min, second=0, tzinfo=pytz.utc
+    )
 
     # Day reference
-    if ref in ('yesterday', 'today', 'tomorrow'):  # yesterday, today, tomorrow
-        if ref == 'yesterday':
+    if ref in (
+        "yesterday",
+        "today",
+        "tomorrow",
+    ):  # yesterday, today, tomorrow
+        if ref == "yesterday":
             refDate = refDate - timedelta(days=1)
-        if ref == 'tomorrow':
+        if ref == "tomorrow":
             refDate = refDate + timedelta(days=1)
-    elif ref.count('/') == 2:  # MM/DD/YY[YY]
-        m, d, y = map(int, ref.split('/'))
+    elif ref.count("/") == 2:  # MM/DD/YY[YY]
+        m, d, y = map(int, ref.split("/"))
         if y < 1900:
             y += 1900
         if y < 1970:
@@ -96,8 +115,9 @@ def parseTimeReference(ref):
         refDate = replace_date(refDate, y, m, d)
 
     elif len(ref) == 8 and ref.isdigit():  # YYYYMMDD
-        refDate = replace_date(refDate, int(ref[:4]), int(ref[4:6]),
-                               int(ref[6:8]))
+        refDate = replace_date(
+            refDate, int(ref[:4]), int(ref[4:6]), int(ref[6:8])
+        )
 
     elif ref[:3] in months:  # MonthName DayOfMonth
         month = months.index(ref[:3]) + 1
@@ -145,26 +165,26 @@ def parseTimeOffset(offset):
     if offset[0].isdigit():
         sign = 1
     else:
-        sign = {'+': 1, '-': -1}[offset[0]]
+        sign = {"+": 1, "-": -1}[offset[0]]
         offset = offset[1:]
 
     while offset:
         i = 1
         while offset[:i].isdigit() and i <= len(offset):
             i += 1
-        num = int(offset[:i-1])
-        offset = offset[i-1:]
+        num = int(offset[: i - 1])
+        offset = offset[i - 1 :]
         i = 1
         while offset[:i].isalpha() and i <= len(offset):
             i += 1
-        unit = offset[:i-1]
-        offset = offset[i-1:]
+        unit = offset[: i - 1]
+        offset = offset[i - 1 :]
         unitString = getUnitString(unit)
-        if unitString == 'months':
-            unitString = 'days'
+        if unitString == "months":
+            unitString = "days"
             num = num * 30
-        if unitString == 'years':
-            unitString = 'days'
+        if unitString == "years":
+            unitString = "days"
             num = num * 365
         t += timedelta(**{unitString: sign * num})
 
@@ -172,18 +192,18 @@ def parseTimeOffset(offset):
 
 
 def getUnitString(s):
-    if s.startswith('s'):
-        return 'seconds'
-    if s.startswith('min'):
-        return 'minutes'
-    if s.startswith('h'):
-        return 'hours'
-    if s.startswith('d'):
-        return 'days'
-    if s.startswith('w'):
-        return 'weeks'
-    if s.startswith('mon'):
-        return 'months'
-    if s.startswith('y'):
-        return 'years'
+    if s.startswith("s"):
+        return "seconds"
+    if s.startswith("min"):
+        return "minutes"
+    if s.startswith("h"):
+        return "hours"
+    if s.startswith("d"):
+        return "days"
+    if s.startswith("w"):
+        return "weeks"
+    if s.startswith("mon"):
+        return "months"
+    if s.startswith("y"):
+        return "years"
     raise Exception("Invalid offset unit '%s'" % s)

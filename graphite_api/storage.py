@@ -1,5 +1,4 @@
 import time
-
 from collections import defaultdict
 
 from .intervals import Interval
@@ -60,19 +59,23 @@ class FindQuery(object):
         self.endTime = endTime
         self.isExact = is_pattern(pattern)
         self.interval = Interval(
-            float('-inf') if startTime is None else startTime,
-            float('inf') if endTime is None else endTime)
+            float("-inf") if startTime is None else startTime,
+            float("inf") if endTime is None else endTime,
+        )
 
     def __repr__(self):
         if self.startTime is None:
-            startString = '*'
+            startString = "*"
         else:
             startString = time.ctime(self.startTime)
 
         if self.endTime is None:
-            endString = '*'
+            endString = "*"
         else:
             endString = time.ctime(self.endTime)
 
-        return '<FindQuery: %s from %s until %s>' % (self.pattern, startString,
-                                                     endString)
+        return "<FindQuery: %s from %s until %s>" % (
+            self.pattern,
+            startString,
+            endString,
+        )

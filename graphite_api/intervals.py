@@ -1,9 +1,9 @@
-INFINITY = float('inf')
+INFINITY = float("inf")
 NEGATIVE_INFINITY = -INFINITY
 
 
 class IntervalSet(object):
-    __slots__ = ('intervals', 'size')
+    __slots__ = ("intervals", "size")
 
     def __init__(self, intervals, disjoint=False):
         self.intervals = intervals
@@ -30,6 +30,7 @@ class IntervalSet(object):
 
     def __bool__(self):
         return self.size != 0
+
     __nonzero__ = __bool__  # python 2
 
     def __sub__(self, other):
@@ -55,17 +56,22 @@ class IntervalSet(object):
         if not self or not other:
             return IntervalSet([])
 
-        intersections = [x for x in (i.intersect(j)
-                                     for i in self.intervals
-                                     for j in other.intervals)
-                         if x]
+        intersections = [
+            x
+            for x in (
+                i.intersect(j)
+                for i in self.intervals
+                for j in other.intervals
+            )
+            if x
+        ]
 
         return IntervalSet(intersections, disjoint=True)
 
     def intersect_interval(self, interval):
-        intersections = [x for x in (i.intersect(interval)
-                                     for i in self.intervals)
-                         if x]
+        intersections = [
+            x for x in (i.intersect(interval) for i in self.intervals) if x
+        ]
         return IntervalSet(intersections, disjoint=True)
 
     def union(self, other):
@@ -73,11 +79,13 @@ class IntervalSet(object):
 
 
 class Interval(object):
-    __slots__ = ('start', 'end', 'tuple', 'size')
+    __slots__ = ("start", "end", "tuple", "size")
 
     def __init__(self, start, end):
         if end - start < 0:
-            raise ValueError("Invalid interval start=%s end=%s" % (start, end))
+            raise ValueError(
+                "Invalid interval start=%s end=%s" % (start, end)
+            )
 
         self.start = start
         self.end = end
@@ -94,15 +102,18 @@ class Interval(object):
         return (self.start < other.start) - (self.start > other.start)
 
     def __len__(self):
-        raise TypeError("len() doesn't support infinite values, use the "
-                        "'size' attribute instead")
+        raise TypeError(
+            "len() doesn't support infinite values, use the "
+            "'size' attribute instead"
+        )
 
     def __bool__(self):
         return self.size != 0
+
     __nonzero__ = __bool__  # python 2
 
     def __repr__(self):
-        return '<Interval: %s>' % str(self.tuple)
+        return "<Interval: %s>" % str(self.tuple)
 
     def intersect(self, other):
         start = max(self.start, other.start)

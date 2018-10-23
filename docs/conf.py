@@ -6,7 +6,6 @@ import re
 import sys
 
 import sphinx_rtd_theme
-
 from sphinx.ext import autodoc
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), os.pardir))

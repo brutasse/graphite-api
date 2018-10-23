@@ -1,16 +1,13 @@
 import copy
 import math
 import time
-
 from datetime import datetime
-
-import pytz
 
 try:
     from unittest.mock import patch, call, MagicMock
 except ImportError:
     from mock import patch, call, MagicMock
-
+import pytz
 from graphite_api import functions
 from graphite_api.app import app
 from graphite_api.render.attime import parseATTime
@@ -170,7 +167,9 @@ class FunctionsTest(TestCase):
         self.assertEqual(functions.safeStdDev([]), None)
 
     def test_safe_stddev_all_numbers(self):
-        self.assertEqual(functions.safeStdDev([1, 2, 3, 4]), 1.118033988749895)
+        self.assertEqual(
+            functions.safeStdDev([1, 2, 3, 4]), 1.118033988749895
+        )
 
     def test_safe_stddev_all_None(self):
         self.assertEqual(functions.safeStdDev([None, None, None, None]), None)
@@ -258,8 +257,9 @@ class FunctionsTest(TestCase):
         self.assertEqual(functions.safeMap(abs, [1, 2, 3, 4]), [1, 2, 3, 4])
 
     def test_safe_map_all_None(self):
-        self.assertEqual(functions.safeMap(abs, [None, None, None, None]),
-                         None)
+        self.assertEqual(
+            functions.safeMap(abs, [None, None, None, None]), None
+        )
 
     def test_safe_map_mixed(self):
         self.assertEqual(functions.safeMap(abs, [10, None, 5, None]), [10, 5])
@@ -305,25 +305,37 @@ class FunctionsTest(TestCase):
 
     def test_normalize_None_values(self):
         seriesList = []
-        seriesList.append(TimeSeries("collectd.test-db{0}.load.value", 0, 5, 1,
-                                     [None, None, None, None, None]))
-        self.assertEqual(functions.normalize([seriesList]),
-                         (seriesList, 0, 5, 1))
+        seriesList.append(
+            TimeSeries(
+                "collectd.test-db{0}.load.value",
+                0,
+                5,
+                1,
+                [None, None, None, None, None],
+            )
+        )
+        self.assertEqual(
+            functions.normalize([seriesList]), (seriesList, 0, 5, 1)
+        )
 
     def test_normalize_generate_series_list_input(self):
-        seriesList = self._generate_series_list(config=[range(101),
-                                                        range(101)])
-        self.assertEqual(functions.normalize([seriesList]),
-                         (seriesList, seriesList[0].start,
-                          seriesList[0].end, 1))
+        seriesList = self._generate_series_list(
+            config=[range(101), range(101)]
+        )
+        self.assertEqual(
+            functions.normalize([seriesList]),
+            (seriesList, seriesList[0].start, seriesList[0].end, 1),
+        )
 
     # Test matchSeries()
     def test_match_series_assert(self):
         seriesList = self._generate_series_list()
         with self.assertRaises(AssertionError) as context:
             functions.matchSeries(seriesList[0], [])
-        self.assertIn('The number of series in each argument '
-                      'must be the same', str(context.exception))
+        self.assertIn(
+            "The number of series in each argument " "must be the same",
+            str(context.exception),
+        )
 
     def test_match_series_empty(self):
         results = functions.matchSeries([], [])
@@ -333,45 +345,67 @@ class FunctionsTest(TestCase):
 
     def test_match_series(self):
         seriesList1 = [
-            TimeSeries('collectd.test-db3.load.value', 0, 1, 1, [3, 30, 31]),
-            TimeSeries('collectd.test-db1.load.value', 0, 1, 1, [1, 10, 11]),
-            TimeSeries('collectd.test-db2.load.value', 0, 1, 1, [2, 20, 21]),
-            TimeSeries('collectd.test-db4.load.value', 0, 1, 1, [4, 40, 41]),
+            TimeSeries("collectd.test-db3.load.value", 0, 1, 1, [3, 30, 31]),
+            TimeSeries("collectd.test-db1.load.value", 0, 1, 1, [1, 10, 11]),
+            TimeSeries("collectd.test-db2.load.value", 0, 1, 1, [2, 20, 21]),
+            TimeSeries("collectd.test-db4.load.value", 0, 1, 1, [4, 40, 41]),
         ]
         seriesList2 = [
-            TimeSeries('collectd.test-db4.load.value', 0, 1, 1, [4, 8, 12]),
-            TimeSeries('collectd.test-db3.load.value', 0, 1, 1, [3, 7, 11]),
-            TimeSeries('collectd.test-db1.load.value', 0, 1, 1, [1, 5, 9]),
-            TimeSeries('collectd.test-db2.load.value', 0, 1, 1, [2, 6, 10]),
+            TimeSeries("collectd.test-db4.load.value", 0, 1, 1, [4, 8, 12]),
+            TimeSeries("collectd.test-db3.load.value", 0, 1, 1, [3, 7, 11]),
+            TimeSeries("collectd.test-db1.load.value", 0, 1, 1, [1, 5, 9]),
+            TimeSeries("collectd.test-db2.load.value", 0, 1, 1, [2, 6, 10]),
         ]
-        expectedResult = [[
-            TimeSeries('collectd.test-db1.load.value', 0, 1, 1, [1, 10, 11]),
-            TimeSeries('collectd.test-db2.load.value', 0, 1, 1, [2, 20, 21]),
-            TimeSeries('collectd.test-db3.load.value', 0, 1, 1, [3, 30, 31]),
-            TimeSeries('collectd.test-db4.load.value', 0, 1, 1, [4, 40, 41]),
-        ], [
-            TimeSeries('collectd.test-db1.load.value', 0, 1, 1, [1, 5, 9]),
-            TimeSeries('collectd.test-db2.load.value', 0, 1, 1, [2, 6, 10]),
-            TimeSeries('collectd.test-db3.load.value', 0, 1, 1, [3, 7, 11]),
-            TimeSeries('collectd.test-db4.load.value', 0, 1, 1, [4, 8, 12]),
-        ]]
-        results = functions.matchSeries(copy.deepcopy(seriesList1),
-                                        copy.deepcopy(seriesList2))
+        expectedResult = [
+            [
+                TimeSeries(
+                    "collectd.test-db1.load.value", 0, 1, 1, [1, 10, 11]
+                ),
+                TimeSeries(
+                    "collectd.test-db2.load.value", 0, 1, 1, [2, 20, 21]
+                ),
+                TimeSeries(
+                    "collectd.test-db3.load.value", 0, 1, 1, [3, 30, 31]
+                ),
+                TimeSeries(
+                    "collectd.test-db4.load.value", 0, 1, 1, [4, 40, 41]
+                ),
+            ],
+            [
+                TimeSeries(
+                    "collectd.test-db1.load.value", 0, 1, 1, [1, 5, 9]
+                ),
+                TimeSeries(
+                    "collectd.test-db2.load.value", 0, 1, 1, [2, 6, 10]
+                ),
+                TimeSeries(
+                    "collectd.test-db3.load.value", 0, 1, 1, [3, 7, 11]
+                ),
+                TimeSeries(
+                    "collectd.test-db4.load.value", 0, 1, 1, [4, 8, 12]
+                ),
+            ],
+        ]
+        results = functions.matchSeries(
+            copy.deepcopy(seriesList1), copy.deepcopy(seriesList2)
+        )
         for i, (series1, series2) in enumerate(results):
             self.assertEqual(series1, expectedResult[0][i])
             self.assertEqual(series2, expectedResult[1][i])
 
     # Test formatPathExpressions()
     def test_format_path_expressions_empty_list(self):
-        self.assertEqual(functions.formatPathExpressions([]), '')
+        self.assertEqual(functions.formatPathExpressions([]), "")
 
     def test_format_path_expressions(self):
         seriesList = self._generate_series_list()
-        self.assertEqual(functions.formatPathExpressions(seriesList),
-                         "collectd.test-db1.load.value,"
-                         "collectd.test-db2.load.value,"
-                         "collectd.test-db3.load.value,"
-                         "collectd.test-db4.load.value")
+        self.assertEqual(
+            functions.formatPathExpressions(seriesList),
+            "collectd.test-db1.load.value,"
+            "collectd.test-db2.load.value,"
+            "collectd.test-db3.load.value,"
+            "collectd.test-db4.load.value",
+        )
 
     def test_highest_max(self):
         config = [20, 50, 30, 40]
@@ -412,9 +446,13 @@ class FunctionsTest(TestCase):
             series, expected = conf
             result = functions._getPercentile(series, 30)
             self.assertEqual(
-                expected, result,
-                ('For series index <%s> the 30th percentile ordinal is not '
-                 '%d, but %d ' % (index, expected, result)))
+                expected,
+                result,
+                (
+                    "For series index <%s> the 30th percentile ordinal is not "
+                    "%d, but %d " % (index, expected, result)
+                ),
+            )
 
     def test_n_percentile(self):
         config = [
@@ -433,23 +471,36 @@ class FunctionsTest(TestCase):
             seriesList = []
             expected = []
             for i, c in enumerate(config):
-                seriesList.append(TimeSeries('Test(%d)' % i, 0, len(c), 1, c))
-                expected.append(TimeSeries('nPercentile(Test(%d), %d)' %
-                                           (i, perc), 0, len(c), 1,
-                                           expect[i] * len(c)))
+                seriesList.append(TimeSeries("Test(%d)" % i, 0, len(c), 1, c))
+                expected.append(
+                    TimeSeries(
+                        "nPercentile(Test(%d), %d)" % (i, perc),
+                        0,
+                        len(c),
+                        1,
+                        expect[i] * len(c),
+                    )
+                )
             result = functions.nPercentile({}, seriesList, perc)
             self.assertEqual(expected, result)
 
         n_percentile(30, [[20], [31], [61], [91], [30], [60], [90], [90]])
-        n_percentile(90, [[50], [91], [181], [271], [90], [180], [270], [270]])
-        n_percentile(95, [[50], [96], [191], [286], [95], [190], [285], [285]])
+        n_percentile(
+            90, [[50], [91], [181], [271], [90], [180], [270], [270]]
+        )
+        n_percentile(
+            95, [[50], [96], [191], [286], [95], [190], [285], [285]]
+        )
 
-    def _generate_series_list(self, config=(
-        range(101),
-        range(2, 103),
-        [1] * 2 + [None] * 90 + [1] * 2 + [None] * 7,
-        []
-    )):
+    def _generate_series_list(
+        self,
+        config=(
+            range(101),
+            range(2, 103),
+            [1] * 2 + [None] * 90 + [1] * 2 + [None] * 7,
+            [],
+        ),
+    ):
         seriesList = []
 
         now = int(time.time())
@@ -497,8 +548,11 @@ class FunctionsTest(TestCase):
         seriesList = self._generate_series_list()
         limit = len(seriesList) - 1
         results = functions.limit({}, seriesList, limit)
-        self.assertEqual(len(results), limit,
-                         "More than {0} results returned".format(limit))
+        self.assertEqual(
+            len(results),
+            limit,
+            "More than {0} results returned".format(limit),
+        )
 
     def _verify_series_options(self, seriesList, name, value):
         """
@@ -525,41 +579,58 @@ class FunctionsTest(TestCase):
         self._verify_series_options(results, "drawAsInfinite", True)
 
     def test_vertical_line(self):
-        result = functions.verticalLine({
-            'startTime': datetime(1970, 1, 1, 1, 0, 0, 0, pytz.utc),
-            'endTime': datetime(1970, 1, 1, 1, 2, 0, 0, pytz.utc),
-            'tzinfo': pytz.timezone('UTC'),
-        }, "01:0019700101", "foo")
-        expectedResult = [TimeSeries('foo', 3600, 3600, 1.0, [1.0, 1.0])]
-        expectedResult[0].options = {'drawAsInfinite': True}
+        result = functions.verticalLine(
+            {
+                "startTime": datetime(1970, 1, 1, 1, 0, 0, 0, pytz.utc),
+                "endTime": datetime(1970, 1, 1, 1, 2, 0, 0, pytz.utc),
+                "tzinfo": pytz.timezone("UTC"),
+            },
+            "01:0019700101",
+            "foo",
+        )
+        expectedResult = [TimeSeries("foo", 3600, 3600, 1.0, [1.0, 1.0])]
+        expectedResult[0].options = {"drawAsInfinite": True}
         self.assertEqual(result, expectedResult)
 
     def test_vertical_line_color(self):
-        result = functions.verticalLine({
-            'startTime': datetime(1970, 1, 1, 1, 0, 0, 0, pytz.utc),
-            'endTime': datetime(1970, 1, 1, 1, 2, 0, 0, pytz.utc),
-            'tzinfo': pytz.timezone('UTC'),
-        }, "01:0019700101", "foo", "white")
-        expectedResult = [TimeSeries('foo', 3600, 3600, 1.0, [1.0, 1.0])]
-        expectedResult[0].options = {'drawAsInfinite': True}
+        result = functions.verticalLine(
+            {
+                "startTime": datetime(1970, 1, 1, 1, 0, 0, 0, pytz.utc),
+                "endTime": datetime(1970, 1, 1, 1, 2, 0, 0, pytz.utc),
+                "tzinfo": pytz.timezone("UTC"),
+            },
+            "01:0019700101",
+            "foo",
+            "white",
+        )
+        expectedResult = [TimeSeries("foo", 3600, 3600, 1.0, [1.0, 1.0])]
+        expectedResult[0].options = {"drawAsInfinite": True}
         expectedResult[0].color = "white"
         self.assertEqual(result, expectedResult)
 
     def test_vertical_line_before_start(self):
         with self.assertRaises(ValueError):
-            functions.verticalLine({
-                'startTime': datetime(1971, 1, 1, 1, 0, 0, 0, pytz.utc),
-                'endTime': datetime(1971, 1, 1, 1, 2, 0, 0, pytz.utc),
-                'tzinfo': pytz.timezone('UTC'),
-            }, "01:0019700101", "foo")
+            functions.verticalLine(
+                {
+                    "startTime": datetime(1971, 1, 1, 1, 0, 0, 0, pytz.utc),
+                    "endTime": datetime(1971, 1, 1, 1, 2, 0, 0, pytz.utc),
+                    "tzinfo": pytz.timezone("UTC"),
+                },
+                "01:0019700101",
+                "foo",
+            )
 
     def test_vertical_line_after_end(self):
         with self.assertRaises(ValueError):
-            functions.verticalLine({
-                'startTime': datetime(1970, 1, 1, 1, 0, 0, 0, pytz.utc),
-                'endTime': datetime(1970, 1, 1, 1, 2, 0, 0, pytz.utc),
-                'tzinfo': pytz.timezone('UTC'),
-            }, "01:0019710101", "foo")
+            functions.verticalLine(
+                {
+                    "startTime": datetime(1970, 1, 1, 1, 0, 0, 0, pytz.utc),
+                    "endTime": datetime(1970, 1, 1, 1, 2, 0, 0, pytz.utc),
+                    "tzinfo": pytz.timezone("UTC"),
+                },
+                "01:0019710101",
+                "foo",
+            )
 
     def test_line_width(self):
         seriesList = self._generate_series_list()
@@ -570,24 +641,31 @@ class FunctionsTest(TestCase):
     def test_transform_null(self):
         seriesList = self._generate_series_list()
         transform = -5
-        results = functions.transformNull({}, copy.deepcopy(seriesList),
-                                          transform)
+        results = functions.transformNull(
+            {}, copy.deepcopy(seriesList), transform
+        )
 
         for counter, series in enumerate(seriesList):
             if None not in series:
                 continue
             # If the None values weren't transformed, there is a problem
-            self.assertNotIn(None, results[counter],
-                             "tranformNull should remove all None values")
+            self.assertNotIn(
+                None,
+                results[counter],
+                "tranformNull should remove all None values",
+            )
             # Anywhere a None was in the original series, verify it
             # was transformed to the given value it should be.
             for i, value in enumerate(series):
                 if value is None:
                     result_val = results[counter][i]
                     self.assertEqual(
-                        transform, result_val,
+                        transform,
+                        result_val,
                         "Transformed value should be {0}, not {1}".format(
-                            transform, result_val))
+                            transform, result_val
+                        ),
+                    )
 
     def test_transform_null_reference(self):
         seriesList = self._generate_series_list()
@@ -597,8 +675,9 @@ class FunctionsTest(TestCase):
             if index % 2 != 0:
                 referenceSeries[index] = None
 
-        results = functions.transformNull({}, copy.deepcopy(seriesList),
-                                          transform, [referenceSeries])
+        results = functions.transformNull(
+            {}, copy.deepcopy(seriesList), transform, [referenceSeries]
+        )
 
         for counter, series in enumerate(seriesList):
             if None not in series:
@@ -610,55 +689,127 @@ class FunctionsTest(TestCase):
                 if value is None and referenceSeries[i] is not None:
                     result_val = results[counter][i]
                     self.assertEqual(
-                        transform, result_val,
+                        transform,
+                        result_val,
                         "Transformed value should be {0}, not {1}".format(
-                            transform, result_val))
+                            transform, result_val
+                        ),
+                    )
 
     def test_transform_null_reference_empty(self):
         seriesList = self._generate_series_list()
         transform = -5
         referenceSeries = []
 
-        results = functions.transformNull({}, copy.deepcopy(seriesList),
-                                          transform, [referenceSeries])
+        results = functions.transformNull(
+            {}, copy.deepcopy(seriesList), transform, [referenceSeries]
+        )
 
         for counter, series in enumerate(seriesList):
             if None not in series:
                 continue
             # If the None values weren't transformed, there is a problem
-            self.assertNotIn(None, results[counter],
-                             "tranformNull should remove all None values")
+            self.assertNotIn(
+                None,
+                results[counter],
+                "tranformNull should remove all None values",
+            )
             # Anywhere a None was in the original series, verify it
             # was transformed to the given value if a value existed
             for i, value in enumerate(series):
                 if value is None:
                     result_val = results[counter][i]
                     self.assertEqual(
-                        transform, result_val,
+                        transform,
+                        result_val,
                         "Transformed value should be {0}, not {1}".format(
-                            transform, result_val))
+                            transform, result_val
+                        ),
+                    )
 
     def test_group(self):
         seriesList = [
-            TimeSeries('collectd.test-db1.load.value',
-                       0, 600, 60, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
-            TimeSeries('collectd.test-db2.load.value',
-                       0, 600, 60, [None] * 10),
-            TimeSeries('collectd.test-db3.load.value',
-                       0, 600, 60, [1, 2, None, None, None, 6, 7, 8, 9, 10]),
-            TimeSeries('collectd.test-db4.load.value',
-                       0, 600, 60, [1, 2, 3, 4, 5, 6, 7, 8, 9, None]),
+            TimeSeries(
+                "collectd.test-db1.load.value",
+                0,
+                600,
+                60,
+                [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+            ),
+            TimeSeries(
+                "collectd.test-db2.load.value", 0, 600, 60, [None] * 10
+            ),
+            TimeSeries(
+                "collectd.test-db3.load.value",
+                0,
+                600,
+                60,
+                [1, 2, None, None, None, 6, 7, 8, 9, 10],
+            ),
+            TimeSeries(
+                "collectd.test-db4.load.value",
+                0,
+                600,
+                60,
+                [1, 2, 3, 4, 5, 6, 7, 8, 9, None],
+            ),
         ]
         for series in seriesList:
             series.pathExpression = series.name
 
         request_context = {}
-        result = functions.group(request_context, seriesList[0],
-                                 seriesList[1], seriesList[2], seriesList[3])
-        self.assertEqual(result, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, None, None,
-                                  None, None, None, None, None, None, None,
-                                  None, 1, 2, None, None, None, 6, 7, 8, 9,
-                                  10, 1, 2, 3, 4, 5, 6, 7, 8, 9, None])
+        result = functions.group(
+            request_context,
+            seriesList[0],
+            seriesList[1],
+            seriesList[2],
+            seriesList[3],
+        )
+        self.assertEqual(
+            result,
+            [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                1,
+                2,
+                None,
+                None,
+                None,
+                6,
+                7,
+                8,
+                9,
+                10,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                None,
+            ],
+        )
 
     def test_alias(self):
         seriesList = self._generate_series_list()
@@ -675,7 +826,9 @@ class FunctionsTest(TestCase):
             self.assertTrue(
                 series.name.startswith(substitution),
                 "aliasSub should replace the name with {0}".format(
-                    substitution))
+                    substitution
+                ),
+            )
 
     # TODO: Add tests for * globbing and {} matching to this
     def test_alias_by_node(self):
@@ -689,10 +842,10 @@ class FunctionsTest(TestCase):
                 if expected:
                     expected_name = expected[i]
                 else:
-                    fragments = seriesList[i].name.split('.')
+                    fragments = seriesList[i].name.split(".")
                     # Super simplistic. Doesn't match {thing1,thing2}
                     # or glob with *, both of what graphite allow you to use
-                    expected_name = '.'.join([fragments[i] for i in nodes])
+                    expected_name = ".".join([fragments[i] for i in nodes])
                 self.assertEqual(series.name, expected_name)
 
         verify_node_name(seriesList, None, 1)
@@ -761,19 +914,19 @@ class FunctionsTest(TestCase):
     def test_average_series_wildcards(self):
         series = self._generate_series_list()
         average = functions.averageSeriesWithWildcards({}, series, 1)[0]
-        self.assertEqual(average[:3], [1.0, 5/3., 3.0])
-        self.assertEqual(average.name, 'collectd.load.value')
+        self.assertEqual(average[:3], [1.0, 5 / 3.0, 3.0])
+        self.assertEqual(average.name, "collectd.load.value")
 
     def _generate_mr_series(self):
         seriesList = [
-            TimeSeries('group.server1.metric1', 0, 1, 1, [None]),
-            TimeSeries('group.server1.metric2', 0, 1, 1, [None]),
-            TimeSeries('group.server2.metric1', 0, 1, 1, [None]),
-            TimeSeries('group.server2.metric2', 0, 1, 1, [None]),
+            TimeSeries("group.server1.metric1", 0, 1, 1, [None]),
+            TimeSeries("group.server1.metric2", 0, 1, 1, [None]),
+            TimeSeries("group.server2.metric1", 0, 1, 1, [None]),
+            TimeSeries("group.server2.metric2", 0, 1, 1, [None]),
         ]
         mappedResult = [
             [seriesList[0], seriesList[1]],
-            [seriesList[2], seriesList[3]]
+            [seriesList[2], seriesList[3]],
         ]
         return seriesList, mappedResult
 
@@ -785,40 +938,53 @@ class FunctionsTest(TestCase):
     def test_reduceSeries(self):
         sl, inputList = self._generate_mr_series()
         expectedResult = [
-            TimeSeries('group.server2.reduce.mock', 0, 1, 1, [None]),
-            TimeSeries('group.server2.reduce.mock', 0, 1, 1, [None])
+            TimeSeries("group.server2.reduce.mock", 0, 1, 1, [None]),
+            TimeSeries("group.server2.reduce.mock", 0, 1, 1, [None]),
         ]
-        resultSeriesList = [TimeSeries('mock(series)', 0, 1, 1, [None])]
+        resultSeriesList = [TimeSeries("mock(series)", 0, 1, 1, [None])]
         mock = MagicMock(return_value=resultSeriesList)
-        with patch.dict(app.config['GRAPHITE']['functions'], {'mock': mock}):
-            results = functions.reduceSeries({}, copy.deepcopy(inputList),
-                                             "mock", 2, "metric1", "metric2")
+        with patch.dict(app.config["GRAPHITE"]["functions"], {"mock": mock}):
+            results = functions.reduceSeries(
+                {}, copy.deepcopy(inputList), "mock", 2, "metric1", "metric2"
+            )
             self.assertEqual(results, expectedResult)
-        self.assertEqual(mock.mock_calls, [
-            call({}, *[[x] for x in inputList[0]]),
-            call({}, *[[x] for x in inputList[1]]),
-        ])
+        self.assertEqual(
+            mock.mock_calls,
+            [
+                call({}, *[[x] for x in inputList[0]]),
+                call({}, *[[x] for x in inputList[1]]),
+            ],
+        )
 
     def test_reduceSeries_asPercent(self):
         seriesList = [
-            TimeSeries('group.server1.bytes_used', 0, 1, 1, [1]),
-            TimeSeries('group.server1.total_bytes', 0, 1, 1, [2]),
-            TimeSeries('group.server2.bytes_used', 0, 1, 1, [3]),
-            TimeSeries('group.server2.total_bytes', 0, 1, 1, [4]),
+            TimeSeries("group.server1.bytes_used", 0, 1, 1, [1]),
+            TimeSeries("group.server1.total_bytes", 0, 1, 1, [2]),
+            TimeSeries("group.server2.bytes_used", 0, 1, 1, [3]),
+            TimeSeries("group.server2.total_bytes", 0, 1, 1, [4]),
         ]
         for series in seriesList:
             series.pathExpression = "tempPath"
         expectedResult = [
             # 50 == 100 * 1 / 2
-            TimeSeries('group.server1.reduce.asPercent', 0, 1, 1, [50]),
+            TimeSeries("group.server1.reduce.asPercent", 0, 1, 1, [50]),
             # 100 * 3 / 4
-            TimeSeries('group.server2.reduce.asPercent', 0, 1, 1, [75]),
+            TimeSeries("group.server2.reduce.asPercent", 0, 1, 1, [75]),
         ]
         mappedResult = (
-            [seriesList[0]], [seriesList[1]], [seriesList[2]], [seriesList[3]])
+            [seriesList[0]],
+            [seriesList[1]],
+            [seriesList[2]],
+            [seriesList[3]],
+        )
         results = functions.reduceSeries(
-            {}, copy.deepcopy(mappedResult),
-            "asPercent", 2, "bytes_used", "total_bytes")
+            {},
+            copy.deepcopy(mappedResult),
+            "asPercent",
+            2,
+            "bytes_used",
+            "total_bytes",
+        )
         self.assertEqual(results, expectedResult)
 
     def test_pow(self):
@@ -840,11 +1006,13 @@ class FunctionsTest(TestCase):
     def test_sum_series(self):
         series = self._generate_series_list()
         [sum_] = functions.sumSeries({}, series)
-        self.assertEqual(sum_.pathExpression,
-                         "sumSeries(collectd.test-db1.load.value,"
-                         "collectd.test-db2.load.value,"
-                         "collectd.test-db3.load.value,"
-                         "collectd.test-db4.load.value)")
+        self.assertEqual(
+            sum_.pathExpression,
+            "sumSeries(collectd.test-db1.load.value,"
+            "collectd.test-db2.load.value,"
+            "collectd.test-db3.load.value,"
+            "collectd.test-db4.load.value)",
+        )
         self.assertEqual(sum_[:3], [3, 5, 6])
 
     def test_sum_series_wildcards_empty_series_int_position(self):
@@ -853,11 +1021,13 @@ class FunctionsTest(TestCase):
     def test_sum_series_wildcards(self):
         series = self._generate_series_list()
         [sum_] = functions.sumSeriesWithWildcards({}, series, 1)
-        self.assertEqual(sum_.pathExpression,
-                         "sumSeries(collectd.test-db4.load.value,"
-                         "sumSeries(collectd.test-db3.load.value,"
-                         "sumSeries(collectd.test-db1.load.value,"
-                         "collectd.test-db2.load.value)))")
+        self.assertEqual(
+            sum_.pathExpression,
+            "sumSeries(collectd.test-db4.load.value,"
+            "sumSeries(collectd.test-db3.load.value,"
+            "sumSeries(collectd.test-db1.load.value,"
+            "collectd.test-db2.load.value)))",
+        )
         self.assertEqual(sum_[:3], [3, 5, 6])
 
     def test_diff_series_empty(self):
@@ -876,7 +1046,7 @@ class FunctionsTest(TestCase):
     def test_average_series(self):
         series = self._generate_series_list()
         average = functions.averageSeries({}, series)[0]
-        self.assertEqual(average[:3], [1.0, 5/3., 3.0])
+        self.assertEqual(average[:3], [1.0, 5 / 3.0, 3.0])
 
     def test_stddev_series_empty(self):
         self.assertEqual(functions.stddevSeries({}, None), [])
@@ -937,44 +1107,344 @@ class FunctionsTest(TestCase):
 
     def test_interpolate(self):
         seriesList = [
-            TimeSeries('collectd.test-db1.load.value', 0, 1, 1,
-                       [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
-                        16, 17, 18, 19, 20]),
-            TimeSeries('collectd.test-db2.load.value', 0, 1, 1,
-                       [None, 2, None, 4, None, 6, None, 8, None, 10, None,
-                        12, None, 14, None, 16, None, 18, None,  20]),
-            TimeSeries('collectd.test-db3.load.value', 0, 1, 1,
-                       [1, 2, None, None, None, 6, 7, 8, 9, 10, 11, 12, 13,
-                        14, 15, 16, 17, None, None, None]),
-            TimeSeries('collectd.test-db4.load.value', 0, 1, 1,
-                       [1, 2, 3, 4, None, 6, None, None, 9, 10, 11, None, 13,
-                        None, None, None, None, 18, 19, 20]),
-            TimeSeries('collectd.test-db5.load.value', 0, 1, 1,
-                       [1, 2, None, None, None, 6, 7, 8, 9, 10, 11, 12, 13,
-                        14, 15, 16, 17, 18, None, None]),
-            TimeSeries('collectd.test-db6.load.value', 0, 1, 1,
-                       [None, None, None, None, 5, 6, 7, 8, 9, 10, 11, 12, 13,
-                        14, 15, 16, 17, 18, None, None]),
+            TimeSeries(
+                "collectd.test-db1.load.value",
+                0,
+                1,
+                1,
+                [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10,
+                    11,
+                    12,
+                    13,
+                    14,
+                    15,
+                    16,
+                    17,
+                    18,
+                    19,
+                    20,
+                ],
+            ),
+            TimeSeries(
+                "collectd.test-db2.load.value",
+                0,
+                1,
+                1,
+                [
+                    None,
+                    2,
+                    None,
+                    4,
+                    None,
+                    6,
+                    None,
+                    8,
+                    None,
+                    10,
+                    None,
+                    12,
+                    None,
+                    14,
+                    None,
+                    16,
+                    None,
+                    18,
+                    None,
+                    20,
+                ],
+            ),
+            TimeSeries(
+                "collectd.test-db3.load.value",
+                0,
+                1,
+                1,
+                [
+                    1,
+                    2,
+                    None,
+                    None,
+                    None,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10,
+                    11,
+                    12,
+                    13,
+                    14,
+                    15,
+                    16,
+                    17,
+                    None,
+                    None,
+                    None,
+                ],
+            ),
+            TimeSeries(
+                "collectd.test-db4.load.value",
+                0,
+                1,
+                1,
+                [
+                    1,
+                    2,
+                    3,
+                    4,
+                    None,
+                    6,
+                    None,
+                    None,
+                    9,
+                    10,
+                    11,
+                    None,
+                    13,
+                    None,
+                    None,
+                    None,
+                    None,
+                    18,
+                    19,
+                    20,
+                ],
+            ),
+            TimeSeries(
+                "collectd.test-db5.load.value",
+                0,
+                1,
+                1,
+                [
+                    1,
+                    2,
+                    None,
+                    None,
+                    None,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10,
+                    11,
+                    12,
+                    13,
+                    14,
+                    15,
+                    16,
+                    17,
+                    18,
+                    None,
+                    None,
+                ],
+            ),
+            TimeSeries(
+                "collectd.test-db6.load.value",
+                0,
+                1,
+                1,
+                [
+                    None,
+                    None,
+                    None,
+                    None,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10,
+                    11,
+                    12,
+                    13,
+                    14,
+                    15,
+                    16,
+                    17,
+                    18,
+                    None,
+                    None,
+                ],
+            ),
         ]
         expectedResult = [
-            TimeSeries('interpolate(collectd.test-db1.load.value)', 0, 1, 1,
-                       [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
-                        16, 17, 18, 19, 20]),
-            TimeSeries('interpolate(collectd.test-db2.load.value)', 0, 1, 1,
-                       [None, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
-                        16, 17, 18, 19, 20]),
-            TimeSeries('interpolate(collectd.test-db3.load.value)', 0, 1, 1,
-                       [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
-                        17, None, None, None]),
-            TimeSeries('interpolate(collectd.test-db4.load.value)', 0, 1, 1,
-                       [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
-                        17, 18, 19, 20]),
-            TimeSeries('interpolate(collectd.test-db5.load.value)', 0, 1, 1,
-                       [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
-                        17, 18, None, None]),
-            TimeSeries('interpolate(collectd.test-db6.load.value)', 0, 1, 1,
-                       [None, None, None, None, 5, 6, 7, 8, 9, 10, 11, 12, 13,
-                        14, 15, 16, 17, 18, None, None]),
+            TimeSeries(
+                "interpolate(collectd.test-db1.load.value)",
+                0,
+                1,
+                1,
+                [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10,
+                    11,
+                    12,
+                    13,
+                    14,
+                    15,
+                    16,
+                    17,
+                    18,
+                    19,
+                    20,
+                ],
+            ),
+            TimeSeries(
+                "interpolate(collectd.test-db2.load.value)",
+                0,
+                1,
+                1,
+                [
+                    None,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10,
+                    11,
+                    12,
+                    13,
+                    14,
+                    15,
+                    16,
+                    17,
+                    18,
+                    19,
+                    20,
+                ],
+            ),
+            TimeSeries(
+                "interpolate(collectd.test-db3.load.value)",
+                0,
+                1,
+                1,
+                [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10,
+                    11,
+                    12,
+                    13,
+                    14,
+                    15,
+                    16,
+                    17,
+                    None,
+                    None,
+                    None,
+                ],
+            ),
+            TimeSeries(
+                "interpolate(collectd.test-db4.load.value)",
+                0,
+                1,
+                1,
+                [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10,
+                    11,
+                    12,
+                    13,
+                    14,
+                    15,
+                    16,
+                    17,
+                    18,
+                    19,
+                    20,
+                ],
+            ),
+            TimeSeries(
+                "interpolate(collectd.test-db5.load.value)",
+                0,
+                1,
+                1,
+                [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10,
+                    11,
+                    12,
+                    13,
+                    14,
+                    15,
+                    16,
+                    17,
+                    18,
+                    None,
+                    None,
+                ],
+            ),
+            TimeSeries(
+                "interpolate(collectd.test-db6.load.value)",
+                0,
+                1,
+                1,
+                [
+                    None,
+                    None,
+                    None,
+                    None,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10,
+                    11,
+                    12,
+                    13,
+                    14,
+                    15,
+                    16,
+                    17,
+                    18,
+                    None,
+                    None,
+                ],
+            ),
         ]
         results = functions.interpolate({}, seriesList)
         self.assertEqual(results, expectedResult)
@@ -1006,7 +1476,7 @@ class FunctionsTest(TestCase):
     def test_divide_series(self):
         series = self._generate_series_list()
         div = functions.divideSeries({}, [series[0]], [series[1]])[0]
-        self.assertEqual(div[:3], [0, 1/3., 0.5])
+        self.assertEqual(div[:3], [0, 1 / 3.0, 0.5])
 
         with self.assertRaises(ValueError):
             functions.divideSeries({}, [series[0]], [1, 2])
@@ -1045,8 +1515,13 @@ class FunctionsTest(TestCase):
     def test_exponential_moving_average_returns_none(self):
         def gen_series_list(start=0):
             seriesList = [
-                TimeSeries('collectd.test-db0.load.value',
-                           start+10, start+15, 1, range(start, start+15)),
+                TimeSeries(
+                    "collectd.test-db0.load.value",
+                    start + 10,
+                    start + 15,
+                    1,
+                    range(start, start + 15),
+                )
             ]
             for series in seriesList:
                 series.pathExpression = series.name
@@ -1056,8 +1531,9 @@ class FunctionsTest(TestCase):
 
         def mock_evaluate(reqCtx, tokens, store=None):
             seriesList = [
-                TimeSeries('collectd.test-db0.load.value', 10, 25, 1,
-                           [None] * 15)
+                TimeSeries(
+                    "collectd.test-db0.load.value", 10, 25, 1, [None] * 15
+                )
             ]
             for series in seriesList:
                 series.pathExpression = series.name
@@ -1065,25 +1541,38 @@ class FunctionsTest(TestCase):
 
         expectedResults = [
             TimeSeries(
-                'exponentialMovingAverage(collectd.test-db0.load.value,10)',
-                20, 25, 1, [None, None, None, None, None])
+                "exponentialMovingAverage(collectd.test-db0.load.value,10)",
+                20,
+                25,
+                1,
+                [None, None, None, None, None],
+            )
         ]
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
-            result = functions.exponentialMovingAverage({
-                'args': ({}, {}),
-                'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
-                'endTime': datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
-                'data': [],
-            }, series, 10)
+        with patch("graphite_api.functions.evaluateTokens", mock_evaluate):
+            result = functions.exponentialMovingAverage(
+                {
+                    "args": ({}, {}),
+                    "startTime": datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
+                    "endTime": datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
+                    "data": [],
+                },
+                series,
+                10,
+            )
 
         self.assertEqual(result, expectedResults)
 
     def test_exponential_moving_average_returns_half_none(self):
         def gen_series_list(start=0):
             seriesList = [
-                TimeSeries('collectd.test-db0.load.value',
-                           start+10, start+20, 1, range(0, 10)),
+                TimeSeries(
+                    "collectd.test-db0.load.value",
+                    start + 10,
+                    start + 20,
+                    1,
+                    range(0, 10),
+                )
             ]
             for series in seriesList:
                 series.pathExpression = series.name
@@ -1093,8 +1582,13 @@ class FunctionsTest(TestCase):
 
         def mock_evaluate(reqCtx, tokens, store=None):
             seriesList = [
-                TimeSeries('collectd.test-db0.load.value', 10, 30, 1,
-                           [None] * 10 + list(range(0, 10)))
+                TimeSeries(
+                    "collectd.test-db0.load.value",
+                    10,
+                    30,
+                    1,
+                    [None] * 10 + list(range(0, 10)),
+                )
             ]
             for series in seriesList:
                 series.pathExpression = series.name
@@ -1102,26 +1596,49 @@ class FunctionsTest(TestCase):
 
         expectedResults = [
             TimeSeries(
-                'exponentialMovingAverage(collectd.test-db0.load.value,10)',
-                20, 30, 1, [None, 0.0, 0.182, 0.512, 0.965,
-                            1.517, 2.15, 2.85, 3.604, 4.404])
+                "exponentialMovingAverage(collectd.test-db0.load.value,10)",
+                20,
+                30,
+                1,
+                [
+                    None,
+                    0.0,
+                    0.182,
+                    0.512,
+                    0.965,
+                    1.517,
+                    2.15,
+                    2.85,
+                    3.604,
+                    4.404,
+                ],
+            )
         ]
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
-            result = functions.exponentialMovingAverage({
-                'args': ({}, {}),
-                'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
-                'endTime': datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
-                'data': [],
-            }, series, 10)
+        with patch("graphite_api.functions.evaluateTokens", mock_evaluate):
+            result = functions.exponentialMovingAverage(
+                {
+                    "args": ({}, {}),
+                    "startTime": datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
+                    "endTime": datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
+                    "data": [],
+                },
+                series,
+                10,
+            )
 
         self.assertEqual(result, expectedResults)
 
     def test_exponential_moving_average_returns_empty(self):
         def gen_series_list(start=0):
             seriesList = [
-                TimeSeries('collectd.test-db0.load.value',
-                           start+600, start+700, 1, range(start, start+100)),
+                TimeSeries(
+                    "collectd.test-db0.load.value",
+                    start + 600,
+                    start + 700,
+                    1,
+                    range(start, start + 100),
+                )
             ]
             for series in seriesList:
                 series.pathExpression = series.name
@@ -1134,21 +1651,30 @@ class FunctionsTest(TestCase):
 
         expectedResults = []
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
-            result = functions.exponentialMovingAverage({
-                'args': ({}, {}),
-                'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
-                'endTime': datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
-                'data': [],
-            }, series, 60)
+        with patch("graphite_api.functions.evaluateTokens", mock_evaluate):
+            result = functions.exponentialMovingAverage(
+                {
+                    "args": ({}, {}),
+                    "startTime": datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
+                    "endTime": datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
+                    "data": [],
+                },
+                series,
+                60,
+            )
 
         self.assertEqual(result, expectedResults)
 
     def test_exponential_moving_average(self):
         def gen_series_list(start=0):
             seriesList = [
-                TimeSeries('collectd.test-db0.load.value',
-                           start+600, start+700, 1, range(start, start+100)),
+                TimeSeries(
+                    "collectd.test-db0.load.value",
+                    start + 600,
+                    start + 700,
+                    1,
+                    range(start, start + 100),
+                )
             ]
             for series in seriesList:
                 series.pathExpression = series.name
@@ -1164,31 +1690,52 @@ class FunctionsTest(TestCase):
                 yield x
                 x += jump
 
-        expectedResults = [[
-            TimeSeries(
-                'exponentialMovingAverage(collectd.test-db0.load.value,60)',
-                660, 700, 1, frange(29.5, 69.5, 1)),
-        ], [
-            TimeSeries(
-                'exponentialMovingAverage(collectd.test-db0.load.value,'
-                '"-1min")', 660, 700, 1, frange(29.5, 69.5, 1)),
-        ]]
+        expectedResults = [
+            [
+                TimeSeries(
+                    "exponentialMovingAverage(collectd.test-db0.load.value,"
+                    "60)",
+                    660,
+                    700,
+                    1,
+                    frange(29.5, 69.5, 1),
+                )
+            ],
+            [
+                TimeSeries(
+                    "exponentialMovingAverage(collectd.test-db0.load.value,"
+                    '"-1min")',
+                    660,
+                    700,
+                    1,
+                    frange(29.5, 69.5, 1),
+                )
+            ],
+        ]
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
-            result = functions.exponentialMovingAverage({
-                'args': ({}, {}),
-                'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
-                'endTime': datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
-                'data': [],
-            }, series, 60)
+        with patch("graphite_api.functions.evaluateTokens", mock_evaluate):
+            result = functions.exponentialMovingAverage(
+                {
+                    "args": ({}, {}),
+                    "startTime": datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
+                    "endTime": datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
+                    "data": [],
+                },
+                series,
+                60,
+            )
             self.assertEqual(result, expectedResults[0])
 
-            result = functions.exponentialMovingAverage({
-                'args': ({}, {}),
-                'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
-                'endTime': datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
-                'data': [],
-            }, series, "-1min")
+            result = functions.exponentialMovingAverage(
+                {
+                    "args": ({}, {}),
+                    "startTime": datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
+                    "endTime": datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
+                    "data": [],
+                },
+                series,
+                "-1min",
+            )
             self.assertEqual(result, expectedResults[1])
 
     def test_moving_median_empty_series(self):
@@ -1197,8 +1744,13 @@ class FunctionsTest(TestCase):
     def test_moving_median_returns_none(self):
         def gen_series_list(start=0):
             seriesList = [
-                TimeSeries('collectd.test-db0.load.value',
-                           start+10, start+15, 1, range(start, start+15)),
+                TimeSeries(
+                    "collectd.test-db0.load.value",
+                    start + 10,
+                    start + 15,
+                    1,
+                    range(start, start + 15),
+                )
             ]
             for series in seriesList:
                 series.pathExpression = series.name
@@ -1208,33 +1760,48 @@ class FunctionsTest(TestCase):
 
         def mock_evaluate(reqCtx, tokens, store=None):
             seriesList = [
-                TimeSeries('collectd.test-db0.load.value', 10, 25, 1,
-                           [None] * 15)
+                TimeSeries(
+                    "collectd.test-db0.load.value", 10, 25, 1, [None] * 15
+                )
             ]
             for series in seriesList:
                 series.pathExpression = series.name
             return seriesList
 
         expectedResults = [
-            TimeSeries('movingMedian(collectd.test-db0.load.value,10)',
-                       20, 25, 1, [None, None, None, None, None])
+            TimeSeries(
+                "movingMedian(collectd.test-db0.load.value,10)",
+                20,
+                25,
+                1,
+                [None, None, None, None, None],
+            )
         ]
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
-            result = functions.movingMedian({
-                'args': ({}, {}),
-                'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
-                'endTime': datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
-                'data': [],
-            }, series, 10)
+        with patch("graphite_api.functions.evaluateTokens", mock_evaluate):
+            result = functions.movingMedian(
+                {
+                    "args": ({}, {}),
+                    "startTime": datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
+                    "endTime": datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
+                    "data": [],
+                },
+                series,
+                10,
+            )
 
         self.assertEqual(result, expectedResults)
 
     def test_moving_median_returns_half_none(self):
         def gen_series_list(start=0):
             seriesList = [
-                TimeSeries('collectd.test-db0.load.value',
-                           start+10, start+20, 1, range(0, 10)),
+                TimeSeries(
+                    "collectd.test-db0.load.value",
+                    start + 10,
+                    start + 20,
+                    1,
+                    range(0, 10),
+                )
             ]
             for series in seriesList:
                 series.pathExpression = series.name
@@ -1244,33 +1811,52 @@ class FunctionsTest(TestCase):
 
         def mock_evaluate(reqCtx, tokens, store=None):
             seriesList = [
-                TimeSeries('collectd.test-db0.load.value', 10, 30, 1,
-                           [None] * 10 + list(range(0, 10)))
+                TimeSeries(
+                    "collectd.test-db0.load.value",
+                    10,
+                    30,
+                    1,
+                    [None] * 10 + list(range(0, 10)),
+                )
             ]
             for series in seriesList:
                 series.pathExpression = series.name
             return seriesList
 
         expectedResults = [
-            TimeSeries('movingMedian(collectd.test-db0.load.value,10)',
-                       20, 30, 1, [None, 0, 1, 1, 2, 2, 3, 3, 4, 4])
+            TimeSeries(
+                "movingMedian(collectd.test-db0.load.value,10)",
+                20,
+                30,
+                1,
+                [None, 0, 1, 1, 2, 2, 3, 3, 4, 4],
+            )
         ]
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
-            result = functions.movingMedian({
-                'args': ({}, {}),
-                'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
-                'endTime': datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
-                'data': [],
-            }, series, 10)
+        with patch("graphite_api.functions.evaluateTokens", mock_evaluate):
+            result = functions.movingMedian(
+                {
+                    "args": ({}, {}),
+                    "startTime": datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
+                    "endTime": datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
+                    "data": [],
+                },
+                series,
+                10,
+            )
 
         self.assertEqual(result, expectedResults)
 
     def test_moving_median_returns_empty(self):
         def gen_series_list(start=0):
             seriesList = [
-                TimeSeries('collectd.test-db0.load.value',
-                           start+600, start+700, 1, range(start, start+100)),
+                TimeSeries(
+                    "collectd.test-db0.load.value",
+                    start + 600,
+                    start + 700,
+                    1,
+                    range(start, start + 100),
+                )
             ]
             for series in seriesList:
                 series.pathExpression = series.name
@@ -1283,21 +1869,30 @@ class FunctionsTest(TestCase):
 
         expectedResults = []
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
-            result = functions.movingMedian({
-                'args': ({}, {}),
-                'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
-                'endTime': datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
-                'data': [],
-            }, series, 60)
+        with patch("graphite_api.functions.evaluateTokens", mock_evaluate):
+            result = functions.movingMedian(
+                {
+                    "args": ({}, {}),
+                    "startTime": datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
+                    "endTime": datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
+                    "data": [],
+                },
+                series,
+                60,
+            )
 
         self.assertEqual(result, expectedResults)
 
     def test_moving_median(self):
         def gen_series_list(start=0):
             seriesList = [
-                TimeSeries('collectd.test-db0.load.value',
-                           start+600, start+700, 1, range(start, start+100)),
+                TimeSeries(
+                    "collectd.test-db0.load.value",
+                    start + 600,
+                    start + 700,
+                    1,
+                    range(start, start + 100),
+                )
             ]
             for series in seriesList:
                 series.pathExpression = series.name
@@ -1308,29 +1903,50 @@ class FunctionsTest(TestCase):
         def mock_evaluate(reqCtx, tokens, store=None):
             return gen_series_list()
 
-        expectedResults = [[
-            TimeSeries('movingMedian(collectd.test-db0.load.value,60)',
-                       660, 700, 1, range(30, 70)),
-        ], [
-            TimeSeries('movingMedian(collectd.test-db0.load.value,"-1min")',
-                       660, 700, 1, range(30, 70)),
-        ]]
+        expectedResults = [
+            [
+                TimeSeries(
+                    "movingMedian(collectd.test-db0.load.value,60)",
+                    660,
+                    700,
+                    1,
+                    range(30, 70),
+                )
+            ],
+            [
+                TimeSeries(
+                    'movingMedian(collectd.test-db0.load.value,"-1min")',
+                    660,
+                    700,
+                    1,
+                    range(30, 70),
+                )
+            ],
+        ]
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
-            result = functions.movingMedian({
-                'args': ({}, {}),
-                'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
-                'endTime': datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
-                'data': [],
-            }, series, 60)
+        with patch("graphite_api.functions.evaluateTokens", mock_evaluate):
+            result = functions.movingMedian(
+                {
+                    "args": ({}, {}),
+                    "startTime": datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
+                    "endTime": datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
+                    "data": [],
+                },
+                series,
+                60,
+            )
             self.assertEqual(result, expectedResults[0])
 
-            result = functions.movingMedian({
-                'args': ({}, {}),
-                'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
-                'endTime': datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
-                'data': [],
-            }, series, "-1min")
+            result = functions.movingMedian(
+                {
+                    "args": ({}, {}),
+                    "startTime": datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
+                    "endTime": datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
+                    "data": [],
+                },
+                series,
+                "-1min",
+            )
             self.assertEqual(result, expectedResults[1])
 
     def test_pow_series_empty(self):
@@ -1339,16 +1955,42 @@ class FunctionsTest(TestCase):
 
     def test_pow_series(self):
         seriesList = [
-            TimeSeries('collectd.test-db1.load.value', 0, 1, 1,
-                       [1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 312.1]),
-            TimeSeries('collectd.test-db2.load.value', 0, 1, 1,
-                       [1, 3, 5, 7, None, 6, 4, 8, 0, 10, 234.2]),
+            TimeSeries(
+                "collectd.test-db1.load.value",
+                0,
+                1,
+                1,
+                [1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 312.1],
+            ),
+            TimeSeries(
+                "collectd.test-db2.load.value",
+                0,
+                1,
+                1,
+                [1, 3, 5, 7, None, 6, 4, 8, 0, 10, 234.2],
+            ),
         ]
         expectedResult = [
-            TimeSeries('powSeries(collectd.test-db1.load.value,'
-                       'collectd.test-db2.load.value)', 0, 1, 1,
-                       [1.0, 8.0, 243.0, 16384.0, None, 46656.0,
-                        2401.0, 16777216.0, 1.0, 0.0, None]),
+            TimeSeries(
+                "powSeries(collectd.test-db1.load.value,"
+                "collectd.test-db2.load.value)",
+                0,
+                1,
+                1,
+                [
+                    1.0,
+                    8.0,
+                    243.0,
+                    16384.0,
+                    None,
+                    46656.0,
+                    2401.0,
+                    16777216.0,
+                    1.0,
+                    0.0,
+                    None,
+                ],
+            )
         ]
 
         result = functions.powSeries({}, seriesList)
@@ -1357,13 +1999,14 @@ class FunctionsTest(TestCase):
     def test_square_root(self):
         series = self._generate_series_list()
         square_root = functions.squareRoot({}, series)[0]
-        self.assertEqual(square_root[:5],
-                         [0.0, 1.0, math.sqrt(2), math.sqrt(3), 2.0])
+        self.assertEqual(
+            square_root[:5], [0.0, 1.0, math.sqrt(2), math.sqrt(3), 2.0]
+        )
 
     def test_invert(self):
         series = self._generate_series_list()
         invert = functions.invert({}, series)[0]
-        self.assertEqual(invert[:5], [None, 1, 1/2., 1/3., 1/4.])
+        self.assertEqual(invert[:5], [None, 1, 1 / 2.0, 1 / 3.0, 1 / 4.0])
 
     def test_scale_to_seconds(self):
         series = self._generate_series_list()
@@ -1382,7 +2025,8 @@ class FunctionsTest(TestCase):
 
     def test_offset_to_zero(self):
         series = self._generate_series_list(
-            config=[[None] + list(range(10, 110))])
+            config=[[None] + list(range(10, 110))]
+        )
         offset = functions.offsetToZero({}, series)[0]
         self.assertEqual(offset[:3], [None, 0, 1])
 
@@ -1392,8 +2036,13 @@ class FunctionsTest(TestCase):
     def test_moving_average_returns_none(self):
         def gen_series_list(start=0):
             seriesList = [
-                TimeSeries('collectd.test-db0.load.value',
-                           start+10, start+15, 1, range(start, start+15)),
+                TimeSeries(
+                    "collectd.test-db0.load.value",
+                    start + 10,
+                    start + 15,
+                    1,
+                    range(start, start + 15),
+                )
             ]
             for series in seriesList:
                 series.pathExpression = series.name
@@ -1403,33 +2052,48 @@ class FunctionsTest(TestCase):
 
         def mock_evaluate(reqCtx, tokens, store=None):
             seriesList = [
-                TimeSeries('collectd.test-db0.load.value', 10, 25, 1,
-                           [None] * 15)
+                TimeSeries(
+                    "collectd.test-db0.load.value", 10, 25, 1, [None] * 15
+                )
             ]
             for series in seriesList:
                 series.pathExpression = series.name
             return seriesList
 
         expectedResults = [
-            TimeSeries('movingAverage(collectd.test-db0.load.value,10)',
-                       20, 25, 1, [None, None, None, None, None])
+            TimeSeries(
+                "movingAverage(collectd.test-db0.load.value,10)",
+                20,
+                25,
+                1,
+                [None, None, None, None, None],
+            )
         ]
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
-            result = functions.movingAverage({
-                'args': ({}, {}),
-                'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
-                'endTime': datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
-                'data': [],
-            }, series, 10)
+        with patch("graphite_api.functions.evaluateTokens", mock_evaluate):
+            result = functions.movingAverage(
+                {
+                    "args": ({}, {}),
+                    "startTime": datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
+                    "endTime": datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
+                    "data": [],
+                },
+                series,
+                10,
+            )
 
         self.assertEqual(result, expectedResults)
 
     def test_moving_average_returns_half_none(self):
         def gen_series_list(start=0):
             seriesList = [
-                TimeSeries('collectd.test-db0.load.value',
-                           start+10, start+20, 1, range(0, 10)),
+                TimeSeries(
+                    "collectd.test-db0.load.value",
+                    start + 10,
+                    start + 20,
+                    1,
+                    range(0, 10),
+                )
             ]
             for series in seriesList:
                 series.pathExpression = series.name
@@ -1439,34 +2103,52 @@ class FunctionsTest(TestCase):
 
         def mock_evaluate(reqCtx, tokens, store=None):
             seriesList = [
-                TimeSeries('collectd.test-db0.load.value', 10, 30, 1,
-                           [None] * 10 + list(range(0, 10)))
+                TimeSeries(
+                    "collectd.test-db0.load.value",
+                    10,
+                    30,
+                    1,
+                    [None] * 10 + list(range(0, 10)),
+                )
             ]
             for series in seriesList:
                 series.pathExpression = series.name
             return seriesList
 
         expectedResults = [
-            TimeSeries('movingAverage(collectd.test-db0.load.value,10)',
-                       20, 30, 1, [None, 0.0, 0.5, 1.0, 1.5,
-                                   2.0, 2.5, 3.0, 3.5, 4.0])
+            TimeSeries(
+                "movingAverage(collectd.test-db0.load.value,10)",
+                20,
+                30,
+                1,
+                [None, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],
+            )
         ]
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
-            result = functions.movingAverage({
-                'args': ({}, {}),
-                'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
-                'endTime': datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
-                'data': [],
-            }, series, 10)
+        with patch("graphite_api.functions.evaluateTokens", mock_evaluate):
+            result = functions.movingAverage(
+                {
+                    "args": ({}, {}),
+                    "startTime": datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
+                    "endTime": datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
+                    "data": [],
+                },
+                series,
+                10,
+            )
 
         self.assertEqual(result, expectedResults)
 
     def test_moving_average_returns_empty(self):
         def gen_series_list(start=0):
             seriesList = [
-                TimeSeries('collectd.test-db0.load.value',
-                           start+600, start+700, 1, range(start, start+100)),
+                TimeSeries(
+                    "collectd.test-db0.load.value",
+                    start + 600,
+                    start + 700,
+                    1,
+                    range(start, start + 100),
+                )
             ]
             for series in seriesList:
                 series.pathExpression = series.name
@@ -1479,21 +2161,30 @@ class FunctionsTest(TestCase):
 
         expectedResults = []
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
-            result = functions.movingAverage({
-                'args': ({}, {}),
-                'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
-                'endTime': datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
-                'data': [],
-            }, series, 60)
+        with patch("graphite_api.functions.evaluateTokens", mock_evaluate):
+            result = functions.movingAverage(
+                {
+                    "args": ({}, {}),
+                    "startTime": datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
+                    "endTime": datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
+                    "data": [],
+                },
+                series,
+                60,
+            )
 
         self.assertEqual(result, expectedResults)
 
     def test_moving_average(self):
         def gen_series_list(start=0):
             seriesList = [
-                TimeSeries('collectd.test-db0.load.value',
-                           start+600, start+700, 1, range(start, start+100)),
+                TimeSeries(
+                    "collectd.test-db0.load.value",
+                    start + 600,
+                    start + 700,
+                    1,
+                    range(start, start + 100),
+                )
             ]
             for series in seriesList:
                 series.pathExpression = series.name
@@ -1509,29 +2200,50 @@ class FunctionsTest(TestCase):
                 yield x
                 x += jump
 
-        expectedResults = [[
-            TimeSeries('movingAverage(collectd.test-db0.load.value,60)',
-                       660, 700, 1, frange(29.5, 69.5, 1)),
-        ], [
-            TimeSeries('movingAverage(collectd.test-db0.load.value,"-1min")',
-                       660, 700, 1, frange(29.5, 69.5, 1)),
-        ]]
+        expectedResults = [
+            [
+                TimeSeries(
+                    "movingAverage(collectd.test-db0.load.value,60)",
+                    660,
+                    700,
+                    1,
+                    frange(29.5, 69.5, 1),
+                )
+            ],
+            [
+                TimeSeries(
+                    'movingAverage(collectd.test-db0.load.value,"-1min")',
+                    660,
+                    700,
+                    1,
+                    frange(29.5, 69.5, 1),
+                )
+            ],
+        ]
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
-            result = functions.movingAverage({
-                'args': ({}, {}),
-                'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
-                'endTime': datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
-                'data': [],
-            }, series, 60)
+        with patch("graphite_api.functions.evaluateTokens", mock_evaluate):
+            result = functions.movingAverage(
+                {
+                    "args": ({}, {}),
+                    "startTime": datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
+                    "endTime": datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
+                    "data": [],
+                },
+                series,
+                60,
+            )
             self.assertEqual(result, expectedResults[0])
 
-            result = functions.movingAverage({
-                'args': ({}, {}),
-                'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
-                'endTime': datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
-                'data': [],
-            }, series, "-1min")
+            result = functions.movingAverage(
+                {
+                    "args": ({}, {}),
+                    "startTime": datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
+                    "endTime": datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
+                    "data": [],
+                },
+                series,
+                "-1min",
+            )
             self.assertEqual(result, expectedResults[1])
 
     def test_moving_min_empty_series(self):
@@ -1540,8 +2252,13 @@ class FunctionsTest(TestCase):
     def test_moving_min_returns_none(self):
         def gen_series_list(start=0):
             seriesList = [
-                TimeSeries('collectd.test-db0.load.value',
-                           start+10, start+15, 1, range(start, start+15)),
+                TimeSeries(
+                    "collectd.test-db0.load.value",
+                    start + 10,
+                    start + 15,
+                    1,
+                    range(start, start + 15),
+                )
             ]
             for series in seriesList:
                 series.pathExpression = series.name
@@ -1551,33 +2268,48 @@ class FunctionsTest(TestCase):
 
         def mock_evaluate(reqCtx, tokens, store=None):
             seriesList = [
-                TimeSeries('collectd.test-db0.load.value', 10, 25, 1,
-                           [None] * 15)
+                TimeSeries(
+                    "collectd.test-db0.load.value", 10, 25, 1, [None] * 15
+                )
             ]
             for series in seriesList:
                 series.pathExpression = series.name
             return seriesList
 
         expectedResults = [
-            TimeSeries('movingMin(collectd.test-db0.load.value,10)',
-                       20, 25, 1, [None, None, None, None, None])
+            TimeSeries(
+                "movingMin(collectd.test-db0.load.value,10)",
+                20,
+                25,
+                1,
+                [None, None, None, None, None],
+            )
         ]
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
-            result = functions.movingMin({
-                'args': ({}, {}),
-                'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
-                'endTime': datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
-                'data': [],
-            }, series, 10)
+        with patch("graphite_api.functions.evaluateTokens", mock_evaluate):
+            result = functions.movingMin(
+                {
+                    "args": ({}, {}),
+                    "startTime": datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
+                    "endTime": datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
+                    "data": [],
+                },
+                series,
+                10,
+            )
 
         self.assertEqual(result, expectedResults)
 
     def test_moving_min_returns_half_none(self):
         def gen_series_list(start=0):
             seriesList = [
-                TimeSeries('collectd.test-db0.load.value',
-                           start+10, start+20, 1, range(0, 10)),
+                TimeSeries(
+                    "collectd.test-db0.load.value",
+                    start + 10,
+                    start + 20,
+                    1,
+                    range(0, 10),
+                )
             ]
             for series in seriesList:
                 series.pathExpression = series.name
@@ -1587,33 +2319,52 @@ class FunctionsTest(TestCase):
 
         def mock_evaluate(reqCtx, tokens, store=None):
             seriesList = [
-                TimeSeries('collectd.test-db0.load.value', 10, 30, 1,
-                           [None] * 10 + list(range(0, 10)))
+                TimeSeries(
+                    "collectd.test-db0.load.value",
+                    10,
+                    30,
+                    1,
+                    [None] * 10 + list(range(0, 10)),
+                )
             ]
             for series in seriesList:
                 series.pathExpression = series.name
             return seriesList
 
         expectedResults = [
-            TimeSeries('movingMin(collectd.test-db0.load.value,10)',
-                       20, 30, 1, [None, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+            TimeSeries(
+                "movingMin(collectd.test-db0.load.value,10)",
+                20,
+                30,
+                1,
+                [None, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            )
         ]
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
-            result = functions.movingMin({
-                'args': ({}, {}),
-                'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
-                'endTime': datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
-                'data': [],
-            }, series, 10)
+        with patch("graphite_api.functions.evaluateTokens", mock_evaluate):
+            result = functions.movingMin(
+                {
+                    "args": ({}, {}),
+                    "startTime": datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
+                    "endTime": datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
+                    "data": [],
+                },
+                series,
+                10,
+            )
 
         self.assertEqual(result, expectedResults)
 
     def test_moving_min_returns_empty(self):
         def gen_series_list(start=0):
             seriesList = [
-                TimeSeries('collectd.test-db0.load.value',
-                           start+600, start+700, 1, range(start, start+100)),
+                TimeSeries(
+                    "collectd.test-db0.load.value",
+                    start + 600,
+                    start + 700,
+                    1,
+                    range(start, start + 100),
+                )
             ]
             for series in seriesList:
                 series.pathExpression = series.name
@@ -1626,21 +2377,30 @@ class FunctionsTest(TestCase):
 
         expectedResults = []
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
-            result = functions.movingMin({
-                'args': ({}, {}),
-                'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
-                'endTime': datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
-                'data': [],
-            }, series, 60)
+        with patch("graphite_api.functions.evaluateTokens", mock_evaluate):
+            result = functions.movingMin(
+                {
+                    "args": ({}, {}),
+                    "startTime": datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
+                    "endTime": datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
+                    "data": [],
+                },
+                series,
+                60,
+            )
 
         self.assertEqual(result, expectedResults)
 
     def test_moving_min(self):
         def gen_series_list(start=0):
             seriesList = [
-                TimeSeries('collectd.test-db0.load.value',
-                           start+600, start+700, 1, range(start, start+100)),
+                TimeSeries(
+                    "collectd.test-db0.load.value",
+                    start + 600,
+                    start + 700,
+                    1,
+                    range(start, start + 100),
+                )
             ]
             for series in seriesList:
                 series.pathExpression = series.name
@@ -1651,29 +2411,50 @@ class FunctionsTest(TestCase):
         def mock_evaluate(reqCtx, tokens, store=None):
             return gen_series_list()
 
-        expectedResults = [[
-            TimeSeries('movingMin(collectd.test-db0.load.value,60)',
-                       660, 700, 1, range(0, 40)),
-        ], [
-            TimeSeries('movingMin(collectd.test-db0.load.value,"-1min")',
-                       660, 700, 1, range(0, 40)),
-        ]]
+        expectedResults = [
+            [
+                TimeSeries(
+                    "movingMin(collectd.test-db0.load.value,60)",
+                    660,
+                    700,
+                    1,
+                    range(0, 40),
+                )
+            ],
+            [
+                TimeSeries(
+                    'movingMin(collectd.test-db0.load.value,"-1min")',
+                    660,
+                    700,
+                    1,
+                    range(0, 40),
+                )
+            ],
+        ]
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
-            result = functions.movingMin({
-                'args': ({}, {}),
-                'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
-                'endTime': datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
-                'data': [],
-            }, series, 60)
+        with patch("graphite_api.functions.evaluateTokens", mock_evaluate):
+            result = functions.movingMin(
+                {
+                    "args": ({}, {}),
+                    "startTime": datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
+                    "endTime": datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
+                    "data": [],
+                },
+                series,
+                60,
+            )
             self.assertEqual(result, expectedResults[0])
 
-            result = functions.movingMin({
-                'args': ({}, {}),
-                'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
-                'endTime': datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
-                'data': [],
-            }, series, "-1min")
+            result = functions.movingMin(
+                {
+                    "args": ({}, {}),
+                    "startTime": datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
+                    "endTime": datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
+                    "data": [],
+                },
+                series,
+                "-1min",
+            )
             self.assertEqual(result, expectedResults[1])
 
     def test_moving_max_empty_series(self):
@@ -1682,8 +2463,13 @@ class FunctionsTest(TestCase):
     def test_moving_max_returns_none(self):
         def gen_series_list(start=0):
             seriesList = [
-                TimeSeries('collectd.test-db0.load.value',
-                           start+10, start+15, 1, range(start, start+15)),
+                TimeSeries(
+                    "collectd.test-db0.load.value",
+                    start + 10,
+                    start + 15,
+                    1,
+                    range(start, start + 15),
+                )
             ]
             for series in seriesList:
                 series.pathExpression = series.name
@@ -1693,33 +2479,48 @@ class FunctionsTest(TestCase):
 
         def mock_evaluate(reqCtx, tokens, store=None):
             seriesList = [
-                TimeSeries('collectd.test-db0.load.value', 10, 25, 1,
-                           [None] * 15)
+                TimeSeries(
+                    "collectd.test-db0.load.value", 10, 25, 1, [None] * 15
+                )
             ]
             for series in seriesList:
                 series.pathExpression = series.name
             return seriesList
 
         expectedResults = [
-            TimeSeries('movingMax(collectd.test-db0.load.value,10)',
-                       20, 25, 1, [None, None, None, None, None])
+            TimeSeries(
+                "movingMax(collectd.test-db0.load.value,10)",
+                20,
+                25,
+                1,
+                [None, None, None, None, None],
+            )
         ]
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
-            result = functions.movingMax({
-                'args': ({}, {}),
-                'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
-                'endTime': datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
-                'data': [],
-            }, series, 10)
+        with patch("graphite_api.functions.evaluateTokens", mock_evaluate):
+            result = functions.movingMax(
+                {
+                    "args": ({}, {}),
+                    "startTime": datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
+                    "endTime": datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
+                    "data": [],
+                },
+                series,
+                10,
+            )
 
         self.assertEqual(result, expectedResults)
 
     def test_moving_max_returns_half_none(self):
         def gen_series_list(start=0):
             seriesList = [
-                TimeSeries('collectd.test-db0.load.value',
-                           start+10, start+20, 1, range(0, 10)),
+                TimeSeries(
+                    "collectd.test-db0.load.value",
+                    start + 10,
+                    start + 20,
+                    1,
+                    range(0, 10),
+                )
             ]
             for series in seriesList:
                 series.pathExpression = series.name
@@ -1729,33 +2530,52 @@ class FunctionsTest(TestCase):
 
         def mock_evaluate(reqCtx, tokens, store=None):
             seriesList = [
-                TimeSeries('collectd.test-db0.load.value', 10, 30, 1,
-                           [None] * 10 + list(range(0, 10)))
+                TimeSeries(
+                    "collectd.test-db0.load.value",
+                    10,
+                    30,
+                    1,
+                    [None] * 10 + list(range(0, 10)),
+                )
             ]
             for series in seriesList:
                 series.pathExpression = series.name
             return seriesList
 
         expectedResults = [
-            TimeSeries('movingMax(collectd.test-db0.load.value,10)',
-                       20, 30, 1, [None, 0, 1, 2, 3, 4, 5, 6, 7, 8])
+            TimeSeries(
+                "movingMax(collectd.test-db0.load.value,10)",
+                20,
+                30,
+                1,
+                [None, 0, 1, 2, 3, 4, 5, 6, 7, 8],
+            )
         ]
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
-            result = functions.movingMax({
-                'args': ({}, {}),
-                'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
-                'endTime': datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
-                'data': [],
-            }, series, 10)
+        with patch("graphite_api.functions.evaluateTokens", mock_evaluate):
+            result = functions.movingMax(
+                {
+                    "args": ({}, {}),
+                    "startTime": datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
+                    "endTime": datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
+                    "data": [],
+                },
+                series,
+                10,
+            )
 
         self.assertEqual(result, expectedResults)
 
     def test_moving_max_returns_empty(self):
         def gen_series_list(start=0):
             seriesList = [
-                TimeSeries('collectd.test-db0.load.value',
-                           start+600, start+700, 1, range(start, start+100)),
+                TimeSeries(
+                    "collectd.test-db0.load.value",
+                    start + 600,
+                    start + 700,
+                    1,
+                    range(start, start + 100),
+                )
             ]
             for series in seriesList:
                 series.pathExpression = series.name
@@ -1768,21 +2588,30 @@ class FunctionsTest(TestCase):
 
         expectedResults = []
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
-            result = functions.movingMax({
-                'args': ({}, {}),
-                'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
-                'endTime': datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
-                'data': [],
-            }, series, 60)
+        with patch("graphite_api.functions.evaluateTokens", mock_evaluate):
+            result = functions.movingMax(
+                {
+                    "args": ({}, {}),
+                    "startTime": datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
+                    "endTime": datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
+                    "data": [],
+                },
+                series,
+                60,
+            )
 
         self.assertEqual(result, expectedResults)
 
     def test_moving_max(self):
         def gen_series_list(start=0):
             seriesList = [
-                TimeSeries('collectd.test-db0.load.value',
-                           start+600, start+700, 1, range(start, start+100)),
+                TimeSeries(
+                    "collectd.test-db0.load.value",
+                    start + 600,
+                    start + 700,
+                    1,
+                    range(start, start + 100),
+                )
             ]
             for series in seriesList:
                 series.pathExpression = series.name
@@ -1793,29 +2622,50 @@ class FunctionsTest(TestCase):
         def mock_evaluate(reqCtx, tokens, store=None):
             return gen_series_list()
 
-        expectedResults = [[
-            TimeSeries('movingMax(collectd.test-db0.load.value,60)',
-                       660, 700, 1, range(59, 99)),
-        ], [
-            TimeSeries('movingMax(collectd.test-db0.load.value,"-1min")',
-                       660, 700, 1, range(59, 99)),
-        ]]
+        expectedResults = [
+            [
+                TimeSeries(
+                    "movingMax(collectd.test-db0.load.value,60)",
+                    660,
+                    700,
+                    1,
+                    range(59, 99),
+                )
+            ],
+            [
+                TimeSeries(
+                    'movingMax(collectd.test-db0.load.value,"-1min")',
+                    660,
+                    700,
+                    1,
+                    range(59, 99),
+                )
+            ],
+        ]
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
-            result = functions.movingMax({
-                'args': ({}, {}),
-                'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
-                'endTime': datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
-                'data': [],
-            }, series, 60)
+        with patch("graphite_api.functions.evaluateTokens", mock_evaluate):
+            result = functions.movingMax(
+                {
+                    "args": ({}, {}),
+                    "startTime": datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
+                    "endTime": datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
+                    "data": [],
+                },
+                series,
+                60,
+            )
             self.assertEqual(result, expectedResults[0])
 
-            result = functions.movingMax({
-                'args': ({}, {}),
-                'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
-                'endTime': datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
-                'data': [],
-            }, series, "-1min")
+            result = functions.movingMax(
+                {
+                    "args": ({}, {}),
+                    "startTime": datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
+                    "endTime": datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
+                    "data": [],
+                },
+                series,
+                "-1min",
+            )
             self.assertEqual(result, expectedResults[1])
 
     def test_moving_sum_empty_series(self):
@@ -1824,8 +2674,13 @@ class FunctionsTest(TestCase):
     def test_moving_sum_returns_none(self):
         def gen_series_list(start=0):
             seriesList = [
-                TimeSeries('collectd.test-db0.load.value',
-                           start+10, start+15, 1, range(start, start+15)),
+                TimeSeries(
+                    "collectd.test-db0.load.value",
+                    start + 10,
+                    start + 15,
+                    1,
+                    range(start, start + 15),
+                )
             ]
             for series in seriesList:
                 series.pathExpression = series.name
@@ -1835,33 +2690,48 @@ class FunctionsTest(TestCase):
 
         def mock_evaluate(reqCtx, tokens, store=None):
             seriesList = [
-                TimeSeries('collectd.test-db0.load.value', 10, 25, 1,
-                           [None] * 15)
+                TimeSeries(
+                    "collectd.test-db0.load.value", 10, 25, 1, [None] * 15
+                )
             ]
             for series in seriesList:
                 series.pathExpression = series.name
             return seriesList
 
         expectedResults = [
-            TimeSeries('movingSum(collectd.test-db0.load.value,10)',
-                       20, 25, 1, [None, None, None, None, None])
+            TimeSeries(
+                "movingSum(collectd.test-db0.load.value,10)",
+                20,
+                25,
+                1,
+                [None, None, None, None, None],
+            )
         ]
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
-            result = functions.movingSum({
-                'args': ({}, {}),
-                'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
-                'endTime': datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
-                'data': [],
-            }, series, 10)
+        with patch("graphite_api.functions.evaluateTokens", mock_evaluate):
+            result = functions.movingSum(
+                {
+                    "args": ({}, {}),
+                    "startTime": datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
+                    "endTime": datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
+                    "data": [],
+                },
+                series,
+                10,
+            )
 
         self.assertEqual(result, expectedResults)
 
     def test_moving_sum_returns_half_none(self):
         def gen_series_list(start=0):
             seriesList = [
-                TimeSeries('collectd.test-db0.load.value',
-                           start+10, start+20, 1, range(0, 10)),
+                TimeSeries(
+                    "collectd.test-db0.load.value",
+                    start + 10,
+                    start + 20,
+                    1,
+                    range(0, 10),
+                )
             ]
             for series in seriesList:
                 series.pathExpression = series.name
@@ -1871,33 +2741,52 @@ class FunctionsTest(TestCase):
 
         def mock_evaluate(reqCtx, tokens, store=None):
             seriesList = [
-                TimeSeries('collectd.test-db0.load.value', 10, 30, 1,
-                           [None] * 10 + list(range(0, 10)))
+                TimeSeries(
+                    "collectd.test-db0.load.value",
+                    10,
+                    30,
+                    1,
+                    [None] * 10 + list(range(0, 10)),
+                )
             ]
             for series in seriesList:
                 series.pathExpression = series.name
             return seriesList
 
         expectedResults = [
-            TimeSeries('movingSum(collectd.test-db0.load.value,10)',
-                       20, 30, 1, [None, 0, 1, 3, 6, 10, 15, 21, 28, 36])
+            TimeSeries(
+                "movingSum(collectd.test-db0.load.value,10)",
+                20,
+                30,
+                1,
+                [None, 0, 1, 3, 6, 10, 15, 21, 28, 36],
+            )
         ]
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
-            result = functions.movingSum({
-                'args': ({}, {}),
-                'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
-                'endTime': datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
-                'data': [],
-            }, series, 10)
+        with patch("graphite_api.functions.evaluateTokens", mock_evaluate):
+            result = functions.movingSum(
+                {
+                    "args": ({}, {}),
+                    "startTime": datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
+                    "endTime": datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
+                    "data": [],
+                },
+                series,
+                10,
+            )
 
         self.assertEqual(result, expectedResults)
 
     def test_moving_sum_returns_empty(self):
         def gen_series_list(start=0):
             seriesList = [
-                TimeSeries('collectd.test-db0.load.value',
-                           start+600, start+700, 1, range(start, start+100)),
+                TimeSeries(
+                    "collectd.test-db0.load.value",
+                    start + 600,
+                    start + 700,
+                    1,
+                    range(start, start + 100),
+                )
             ]
             for series in seriesList:
                 series.pathExpression = series.name
@@ -1910,21 +2799,30 @@ class FunctionsTest(TestCase):
 
         expectedResults = []
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
-            result = functions.movingSum({
-                'args': ({}, {}),
-                'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
-                'endTime': datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
-                'data': [],
-            }, series, 60)
+        with patch("graphite_api.functions.evaluateTokens", mock_evaluate):
+            result = functions.movingSum(
+                {
+                    "args": ({}, {}),
+                    "startTime": datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
+                    "endTime": datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
+                    "data": [],
+                },
+                series,
+                60,
+            )
 
         self.assertEqual(result, expectedResults)
 
     def test_moving_sum(self):
         def gen_series_list(start=0):
             seriesList = [
-                TimeSeries('collectd.test-db0.load.value',
-                           start+600, start+700, 1, range(start, start+100)),
+                TimeSeries(
+                    "collectd.test-db0.load.value",
+                    start + 600,
+                    start + 700,
+                    1,
+                    range(start, start + 100),
+                )
             ]
             for series in seriesList:
                 series.pathExpression = series.name
@@ -1935,29 +2833,50 @@ class FunctionsTest(TestCase):
         def mock_evaluate(reqCtx, tokens, store=None):
             return gen_series_list()
 
-        expectedResults = [[
-            TimeSeries('movingSum(collectd.test-db0.load.value,60)',
-                       660, 700, 1, range(1770, 4170, 60)),
-        ], [
-            TimeSeries('movingSum(collectd.test-db0.load.value,"-1min")',
-                       660, 700, 1, range(1770, 4170, 60)),
-        ]]
+        expectedResults = [
+            [
+                TimeSeries(
+                    "movingSum(collectd.test-db0.load.value,60)",
+                    660,
+                    700,
+                    1,
+                    range(1770, 4170, 60),
+                )
+            ],
+            [
+                TimeSeries(
+                    'movingSum(collectd.test-db0.load.value,"-1min")',
+                    660,
+                    700,
+                    1,
+                    range(1770, 4170, 60),
+                )
+            ],
+        ]
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
-            result = functions.movingSum({
-                'args': ({}, {}),
-                'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
-                'endTime': datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
-                'data': [],
-            }, series, 60)
+        with patch("graphite_api.functions.evaluateTokens", mock_evaluate):
+            result = functions.movingSum(
+                {
+                    "args": ({}, {}),
+                    "startTime": datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
+                    "endTime": datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
+                    "data": [],
+                },
+                series,
+                60,
+            )
             self.assertEqual(result, expectedResults[0])
 
-            result = functions.movingSum({
-                'args': ({}, {}),
-                'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
-                'endTime': datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
-                'data': [],
-            }, series, "-1min")
+            result = functions.movingSum(
+                {
+                    "args": ({}, {}),
+                    "startTime": datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
+                    "endTime": datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
+                    "data": [],
+                },
+                series,
+                "-1min",
+            )
             self.assertEqual(result, expectedResults[1])
 
     def test_cumulative(self):
@@ -1969,13 +2888,13 @@ class FunctionsTest(TestCase):
     def consolidate_by(self):
         series = self._generate_series_list(config=[range(100)])
         series[0].consolidate(2)
-        min_ = functions.consolidateBy({}, series, 'min')
+        min_ = functions.consolidateBy({}, series, "min")
         self.assertEqual(list(min_)[:3], [0, 2, 4])
 
-        max_ = functions.consolidateBy({}, series, 'max')
+        max_ = functions.consolidateBy({}, series, "max")
         self.assertEqual(list(max_)[:3], [1, 3, 5])
 
-        avg_ = functions.consolidateBy({}, series, 'average')
+        avg_ = functions.consolidateBy({}, series, "average")
         self.assertEqual(list(avg_)[:3], [0.5, 2.3, 4.5])
 
     def test_derivative(self):
@@ -1985,13 +2904,23 @@ class FunctionsTest(TestCase):
 
     def test_delay(self):
         seriesList = [
-            TimeSeries('collectd.test-db1.load.value', 0, 1, 1,
-                       [range(18)] + [None, None])
+            TimeSeries(
+                "collectd.test-db1.load.value",
+                0,
+                1,
+                1,
+                [range(18)] + [None, None],
+            )
         ]
         delay = 2
         expected = [
-            TimeSeries('delay(collectd.test-db1.load.value,2)', 0, 1, 1,
-                       [None, None] + [range(18)]),
+            TimeSeries(
+                "delay(collectd.test-db1.load.value,2)",
+                0,
+                1,
+                1,
+                [None, None] + [range(18)],
+            )
         ]
         result = functions.delay({}, seriesList, delay)
         self.assertEqual(len(expected), len(result))
@@ -2010,63 +2939,81 @@ class FunctionsTest(TestCase):
 
     def test_per_second_nones(self):
         seriesList = [
-            TimeSeries('test', 0, 600, 60,
-                       [0, 60, None, 180, None, 300, None, 420, None, 540])
+            TimeSeries(
+                "test",
+                0,
+                600,
+                60,
+                [0, 60, None, 180, None, 300, None, 420, None, 540],
+            )
         ]
         expected = [
-            TimeSeries('perSecond(test)', 0, 600, 60,
-                       [None, 1, None, 1, None, 1, None, 1, None, 1])
+            TimeSeries(
+                "perSecond(test)",
+                0,
+                600,
+                60,
+                [None, 1, None, 1, None, 1, None, 1, None, 1],
+            )
         ]
         result = functions.perSecond({}, seriesList)
         self.assertEqual(expected, result)
 
     def test_integral(self):
         series = self._generate_series_list(
-            config=[list(range(1, 10)) * 9 + [None] * 10])
+            config=[list(range(1, 10)) * 9 + [None] * 10]
+        )
         integral = functions.integral({}, series)[0]
         self.assertEqual(integral[:3], [1, 3, 6])
         self.assertEqual(integral[-11:], [405] + [None] * 10)
 
     def test_integral_by_interval(self):
         series = self._generate_series_list(
-            config=[list(range(1, 10)) * 9 + [None] * 10])
-        integral = functions.integralByInterval({
-            'startTime': parseATTime('-101s')
-        }, series, '100s')[0]
+            config=[list(range(1, 10)) * 9 + [None] * 10]
+        )
+        integral = functions.integralByInterval(
+            {"startTime": parseATTime("-101s")}, series, "100s"
+        )[0]
         self.assertEqual(integral[:3], [1, 3, 6])
         self.assertEqual(integral[-11:], [405] * 11)
 
     def test_non_negative_derivative(self):
         series = self._generate_series_list(config=[list(range(10)) * 10])
         der = functions.nonNegativeDerivative({}, series)[0]
-        self.assertEqual(list(der),
-                         [1 if i % 10 else None for i in range(100)])
+        self.assertEqual(
+            list(der), [1 if i % 10 else None for i in range(100)]
+        )
 
         series = self._generate_series_list(
-            config=[list(reversed(range(10))) * 10])
+            config=[list(reversed(range(10))) * 10]
+        )
         der = functions.nonNegativeDerivative({}, series, maxValue=10)[0]
-        self.assertEqual(list(der),
-                         [None] + [10 if i % 10 else 9 for i in range(1, 100)])
+        self.assertEqual(
+            list(der), [None] + [10 if i % 10 else 9 for i in range(1, 100)]
+        )
 
     def test_stacked(self):
         series = self._generate_series_list(
-            config=[[None] + list(range(99)), range(50, 150)])
+            config=[[None] + list(range(99)), range(50, 150)]
+        )
         stacked = functions.stacked({}, series)[1]
         self.assertEqual(stacked[:3], [50, 51, 53])
 
-        stacked = functions.stacked({'totalStack': {}}, series)[1]
+        stacked = functions.stacked({"totalStack": {}}, series)[1]
         self.assertEqual(stacked[:3], [50, 51, 53])
-        self.assertEqual(stacked.name, 'stacked(collectd.test-db2.load.value)')
+        self.assertEqual(
+            stacked.name, "stacked(collectd.test-db2.load.value)"
+        )
 
-        stacked = functions.stacked({}, series, 'tx')[1]
+        stacked = functions.stacked({}, series, "tx")[1]
         self.assertEqual(stacked[:3], [50, 51, 53])
         self.assertEqual(stacked.name, series[1].name)
 
     def test_area_between(self):
         series = self._generate_series_list()
         lower, upper = functions.areaBetween({}, series[0], series[1])
-        self.assertEqual(lower.options, {'stacked': True, 'invisible': True})
-        self.assertEqual(upper.options, {'stacked': True})
+        self.assertEqual(lower.options, {"stacked": True, "invisible": True})
+        self.assertEqual(upper.options, {"stacked": True})
 
     def test_cactistyle(self):
         series = self._generate_series_list()
@@ -2074,68 +3021,74 @@ class FunctionsTest(TestCase):
         self.assertEqual(
             cacti[0].name,
             "collectd.test-db1.load.value Current:100.00    Max:100.00    "
-            "Min:0.00    ")
+            "Min:0.00    ",
+        )
 
         series = self._generate_series_list()
-        cacti = functions.cactiStyle({}, series, 'si')
+        cacti = functions.cactiStyle({}, series, "si")
         self.assertEqual(
             cacti[0].name,
             "collectd.test-db1.load.value Current:100.00    Max:100.00    "
-            "Min:0.00    ")
+            "Min:0.00    ",
+        )
 
         series = self._generate_series_list()
-        cacti = functions.cactiStyle({}, series, units='b')
+        cacti = functions.cactiStyle({}, series, units="b")
         self.assertEqual(
             cacti[0].name,
             "collectd.test-db1.load.value Current:100.00 b    Max:100.00 b    "
-            "Min:0.00 b    ")
+            "Min:0.00 b    ",
+        )
 
         series = self._generate_series_list()
-        cacti = functions.cactiStyle({}, series, 'binary', 'b')
+        cacti = functions.cactiStyle({}, series, "binary", "b")
         self.assertEqual(
             cacti[0].name,
             "collectd.test-db1.load.value Current:100.00 b    Max:100.00 b    "
-            "Min:0.00 b    ")
+            "Min:0.00 b    ",
+        )
 
         series = self._generate_series_list(config=[[None] * 100])
         cacti = functions.cactiStyle({}, series)
         self.assertEqual(
             cacti[0].name,
             "collectd.test-db1.load.value Current:nan     Max:nan     "
-            "Min:nan     ")
+            "Min:nan     ",
+        )
 
         cacti = functions.cactiStyle({}, [])
         self.assertEqual(cacti, [])
 
     def test_alias_by_metric(self):
         series = self._generate_series_list(config=[range(100)])
-        series[0].name = 'scaleToSeconds(%s,10)' % series[0].name
+        series[0].name = "scaleToSeconds(%s,10)" % series[0].name
         alias = functions.aliasByMetric({}, series)[0]
         self.assertEqual(alias.name, "value")
 
     def test_legend_value(self):
         series = self._generate_series_list(config=[range(100)])
-        legend = functions.legendValue({}, series, 'min', 'max', 'avg')[0]
+        legend = functions.legendValue({}, series, "min", "max", "avg")[0]
         self.assertEqual(
             legend.name,
-            "collectd.test-db1.load.value (min: 0) (max: 99) (avg: 49.5)")
+            "collectd.test-db1.load.value (min: 0) (max: 99) (avg: 49.5)",
+        )
 
         series = self._generate_series_list(config=[range(100)])
-        series[0].name = 'load.value'
-        legend = functions.legendValue({}, series, 'avg', 'si')[0]
-        self.assertEqual(
-            legend.name,
-            "load.value          avg  49.50     ")
+        series[0].name = "load.value"
+        legend = functions.legendValue({}, series, "avg", "si")[0]
+        self.assertEqual(legend.name, "load.value          avg  49.50     ")
 
         series = self._generate_series_list(config=[range(100)])
-        legend = functions.legendValue({}, series, 'lol')[0]
+        legend = functions.legendValue({}, series, "lol")[0]
         self.assertEqual(
-            legend.name, "collectd.test-db1.load.value (lol: (?))")
+            legend.name, "collectd.test-db1.load.value (lol: (?))"
+        )
 
         series = self._generate_series_list(config=[[None] * 100])
-        legend = functions.legendValue({}, series, 'min')[0]
+        legend = functions.legendValue({}, series, "min")[0]
         self.assertEqual(
-            legend.name, "collectd.test-db1.load.value (min: None)")
+            legend.name, "collectd.test-db1.load.value (min: None)"
+        )
 
     def test_substr(self):
         series = self._generate_series_list(config=[range(100)])
@@ -2143,8 +3096,10 @@ class FunctionsTest(TestCase):
         self.assertEqual(sub.name, "test-db1.load.value")
 
         series = functions.alias(
-            {}, self._generate_series_list(config=[range(100)]),
-            '(foo.bar, "baz")')
+            {},
+            self._generate_series_list(config=[range(100)]),
+            '(foo.bar, "baz")',
+        )
         sub = functions.substr({}, series, 1)[0]
         self.assertEqual(sub.name, "bar")
 
@@ -2205,9 +3160,9 @@ class FunctionsTest(TestCase):
         self.assertEqual(functions.minimumBelow({}, [[None]], 1), [[None]])
 
     def test_highest_current(self):
-        series = self._generate_series_list(config=[range(100),
-                                                    range(10, 110),
-                                                    range(200, 300)])
+        series = self._generate_series_list(
+            config=[range(100), range(10, 110), range(200, 300)]
+        )
         highest = functions.highestCurrent({}, series)[0]
         self.assertEqual(highest.name, "collectd.test-db3.load.value")
 
@@ -2215,9 +3170,9 @@ class FunctionsTest(TestCase):
         self.assertEqual(highest[0].name, "collectd.test-db2.load.value")
 
     def test_lowest_current(self):
-        series = self._generate_series_list(config=[range(100),
-                                                    range(10, 110),
-                                                    range(200, 300)])
+        series = self._generate_series_list(
+            config=[range(100), range(10, 110), range(200, 300)]
+        )
         lowest = functions.lowestCurrent({}, series)[0]
         self.assertEqual(lowest.name, "collectd.test-db1.load.value")
 
@@ -2243,10 +3198,13 @@ class FunctionsTest(TestCase):
         self.assertEqual(functions.currentBelow({}, [[None]], 1), [[None]])
 
     def test_highest_average(self):
-        series = self._generate_series_list(config=[
-            range(100),
-            range(50, 150),
-            list(range(150, 200)) + [None] * 50])
+        series = self._generate_series_list(
+            config=[
+                range(100),
+                range(50, 150),
+                list(range(150, 200)) + [None] * 50,
+            ]
+        )
         highest = functions.highestAverage({}, series, 2)
         self.assertEqual(len(highest), 2)
         self.assertEqual(highest, [series[1], series[2]])
@@ -2255,10 +3213,13 @@ class FunctionsTest(TestCase):
         self.assertEqual(highest, [series[2]])
 
     def test_lowest_average(self):
-        series = self._generate_series_list(config=[
-            range(100),
-            range(50, 150),
-            list(range(150, 200)) + [None] * 50])
+        series = self._generate_series_list(
+            config=[
+                range(100),
+                range(50, 150),
+                list(range(150, 200)) + [None] * 50,
+            ]
+        )
         lowest = functions.lowestAverage({}, series, 2)
         self.assertEqual(len(lowest), 2)
         self.assertEqual(lowest, [series[0], series[1]])
@@ -2290,7 +3251,8 @@ class FunctionsTest(TestCase):
 
     def test_average_outside_percentile(self):
         series = self._generate_series_list(
-            config=[range(i, i+100) for i in range(50)])
+            config=[range(i, i + 100) for i in range(50)]
+        )
         outside = functions.averageOutsidePercentile({}, series, 95)
         self.assertEqual(outside, series[:3] + series[-2:])
 
@@ -2299,7 +3261,8 @@ class FunctionsTest(TestCase):
 
     def test_remove_between_percentile(self):
         series = self._generate_series_list(
-            config=[range(i, i+100) for i in range(50)])
+            config=[range(i, i + 100) for i in range(50)]
+        )
         not_between = functions.removeBetweenPercentile({}, series, 95)
         self.assertEqual(not_between, series[:3] + series[-2:])
 
@@ -2307,8 +3270,13 @@ class FunctionsTest(TestCase):
         self.assertEqual(not_between, series[:3] + series[-2:])
 
     def test_sort_by_name(self):
-        series = list(reversed(self._generate_series_list(
-            config=[range(100) for i in range(10)])))
+        series = list(
+            reversed(
+                self._generate_series_list(
+                    config=[range(100) for i in range(10)]
+                )
+            )
+        )
         sorted_s = functions.sortByName({}, series)
         self.assertEqual(sorted_s[0].name, series[-1].name)
 
@@ -2317,43 +3285,55 @@ class FunctionsTest(TestCase):
 
     def test_sort_by_total(self):
         series = self._generate_series_list(
-            config=[range(i, i+100) for i in range(10)])
+            config=[range(i, i + 100) for i in range(10)]
+        )
         sorted_s = functions.sortByTotal({}, series)
         self.assertEqual(sorted_s[0].name, series[-1].name)
 
     def test_sort_by_maxima(self):
-        series = list(reversed(self._generate_series_list(
-            config=[range(i, i+100) for i in range(10)])))
+        series = list(
+            reversed(
+                self._generate_series_list(
+                    config=[range(i, i + 100) for i in range(10)]
+                )
+            )
+        )
         sorted_s = functions.sortByMaxima({}, series)
         self.assertEqual(sorted_s[0].name, series[-1].name)
 
     def test_sort_by_minima(self):
-        series = list(reversed(self._generate_series_list(
-            config=[range(i, i+100) for i in range(10)])))
+        series = list(
+            reversed(
+                self._generate_series_list(
+                    config=[range(i, i + 100) for i in range(10)]
+                )
+            )
+        )
         sorted_s = functions.sortByMinima({}, series)
         self.assertEqual(sorted_s[0].name, series[-1].name)
 
     def test_use_series_above(self):
         series = self._generate_series_list(
-            config=[list(range(90)) + [None] * 10])
-        series[0].pathExpression = 'bar'
+            config=[list(range(90)) + [None] * 10]
+        )
+        series[0].pathExpression = "bar"
 
         for s in series:
             self.write_series(s)
 
-        series[0].name = 'foo'
+        series[0].name = "foo"
 
         ctx = {
-            'startTime': parseATTime('-100s'),
-            'endTime': parseATTime('now'),
+            "startTime": parseATTime("-100s"),
+            "endTime": parseATTime("now"),
         }
-        above = functions.useSeriesAbove(ctx, series, 10, 'foo', 'bar')[0]
+        above = functions.useSeriesAbove(ctx, series, 10, "foo", "bar")[0]
         self.assertEqual(above[0], 2)
 
-        above = functions.useSeriesAbove(ctx, series, 100, 'foo', 'bar')
+        above = functions.useSeriesAbove(ctx, series, 100, "foo", "bar")
         self.assertEqual(len(above), 0)
 
-        above = functions.useSeriesAbove(ctx, series, 10, 'foo', 'baz')
+        above = functions.useSeriesAbove(ctx, series, 10, "foo", "baz")
         self.assertEqual(len(above), 0)
 
     def test_fallback_series(self):
@@ -2362,27 +3342,59 @@ class FunctionsTest(TestCase):
         self.assertEqual(functions.fallbackSeries({}, [], series), series)
 
     def test_most_deviant(self):
-        series = self._generate_series_list(config=[
-            range(1, i * 100, i) for i in range(1, 10)] + [[None] * 100])
+        series = self._generate_series_list(
+            config=[range(1, i * 100, i) for i in range(1, 10)]
+            + [[None] * 100]
+        )
         deviant = functions.mostDeviant({}, series, 8)
-        self.assertEqual(deviant[0].name, 'collectd.test-db9.load.value')
+        self.assertEqual(deviant[0].name, "collectd.test-db9.load.value")
 
     def test_stdev(self):
-        series = self._generate_series_list(config=[
-            [x**1.5 for x in range(100)], [None] * 100])
+        series = self._generate_series_list(
+            config=[[x ** 1.5 for x in range(100)], [None] * 100]
+        )
         dev = functions.stdev({}, series, 10)[0]
         self.assertEqual(dev[1], 0.5)
 
     def test_stdev_math_domain(self):
         # This data set is enough to trigger a math domain error in stdev.
         # The last two data points should be NaN.
-        inputData = [0.9, 0.1, 0.5, 0.7, 0.5, 0.4, 0.4, 0.3, 0.6,
-                     0.6333333333333333, 1.3,
-                     0.6333333333333333, 0.6185185185185186,
-                     0.3, 0.5, 0.6, 0.3, 1.0, 0.6, 0.9, 0.4,
-                     0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        inputData = [
+            0.9,
+            0.1,
+            0.5,
+            0.7,
+            0.5,
+            0.4,
+            0.4,
+            0.3,
+            0.6,
+            0.6333333333333333,
+            1.3,
+            0.6333333333333333,
+            0.6185185185185186,
+            0.3,
+            0.5,
+            0.6,
+            0.3,
+            1.0,
+            0.6,
+            0.9,
+            0.4,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+        ]
         series = [
-            TimeSeries('collectd.test-db0.load.value', 600, 760, 5, inputData)
+            TimeSeries("collectd.test-db0.load.value", 600, 760, 5, inputData)
         ]
         series[0].pathExpression = series[0].name
 
@@ -2390,18 +3402,27 @@ class FunctionsTest(TestCase):
         self.assertEqual(result[-2:], [None, None])
 
     def test_holt_winters_analysis_none(self):
-        seriesList = TimeSeries('collectd.test-db0.load.value',
-                                660, 700, 1, [None])
+        seriesList = TimeSeries(
+            "collectd.test-db0.load.value", 660, 700, 1, [None]
+        )
         expectedResults = {
-            'predictions': TimeSeries(
-                'holtWintersForecast(collectd.test-db0.load.value)',
-                660, 700, 1, [None]),
-            'deviations': TimeSeries(
-                'holtWintersDeviation(collectd.test-db0.load.value)',
-                660, 700, 1, [0]),
-            'seasonals': [0],
-            'slopes': [0],
-            'intercepts': [None]
+            "predictions": TimeSeries(
+                "holtWintersForecast(collectd.test-db0.load.value)",
+                660,
+                700,
+                1,
+                [None],
+            ),
+            "deviations": TimeSeries(
+                "holtWintersDeviation(collectd.test-db0.load.value)",
+                660,
+                700,
+                1,
+                [0],
+            ),
+            "seasonals": [0],
+            "slopes": [0],
+            "intercepts": [None],
         }
 
         result = functions.holtWintersAnalysis(seriesList)
@@ -2410,8 +3431,13 @@ class FunctionsTest(TestCase):
     def test_holt_winters_forecast(self):
         def gen_series_list(start=0):
             seriesList = [
-                TimeSeries('collectd.test-db0.load.value',
-                           start+600, start+700, 1, range(start, start+100)),
+                TimeSeries(
+                    "collectd.test-db0.load.value",
+                    start + 600,
+                    start + 700,
+                    1,
+                    range(start, start + 100),
+                )
             ]
             for series in seriesList:
                 series.pathExpression = series.name
@@ -2423,17 +3449,25 @@ class FunctionsTest(TestCase):
             return gen_series_list()
 
         expectedResults = [
-            TimeSeries('holtWintersForecast(collectd.test-db0.load.value)',
-                       605400, 700, 1, [])
+            TimeSeries(
+                "holtWintersForecast(collectd.test-db0.load.value)",
+                605400,
+                700,
+                1,
+                [],
+            )
         ]
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
-            result = functions.holtWintersForecast({
-                'args': ({}, {}),
-                'startTime': datetime(1970, 2, 1, 0, 0, 0, 0, pytz.utc),
-                'endTime': datetime(1970, 2, 1, 0, 9, 0, 0, pytz.utc),
-                'data': [],
-            }, series)
+        with patch("graphite_api.functions.evaluateTokens", mock_evaluate):
+            result = functions.holtWintersForecast(
+                {
+                    "args": ({}, {}),
+                    "startTime": datetime(1970, 2, 1, 0, 0, 0, 0, pytz.utc),
+                    "endTime": datetime(1970, 2, 1, 0, 9, 0, 0, pytz.utc),
+                    "data": [],
+                },
+                series,
+            )
         self.assertEqual(result, expectedResults)
 
     def test_holt_winters(self):
@@ -2449,9 +3483,13 @@ class FunctionsTest(TestCase):
 
         def gen_series_list(start=0, points=10):
             seriesList = [
-                TimeSeries('collectd.test-db0.load.value',
-                           start, start+(points*step), step,
-                           hw_range(0, points*step, step)),
+                TimeSeries(
+                    "collectd.test-db0.load.value",
+                    start,
+                    start + (points * step),
+                    step,
+                    hw_range(0, points * step, step),
+                )
             ]
             for series in seriesList:
                 series.pathExpression = series.name
@@ -2460,176 +3498,235 @@ class FunctionsTest(TestCase):
         series = gen_series_list(start_time, points)
 
         def mock_evaluate(reqCtx, tokens, store=None):
-            return gen_series_list(start_time - week_seconds,
-                                   (week_seconds / step) + points)
-
-        expectedResults = [[
-            TimeSeries(
-                'holtWintersConfidenceLower(collectd.test-db0.load.value)',
-                start_time, start_time+(points*step), step,
-                [0.2841206166091448, 1.0581027098774411, 0.3338172102994683,
-                 0.5116859493263242, -0.18199175514936972, 0.2366173792019426,
-                 -1.2941554508809152, -0.513426806531049, -0.7970905542723132,
-                 0.09868900726536012]
-            ),
-            TimeSeries(
-                'holtWintersConfidenceUpper(collectd.test-db0.load.value)',
-                start_time, start_time+(points*step), step,
-                [8.424944558327624, 9.409422251880809, 10.607070189221787,
-                 10.288439865038768, 9.491556863132963, 9.474595784593738,
-                 8.572310478053845, 8.897670449095346, 8.941566968508148,
-                 9.409728797779282]
-            ),
-        ], [
-            TimeSeries(
-                'holtWintersConfidenceArea(collectd.test-db0.load.value)',
-                start_time, start_time+(points*step), step,
-                [0.2841206166091448, 1.0581027098774411, 0.3338172102994683,
-                 0.5116859493263242, -0.18199175514936972, 0.2366173792019426,
-                 -1.2941554508809152, -0.513426806531049, -0.7970905542723132,
-                 0.09868900726536012]
-            ),
-            TimeSeries(
-                'holtWintersConfidenceArea(collectd.test-db0.load.value)',
-                start_time, start_time+(points*step), step,
-                [8.424944558327624, 9.409422251880809, 10.607070189221787,
-                 10.288439865038768, 9.491556863132963, 9.474595784593738,
-                 8.572310478053845, 8.897670449095346, 8.941566968508148,
-                 9.409728797779282]
-            ),
-        ], [
-            TimeSeries(
-                'holtWintersAberration(collectd.test-db0.load.value)',
-                start_time, start_time+(points*step), step,
-                [-0.2841206166091448, -0.05810270987744115,
-                 0, 0, 0, 0, 0, 0, 0, 0]
+            return gen_series_list(
+                start_time - week_seconds, (week_seconds / step) + points
             )
-        ]]
-        expectedResults[1][0].options = {'invisible': True, 'stacked': True}
-        expectedResults[1][1].options = {'stacked': True}
 
-        with patch('graphite_api.functions.evaluateTokens', mock_evaluate):
-            result = functions.holtWintersConfidenceBands({
-                'args': ({}, {}),
-                'startTime': datetime(1970, 2, 1, 0, 0, 0, 0, pytz.utc),
-                'endTime': datetime(1970, 2, 1, 0, 9, 0, 0, pytz.utc),
-                'data': []
-                }, series)
+        expectedResults = [
+            [
+                TimeSeries(
+                    "holtWintersConfidenceLower(collectd.test-db0.load.value)",
+                    start_time,
+                    start_time + (points * step),
+                    step,
+                    [
+                        0.2841206166091448,
+                        1.0581027098774411,
+                        0.3338172102994683,
+                        0.5116859493263242,
+                        -0.18199175514936972,
+                        0.2366173792019426,
+                        -1.2941554508809152,
+                        -0.513426806531049,
+                        -0.7970905542723132,
+                        0.09868900726536012,
+                    ],
+                ),
+                TimeSeries(
+                    "holtWintersConfidenceUpper(collectd.test-db0.load.value)",
+                    start_time,
+                    start_time + (points * step),
+                    step,
+                    [
+                        8.424944558327624,
+                        9.409422251880809,
+                        10.607070189221787,
+                        10.288439865038768,
+                        9.491556863132963,
+                        9.474595784593738,
+                        8.572310478053845,
+                        8.897670449095346,
+                        8.941566968508148,
+                        9.409728797779282,
+                    ],
+                ),
+            ],
+            [
+                TimeSeries(
+                    "holtWintersConfidenceArea(collectd.test-db0.load.value)",
+                    start_time,
+                    start_time + (points * step),
+                    step,
+                    [
+                        0.2841206166091448,
+                        1.0581027098774411,
+                        0.3338172102994683,
+                        0.5116859493263242,
+                        -0.18199175514936972,
+                        0.2366173792019426,
+                        -1.2941554508809152,
+                        -0.513426806531049,
+                        -0.7970905542723132,
+                        0.09868900726536012,
+                    ],
+                ),
+                TimeSeries(
+                    "holtWintersConfidenceArea(collectd.test-db0.load.value)",
+                    start_time,
+                    start_time + (points * step),
+                    step,
+                    [
+                        8.424944558327624,
+                        9.409422251880809,
+                        10.607070189221787,
+                        10.288439865038768,
+                        9.491556863132963,
+                        9.474595784593738,
+                        8.572310478053845,
+                        8.897670449095346,
+                        8.941566968508148,
+                        9.409728797779282,
+                    ],
+                ),
+            ],
+            [
+                TimeSeries(
+                    "holtWintersAberration(collectd.test-db0.load.value)",
+                    start_time,
+                    start_time + (points * step),
+                    step,
+                    [
+                        -0.2841206166091448,
+                        -0.05810270987744115,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                    ],
+                )
+            ],
+        ]
+        expectedResults[1][0].options = {"invisible": True, "stacked": True}
+        expectedResults[1][1].options = {"stacked": True}
+
+        with patch("graphite_api.functions.evaluateTokens", mock_evaluate):
+            result = functions.holtWintersConfidenceBands(
+                {
+                    "args": ({}, {}),
+                    "startTime": datetime(1970, 2, 1, 0, 0, 0, 0, pytz.utc),
+                    "endTime": datetime(1970, 2, 1, 0, 9, 0, 0, pytz.utc),
+                    "data": [],
+                },
+                series,
+            )
             self.assertEqual(result, expectedResults[0])
 
-            result = functions.holtWintersConfidenceArea({
-                'args': ({}, {}),
-                'startTime': datetime(1970, 2, 1, 0, 0, 0, 0, pytz.utc),
-                'endTime': datetime(1970, 2, 1, 0, 9, 0, 0, pytz.utc),
-                'data': []
-                }, series)
+            result = functions.holtWintersConfidenceArea(
+                {
+                    "args": ({}, {}),
+                    "startTime": datetime(1970, 2, 1, 0, 0, 0, 0, pytz.utc),
+                    "endTime": datetime(1970, 2, 1, 0, 9, 0, 0, pytz.utc),
+                    "data": [],
+                },
+                series,
+            )
             self.assertEqual(result, expectedResults[1])
 
-            result = functions.holtWintersAberration({
-                'args': ({}, {}),
-                'startTime': datetime(1970, 2, 1, 0, 0, 0, 0, pytz.utc),
-                'endTime': datetime(1970, 2, 1, 0, 9, 0, 0, pytz.utc),
-                'data': []
-                }, series)
+            result = functions.holtWintersAberration(
+                {
+                    "args": ({}, {}),
+                    "startTime": datetime(1970, 2, 1, 0, 0, 0, 0, pytz.utc),
+                    "endTime": datetime(1970, 2, 1, 0, 9, 0, 0, pytz.utc),
+                    "data": [],
+                },
+                series,
+            )
             self.assertEqual(result, expectedResults[2])
 
     def test_dashed(self):
         series = self._generate_series_list(config=[range(100)])
         dashed = functions.dashed({}, series)[0]
-        self.assertEqual(dashed.options, {'dashed': 5})
+        self.assertEqual(dashed.options, {"dashed": 5})
 
         dashed = functions.dashed({}, series, 12)[0]
-        self.assertEqual(dashed.options, {'dashed': 12})
+        self.assertEqual(dashed.options, {"dashed": 12})
 
     def test_time_stack(self):
         timespan = 3600 * 24 * 8  # 8 days
         stop = int(time.time())
         step = 100
-        series = TimeSeries('foo.bar',
-                            stop - timespan,
-                            stop,
-                            step,
-                            [x**1.5 for x in range(0, timespan, step)])
+        series = TimeSeries(
+            "foo.bar",
+            stop - timespan,
+            stop,
+            step,
+            [x ** 1.5 for x in range(0, timespan, step)],
+        )
         series[10] = None
-        series.pathExpression = 'foo.bar'
+        series.pathExpression = "foo.bar"
         self.write_series(series, [(100, timespan)])
 
-        ctx = {'startTime': parseATTime('-1d'),
-               'endTime': parseATTime('now')}
-        stack = functions.timeStack(ctx, [series], '1d', 0, 7)
+        ctx = {"startTime": parseATTime("-1d"), "endTime": parseATTime("now")}
+        stack = functions.timeStack(ctx, [series], "1d", 0, 7)
         self.assertEqual(len(stack), 7)
 
-        stack = functions.timeStack(ctx, [series], '-1d', 0, 7)
+        stack = functions.timeStack(ctx, [series], "-1d", 0, 7)
         self.assertEqual(len(stack), 7)
 
     def test_time_shift(self):
         timespan = 3600 * 24 * 8  # 8 days
         stop = int(time.time())
         step = 100
-        series = TimeSeries('foo.bar',
-                            stop - timespan,
-                            stop,
-                            step,
-                            [x**1.5 for x in range(0, timespan, step)])
+        series = TimeSeries(
+            "foo.bar",
+            stop - timespan,
+            stop,
+            step,
+            [x ** 1.5 for x in range(0, timespan, step)],
+        )
         series[10] = None
-        series.pathExpression = 'foo.bar'
+        series.pathExpression = "foo.bar"
         self.write_series(series, [(100, timespan)])
 
-        ctx = {'startTime': parseATTime('-1d'),
-               'endTime': parseATTime('now')}
-        shift = functions.timeShift(ctx, [series], '1d')
+        ctx = {"startTime": parseATTime("-1d"), "endTime": parseATTime("now")}
+        shift = functions.timeShift(ctx, [series], "1d")
         self.assertEqual(len(shift), 1)
 
-        shift = functions.timeShift(ctx, [series], '-1d', False)
+        shift = functions.timeShift(ctx, [series], "-1d", False)
         self.assertEqual(len(shift), 1)
 
-        shift = functions.timeShift(ctx, [], '-1d')
+        shift = functions.timeShift(ctx, [], "-1d")
         self.assertEqual(len(shift), 0)
 
     def test_constant_line(self):
-        ctx = {
-            'startTime': parseATTime('-1d'),
-            'endTime': parseATTime('now'),
-        }
+        ctx = {"startTime": parseATTime("-1d"), "endTime": parseATTime("now")}
         line = functions.constantLine(ctx, 12)[0]
         self.assertEqual(list(line), [12, 12, 12])
         self.assertEqual(line.step, 3600 * 24 // 2)
 
     def test_aggregate_line(self):
-        ctx = {
-            'startTime': parseATTime('-1d'),
-            'endTime': parseATTime('now'),
-        }
+        ctx = {"startTime": parseATTime("-1d"), "endTime": parseATTime("now")}
         series = self._generate_series_list(config=[range(100)])
         line = functions.aggregateLine(ctx, series)[0]
         self.assertEqual(list(line), [49.5, 49.5, 49.5])
 
-        line = functions.aggregateLine(ctx, series, 'avg')[0]
+        line = functions.aggregateLine(ctx, series, "avg")[0]
         self.assertEqual(list(line), [49.5, 49.5, 49.5])
 
-        line = functions.aggregateLine(ctx, series, 'min')[0]
+        line = functions.aggregateLine(ctx, series, "min")[0]
         self.assertEqual(list(line), [0, 0, 0])
 
-        line = functions.aggregateLine(ctx, series, 'max')[0]
+        line = functions.aggregateLine(ctx, series, "max")[0]
         self.assertEqual(list(line), [99, 99, 99])
 
         with self.assertRaises(ValueError):
-            functions.aggregateLine(ctx, series, 'foo')
+            functions.aggregateLine(ctx, series, "foo")
 
     def test_threshold(self):
-        ctx = {
-            'startTime': parseATTime('-1d'),
-            'endTime': parseATTime('now'),
-        }
-        threshold = functions.threshold(ctx, 123, 'foobar')[0]
+        ctx = {"startTime": parseATTime("-1d"), "endTime": parseATTime("now")}
+        threshold = functions.threshold(ctx, 123, "foobar")[0]
         self.assertEqual(list(threshold), [123, 123, 123])
 
         threshold = functions.threshold(ctx, 123)[0]
         self.assertEqual(list(threshold), [123, 123, 123])
 
-        threshold = functions.threshold(ctx, 123, 'foo', 'red')[0]
+        threshold = functions.threshold(ctx, 123, "foo", "red")[0]
         self.assertEqual(list(threshold), [123, 123, 123])
-        self.assertEqual(threshold.color, 'red')
+        self.assertEqual(threshold.color, "red")
 
     def test_non_null(self):
         one = [None, 0, 2, 3] * 25
@@ -2640,214 +3737,243 @@ class FunctionsTest(TestCase):
         self.assertEqual(non_null[1][:5], [0, 1, 1, 0, 1])
 
     def test_identity(self):
-        ctx = {
-            'startTime': parseATTime('-1d'),
-            'endTime': parseATTime('now'),
-        }
-        identity = functions.identity(ctx, 'foo')[0]
+        ctx = {"startTime": parseATTime("-1d"), "endTime": parseATTime("now")}
+        identity = functions.identity(ctx, "foo")[0]
         self.assertEqual(identity.end - identity.start, 3600 * 24)
 
     def test_count(self):
-        series = self._generate_series_list(config=[range(100),
-                                                    range(100, 200)])
+        series = self._generate_series_list(
+            config=[range(100), range(100, 200)]
+        )
         count = functions.countSeries({}, series)[0]
         self.assertEqual(list(count), [2] * 100)
 
     def test_empty_count(self):
-        expectedResult = [
-            TimeSeries('0', 0, 600, 300, [0, 0, 0]),
-        ]
+        expectedResult = [TimeSeries("0", 0, 600, 300, [0, 0, 0])]
         ctx = {
-            'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
-            'endTime': datetime(1970, 1, 1, 0, 10, 0, 0, pytz.utc),
+            "startTime": datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
+            "endTime": datetime(1970, 1, 1, 0, 10, 0, 0, pytz.utc),
         }
         result = functions.countSeries(ctx)
         self.assertEqual(result, expectedResult)
 
     def test_group_by_node(self):
-        series = self._generate_series_list(config=[range(100),
-                                                    range(100, 200)])
-        grouped = functions.groupByNode({}, series, 1, 'sumSeries')
+        series = self._generate_series_list(
+            config=[range(100), range(100, 200)]
+        )
+        grouped = functions.groupByNode({}, series, 1, "sumSeries")
         first, second = grouped
-        self.assertEqual(first.name, 'test-db1')
-        self.assertEqual(second.name, 'test-db2')
+        self.assertEqual(first.name, "test-db1")
+        self.assertEqual(second.name, "test-db2")
 
         series[1].name = series[0].name
-        grouped = functions.groupByNode({}, series, 1, 'sumSeries')
+        grouped = functions.groupByNode({}, series, 1, "sumSeries")
         self.assertEqual(len(grouped), 1)
-        self.assertEqual(grouped[0].name, 'test-db1')
+        self.assertEqual(grouped[0].name, "test-db1")
         self.assertEqual(list(grouped[0])[:3], [100, 102, 104])
 
     def test_group_by_nodes(self):
         seriesList = [
-            TimeSeries('group1.server1.load5', 0, 2, 1, [10, 20]),
-            TimeSeries('group1.server1.load10', 0, 2, 1, [1, 2]),
-            TimeSeries('group1.server2.load5', 0, 2, 1, [30, 40]),
-            TimeSeries('group1.server2.load10', 0, 2, 1, [3, 4]),
-            TimeSeries('group2.server1.load5', 0, 2, 1, [40, 50]),
-            TimeSeries('group2.server1.load10', 0, 2, 1, [4, 5]),
-            TimeSeries('group2.server2.load5', 0, 2, 1, [60, 70]),
-            TimeSeries('group2.server2.load10', 0, 2, 1, [6, 7]),
+            TimeSeries("group1.server1.load5", 0, 2, 1, [10, 20]),
+            TimeSeries("group1.server1.load10", 0, 2, 1, [1, 2]),
+            TimeSeries("group1.server2.load5", 0, 2, 1, [30, 40]),
+            TimeSeries("group1.server2.load10", 0, 2, 1, [3, 4]),
+            TimeSeries("group2.server1.load5", 0, 2, 1, [40, 50]),
+            TimeSeries("group2.server1.load10", 0, 2, 1, [4, 5]),
+            TimeSeries("group2.server2.load5", 0, 2, 1, [60, 70]),
+            TimeSeries("group2.server2.load10", 0, 2, 1, [6, 7]),
         ]
         for series in seriesList:
             series.pathExpression = series.name
-        grouped = functions.groupByNodes({}, seriesList,
-                                         'sumSeries', 0, 2)
+        grouped = functions.groupByNodes({}, seriesList, "sumSeries", 0, 2)
 
-        expectedNames = ['group1.load5', 'group1.load10',
-                         'group2.load5', 'group2.load10']
+        expectedNames = [
+            "group1.load5",
+            "group1.load10",
+            "group2.load5",
+            "group2.load10",
+        ]
         self.assertEqual([s.name for s in grouped], expectedNames)
 
         group1_load10 = grouped[1]
         self.assertEqual(list(group1_load10), [4, 6])
 
     def test_exclude(self):
-        series = self._generate_series_list(config=[range(100),
-                                                    range(100, 200)])
-        excl = functions.exclude({}, series, 'db1')
+        series = self._generate_series_list(
+            config=[range(100), range(100, 200)]
+        )
+        excl = functions.exclude({}, series, "db1")
         self.assertEqual(excl, [series[1]])
 
     def test_grep(self):
-        series = self._generate_series_list(config=[range(100),
-                                                    range(100, 200)])
-        grep = functions.grep({}, series, 'db1')
+        series = self._generate_series_list(
+            config=[range(100), range(100, 200)]
+        )
+        grep = functions.grep({}, series, "db1")
         self.assertEqual(grep, [series[0]])
 
     def test_smart_summarize(self):
         ctx = {
-            'startTime': parseATTime('-1min'),
-            'endTime': parseATTime('now'),
-            'tzinfo': pytz.timezone('UTC'),
+            "startTime": parseATTime("-1min"),
+            "endTime": parseATTime("now"),
+            "tzinfo": pytz.timezone("UTC"),
         }
         series = self._generate_series_list(config=[range(100)])
         for s in series:
             self.write_series(s)
-        summ = functions.smartSummarize(ctx, series, '5s')[0]
+        summ = functions.smartSummarize(ctx, series, "5s")[0]
         self.assertEqual(summ[:3], [220, 245, 270])
 
-        summ = functions.smartSummarize(ctx, series, '5s', 'avg')[0]
+        summ = functions.smartSummarize(ctx, series, "5s", "avg")[0]
         self.assertEqual(summ[:3], [44, 49, 54])
 
-        summ = functions.smartSummarize(ctx, series, '5s', 'last')[0]
+        summ = functions.smartSummarize(ctx, series, "5s", "last")[0]
         self.assertEqual(summ[:3], [46, 51, 56])
 
-        summ = functions.smartSummarize(ctx, series, '5s', 'max')[0]
+        summ = functions.smartSummarize(ctx, series, "5s", "max")[0]
         self.assertEqual(summ[:3], [46, 51, 56])
 
-        summ = functions.smartSummarize(ctx, series, '5s', 'min')[0]
+        summ = functions.smartSummarize(ctx, series, "5s", "min")[0]
         self.assertEqual(summ[:3], [42, 47, 52])
 
         # Higher time interval should not trigger timezone errors
-        functions.smartSummarize(ctx, series, '100s', 'min')[0]
+        functions.smartSummarize(ctx, series, "100s", "min")[0]
 
     def test_summarize(self):
         series = self._generate_series_list(config=[list(range(99)) + [None]])
 
         # summarize is not consistent enough to allow testing exact output
-        functions.summarize({}, series, '5s')[0]
-        functions.summarize({}, series, '5s', 'avg', True)[0]
-        functions.summarize({}, series, '5s', 'last')[0]
-        functions.summarize({}, series, '5s', 'min')[0]
-        functions.summarize({}, series, '5s', 'max')[0]
+        functions.summarize({}, series, "5s")[0]
+        functions.summarize({}, series, "5s", "avg", True)[0]
+        functions.summarize({}, series, "5s", "last")[0]
+        functions.summarize({}, series, "5s", "min")[0]
+        functions.summarize({}, series, "5s", "max")[0]
 
     def test_hitcount(self):
         ctx = {
-            'startTime': parseATTime('-1min'),
-            'endTime': parseATTime('now'),
-            'tzinfo': pytz.timezone('UTC'),
+            "startTime": parseATTime("-1min"),
+            "endTime": parseATTime("now"),
+            "tzinfo": pytz.timezone("UTC"),
         }
         series = self._generate_series_list(config=[list(range(99)) + [None]])
         for s in series:
             self.write_series(s)
 
-        hit = functions.hitcount(ctx, series, '5s')[0]
+        hit = functions.hitcount(ctx, series, "5s")[0]
         self.assertEqual(hit[:3], [0, 15, 40])
 
-        hit = functions.hitcount(ctx, series, '5s', True)[0]
+        hit = functions.hitcount(ctx, series, "5s", True)[0]
         self.assertEqual(hit[:3], [220, 245, 270])
 
         try:
-            hit = functions.hitcount(ctx, series, '1min', True)[0]
-            hit = functions.hitcount(ctx, series, '1h', True)[0]
-            hit = functions.hitcount(ctx, series, '1d', True)[0]
+            hit = functions.hitcount(ctx, series, "1min", True)[0]
+            hit = functions.hitcount(ctx, series, "1h", True)[0]
+            hit = functions.hitcount(ctx, series, "1d", True)[0]
         except ValueError as e:
             self.fail("hitcount() raised ValueError: %s" % str(e))
 
     def test_random_walk(self):
         ctx = {
-            'startTime': parseATTime('-12h'),
-            'endTime': parseATTime('now'),
+            "startTime": parseATTime("-12h"),
+            "endTime": parseATTime("now"),
         }
-        walk = functions.randomWalkFunction(ctx, 'foo')[0]
+        walk = functions.randomWalkFunction(ctx, "foo")[0]
         self.assertEqual(len(walk), 721)
 
     def test_null_zero_sum(self):
         s = TimeSeries("s", 0, 1, 1, [None])
-        s.pathExpression = 's'
+        s.pathExpression = "s"
         [series] = functions.sumSeries({}, [s])
         self.assertEqual(list(series), [None])
 
         s = TimeSeries("s", 0, 1, 1, [None, 1])
-        s.pathExpression = 's'
+        s.pathExpression = "s"
         t = TimeSeries("s", 0, 1, 1, [None, None])
-        t.pathExpression = 't'
+        t.pathExpression = "t"
         [series] = functions.sumSeries({}, [s, t])
         self.assertEqual(list(series), [None, 1])
 
     def test_multiply_with_wildcards(self):
         s1 = [
-            TimeSeries('web.host-1.avg-response.value', 0, 1, 1, [1, 10, 11]),
-            TimeSeries('web.host-2.avg-response.value', 0, 1, 1, [2, 20, 21]),
-            TimeSeries('web.host-3.avg-response.value', 0, 1, 1, [3, 30, 31]),
-            TimeSeries('web.host-4.avg-response.value', 0, 1, 1, [4, 40, 41]),
+            TimeSeries("web.host-1.avg-response.value", 0, 1, 1, [1, 10, 11]),
+            TimeSeries("web.host-2.avg-response.value", 0, 1, 1, [2, 20, 21]),
+            TimeSeries("web.host-3.avg-response.value", 0, 1, 1, [3, 30, 31]),
+            TimeSeries("web.host-4.avg-response.value", 0, 1, 1, [4, 40, 41]),
         ]
         s2 = [
-            TimeSeries('web.host-4.total-request.value', 0, 1, 1, [4, 8, 12]),
-            TimeSeries('web.host-3.total-request.value', 0, 1, 1, [3, 7, 11]),
-            TimeSeries('web.host-1.total-request.value', 0, 1, 1, [1, 5, 9]),
-            TimeSeries('web.host-2.total-request.value', 0, 1, 1, [2, 6, 10]),
+            TimeSeries("web.host-4.total-request.value", 0, 1, 1, [4, 8, 12]),
+            TimeSeries("web.host-3.total-request.value", 0, 1, 1, [3, 7, 11]),
+            TimeSeries("web.host-1.total-request.value", 0, 1, 1, [1, 5, 9]),
+            TimeSeries("web.host-2.total-request.value", 0, 1, 1, [2, 6, 10]),
         ]
         expected = [
-            TimeSeries('web.host-1', 0, 1, 1, [1, 50, 99]),
-            TimeSeries('web.host-2', 0, 1, 1, [4, 120, 210]),
-            TimeSeries('web.host-3', 0, 1, 1, [9, 210, 341]),
-            TimeSeries('web.host-4', 0, 1, 1, [16, 320, 492]),
+            TimeSeries("web.host-1", 0, 1, 1, [1, 50, 99]),
+            TimeSeries("web.host-2", 0, 1, 1, [4, 120, 210]),
+            TimeSeries("web.host-3", 0, 1, 1, [9, 210, 341]),
+            TimeSeries("web.host-4", 0, 1, 1, [16, 320, 492]),
         ]
         results = functions.multiplySeriesWithWildcards({}, s1 + s2, 2, 3)
         self.assertEqual(results, expected)
 
     def test_timeslice(self):
         series = [
-            TimeSeries('test.value', 0, 600, 60,
-                       [None, 1, 2, 3, None, 5, 6, None, 7, 8, 9]),
+            TimeSeries(
+                "test.value",
+                0,
+                600,
+                60,
+                [None, 1, 2, 3, None, 5, 6, None, 7, 8, 9],
+            )
         ]
 
         expected = [
-            TimeSeries('timeSlice(test.value, 180, 480)', 0, 600, 60,
-                       [None, None, None, 3, None, 5, 6, None, 7, None, None]),
+            TimeSeries(
+                "timeSlice(test.value, 180, 480)",
+                0,
+                600,
+                60,
+                [None, None, None, 3, None, 5, 6, None, 7, None, None],
+            )
         ]
 
-        results = functions.timeSlice({
-            'startTime': datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
-            'endTime': datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
-            'data': [],
-        }, series, '00:03 19700101', '00:08 19700101')
+        results = functions.timeSlice(
+            {
+                "startTime": datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc),
+                "endTime": datetime(1970, 1, 1, 0, 9, 0, 0, pytz.utc),
+                "data": [],
+            },
+            series,
+            "00:03 19700101",
+            "00:08 19700101",
+        )
         self.assertEqual(results, expected)
 
     def test_remove_emtpy(self):
         series = [
-            TimeSeries('foo.bar', 0, 100, 10,
-                       [None, None, None, 0, 0, 0, 1, 1, 1, None]),
-            TimeSeries('foo.baz', 0, 100, 10, [None] * 10),
-            TimeSeries('foo.blah', 0, 100, 10,
-                       [None, None, None, 0, 0, 0, 0, 0, 0, None]),
+            TimeSeries(
+                "foo.bar",
+                0,
+                100,
+                10,
+                [None, None, None, 0, 0, 0, 1, 1, 1, None],
+            ),
+            TimeSeries("foo.baz", 0, 100, 10, [None] * 10),
+            TimeSeries(
+                "foo.blah",
+                0,
+                100,
+                10,
+                [None, None, None, 0, 0, 0, 0, 0, 0, None],
+            ),
         ]
 
         results = functions.removeEmptySeries({}, series)
         self.assertEqual(results, [series[0], series[2]])
 
     def test_legend_value_with_system_preserves_sign(self):
-        series = [TimeSeries("foo", 0, 1, 1, [-10000, -20000, -30000, -40000])]
+        series = [
+            TimeSeries("foo", 0, 1, 1, [-10000, -20000, -30000, -40000])
+        ]
         [result] = functions.legendValue({}, series, "avg", "si")
         self.assertEqual(result.name, "foo                 avg  -25.00K   ")
 
@@ -2858,25 +3984,39 @@ class FunctionsTest(TestCase):
         # savedSeries would be eg: ('test.value', 180, 480, 60)
         savedStart = now - 1320
         savedEnd = now - 1020
-        savedSeries = TimeSeries('test.value', savedStart, savedEnd, 60,
-                                 [3, None, 5, 6, None, 8])
-        savedSeries.pathExpression = 'test.value'
+        savedSeries = TimeSeries(
+            "test.value", savedStart, savedEnd, 60, [3, None, 5, 6, None, 8]
+        )
+        savedSeries.pathExpression = "test.value"
         self.write_series(savedSeries, [(60, 60)])
 
         # inputSeries would be eg: ('test.value', 1200, 1500, 60)
         inputStart = now - 300
-        inputSeries = TimeSeries('test.value', inputStart, now, 60,
-                                 [123, None, None, 456, None, None, None])
-        inputSeries.pathExpression = 'test.value'
+        inputSeries = TimeSeries(
+            "test.value",
+            inputStart,
+            now,
+            60,
+            [123, None, None, 456, None, None, None],
+        )
+        inputSeries.pathExpression = "test.value"
 
-        results = functions.linearRegression({
-            'startTime': parseATTime(str(inputStart)),
-        }, [inputSeries], str(savedStart), str(savedEnd))
+        results = functions.linearRegression(
+            {"startTime": parseATTime(str(inputStart))},
+            [inputSeries],
+            str(savedStart),
+            str(savedEnd),
+        )
 
         expected = [
-            TimeSeries('linearRegression(test.value, %s, %s)' %
-                       (savedStart, savedEnd), inputStart, now, 60,
-                       [20.0, 21.0, 22.0, 23.0, 24.0, 25.0, 26.0])
+            TimeSeries(
+                "linearRegression(test.value, %s, %s)"
+                % (savedStart, savedEnd),
+                inputStart,
+                now,
+                60,
+                [20.0, 21.0, 22.0, 23.0, 24.0, 25.0, 26.0],
+            )
         ]
 
         # regression function calculated from datapoints on minutes 3 to 8
@@ -2887,30 +4027,40 @@ class FunctionsTest(TestCase):
         start = end - 3
 
         seriesList = [
-            TimeSeries('servers.s1.disk.bytes_used',
-                       start, end, 1, [10, 20, 30]),
-            TimeSeries('servers.s1.disk.bytes_free',
-                       start, end, 1, [90, 80, 70]),
-            TimeSeries('servers.s2.disk.bytes_used',
-                       start, end, 1, [1, 2, 3]),
-            TimeSeries('servers.s2.disk.bytes_free',
-                       start, end, 1, [99, 98, 97])
+            TimeSeries(
+                "servers.s1.disk.bytes_used", start, end, 1, [10, 20, 30]
+            ),
+            TimeSeries(
+                "servers.s1.disk.bytes_free", start, end, 1, [90, 80, 70]
+            ),
+            TimeSeries(
+                "servers.s2.disk.bytes_used", start, end, 1, [1, 2, 3]
+            ),
+            TimeSeries(
+                "servers.s2.disk.bytes_free", start, end, 1, [99, 98, 97]
+            ),
         ]
         for series in seriesList:
             series.pathExpression = series.name
             self.write_series(series)
 
         expectedResults = [
-            TimeSeries('servers.s1.disk.pct_used',
-                       start, end, 1, [0.10, 0.20, 0.30]),
-            TimeSeries('servers.s2.disk.pct_used', start, end, 1,
-                       [0.01, 0.02, 0.03])
+            TimeSeries(
+                "servers.s1.disk.pct_used", start, end, 1, [0.10, 0.20, 0.30]
+            ),
+            TimeSeries(
+                "servers.s2.disk.pct_used", start, end, 1, [0.01, 0.02, 0.03]
+            ),
         ]
 
-        result = functions.applyByNode({
-                'startTime': parseATTime(str(start - 1)),
-                'endTime': parseATTime(str(end - 1)),
-            }, seriesList, 1,
-            'divideSeries(%.disk.bytes_used, sumSeries(%.disk.bytes_*))',
-            '%.disk.pct_used')
+        result = functions.applyByNode(
+            {
+                "startTime": parseATTime(str(start - 1)),
+                "endTime": parseATTime(str(end - 1)),
+            },
+            seriesList,
+            1,
+            "divideSeries(%.disk.bytes_used, sumSeries(%.disk.bytes_*))",
+            "%.disk.pct_used",
+        )
         self.assertEqual(result, expectedResults)

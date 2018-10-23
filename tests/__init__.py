@@ -4,8 +4,9 @@ import shutil
 from logging.config import dictConfig
 
 os.environ.setdefault(
-    'GRAPHITE_API_CONFIG',
-    os.path.join(os.path.dirname(__file__), 'conf.yaml'))  # noqa
+    "GRAPHITE_API_CONFIG",
+    os.path.join(os.path.dirname(__file__), "conf.yaml"),
+)  # noqa
 
 try:
     import unittest2 as unittest
@@ -18,20 +19,19 @@ from graphite_api.finders.whisper import WhisperFinder
 from graphite_api.storage import Store
 
 
-DATA_DIR = '/tmp/graphite-api-data.{0}'.format(os.getpid())
-WHISPER_DIR = os.path.join(DATA_DIR, 'whisper')
-SEARCH_INDEX = os.path.join(DATA_DIR, 'index')
+DATA_DIR = "/tmp/graphite-api-data.{0}".format(os.getpid())
+WHISPER_DIR = os.path.join(DATA_DIR, "whisper")
+SEARCH_INDEX = os.path.join(DATA_DIR, "index")
 
 
-dictConfig({
-    'version': 1,
-    'handlers': {
-        'raw': {
-            'level': 'DEBUG',
-            'class': 'logging.NullHandler',
+dictConfig(
+    {
+        "version": 1,
+        "handlers": {
+            "raw": {"level": "DEBUG", "class": "logging.NullHandler"}
         },
-    },
-})
+    }
+)
 
 
 class TestCase(unittest.TestCase):
@@ -41,9 +41,9 @@ class TestCase(unittest.TestCase):
     def setUp(self):
         self._cleanup()
         os.makedirs(WHISPER_DIR)
-        app.config['TESTING'] = True
-        whisper_conf = {'whisper': {'directories': [WHISPER_DIR]}}
-        app.config['GRAPHITE']['store'] = Store([WhisperFinder(whisper_conf)])
+        app.config["TESTING"] = True
+        whisper_conf = {"whisper": {"directories": [WHISPER_DIR]}}
+        app.config["GRAPHITE"]["store"] = Store([WhisperFinder(whisper_conf)])
         self.app = app.test_client()
 
     def tearDown(self):
@@ -51,12 +51,13 @@ class TestCase(unittest.TestCase):
 
     def assertJSON(self, response, data, status_code=200):
         self.assertEqual(response.status_code, status_code)
-        self.assertEqual(json.loads(response.data.decode('utf-8')), data)
+        self.assertEqual(json.loads(response.data.decode("utf-8")), data)
 
     def write_series(self, series, retentions=((1, 180),)):
         file_name = os.path.join(
             WHISPER_DIR,
-            '{0}.wsp'.format(series.pathExpression.replace('.', os.sep)))
+            "{0}.wsp".format(series.pathExpression.replace(".", os.sep)),
+        )
         dir_name = os.path.dirname(file_name)
         if not os.path.isdir(dir_name):
             os.makedirs(dir_name)

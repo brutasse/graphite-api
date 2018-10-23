@@ -15,17 +15,21 @@ from . import TestCase
 class CarbonLinkTestCase(TestCase):
     def test_allowed_modules(self):
         with self.assertRaises(pickle.UnpicklingError) as context:
-            carbonlink.allowed_module('foo', 'bar')
-        self.assertIn('Attempting to unpickle unsafe module foo',
-                      str(context.exception))
+            carbonlink.allowed_module("foo", "bar")
+        self.assertIn(
+            "Attempting to unpickle unsafe module foo", str(context.exception)
+        )
 
         with self.assertRaises(pickle.UnpicklingError) as context:
-            carbonlink.allowed_module('__builtin__', 'bar')
-        self.assertIn('Attempting to unpickle unsafe class bar',
-                      str(context.exception))
+            carbonlink.allowed_module("__builtin__", "bar")
+        self.assertIn(
+            "Attempting to unpickle unsafe class bar", str(context.exception)
+        )
 
-        self.assertIsNotNone(carbonlink.allowed_module('collections', 'deque'))
-        self.assertIsNotNone(carbonlink.allowed_module('__builtin__', 'list'))
+        self.assertIsNotNone(
+            carbonlink.allowed_module("collections", "deque")
+        )
+        self.assertIsNotNone(carbonlink.allowed_module("__builtin__", "list"))
 
 
 class ConsistentHashRingTest(TestCase):
@@ -36,10 +40,12 @@ class ConsistentHashRingTest(TestCase):
             ("127.0.0.1", "cache2"),
         ]
         hashring = ConsistentHashRing(hosts)
-        self.assertEqual(hashring.compute_ring_position('hosts.worker1.cpu'),
-                         64833)
-        self.assertEqual(hashring.compute_ring_position('hosts.worker2.cpu'),
-                         38509)
+        self.assertEqual(
+            hashring.compute_ring_position("hosts.worker1.cpu"), 64833
+        )
+        self.assertEqual(
+            hashring.compute_ring_position("hosts.worker2.cpu"), 38509
+        )
 
     def test_chr_add_node(self):
         hosts = [
@@ -98,8 +104,8 @@ class ConsistentHashRingTest(TestCase):
             ("127.0.0.1", "cache2"),
         ]
         hashring = ConsistentHashRing(hosts)
-        node = hashring.get_node('hosts.worker1.cpu')
-        self.assertEqual(node, ('127.0.0.1', 'cache2'))
+        node = hashring.get_node("hosts.worker1.cpu")
+        self.assertEqual(node, ("127.0.0.1", "cache2"))
 
     def test_chr_get_nodes(self):
         hosts = [
@@ -108,7 +114,7 @@ class ConsistentHashRingTest(TestCase):
             ("127.0.0.1", "cache2"),
         ]
         hashring = ConsistentHashRing(hosts)
-        node = hashring.get_nodes('hosts.worker1.cpu')
+        node = hashring.get_nodes("hosts.worker1.cpu")
         expected = [
             ("127.0.0.1", "cache2"),
             ("127.0.0.1", "cache0"),
@@ -124,11 +130,13 @@ class ConsistentHashRingTestFNV1A(TestCase):
             ("127.0.0.2", "5dd63865534f84899c6e5594dba6749a"),
             ("127.0.0.3", "866a18b81f2dc4649517a1df13e26f28"),
         ]
-        hashring = ConsistentHashRing(hosts, hash_type='fnv1a_ch')
-        self.assertEqual(hashring.compute_ring_position('hosts.worker1.cpu'),
-                         59573)
-        self.assertEqual(hashring.compute_ring_position('hosts.worker2.cpu'),
-                         35749)
+        hashring = ConsistentHashRing(hosts, hash_type="fnv1a_ch")
+        self.assertEqual(
+            hashring.compute_ring_position("hosts.worker1.cpu"), 59573
+        )
+        self.assertEqual(
+            hashring.compute_ring_position("hosts.worker2.cpu"), 35749
+        )
 
     def test_chr_get_node_fnv1a(self):
         hosts = [
@@ -136,31 +144,37 @@ class ConsistentHashRingTestFNV1A(TestCase):
             ("127.0.0.2", "5dd63865534f84899c6e5594dba6749a"),
             ("127.0.0.3", "866a18b81f2dc4649517a1df13e26f28"),
         ]
-        hashring = ConsistentHashRing(hosts, hash_type='fnv1a_ch')
-        self.assertEqual(hashring.get_node('hosts.worker1.cpu'),
-                         ('127.0.0.1', 'ba603c36342304ed77953f84ac4d357b'))
-        self.assertEqual(hashring.get_node('hosts.worker2.cpu'),
-                         ('127.0.0.3', '866a18b81f2dc4649517a1df13e26f28'))
+        hashring = ConsistentHashRing(hosts, hash_type="fnv1a_ch")
+        self.assertEqual(
+            hashring.get_node("hosts.worker1.cpu"),
+            ("127.0.0.1", "ba603c36342304ed77953f84ac4d357b"),
+        )
+        self.assertEqual(
+            hashring.get_node("hosts.worker2.cpu"),
+            ("127.0.0.3", "866a18b81f2dc4649517a1df13e26f28"),
+        )
 
 
 class CarbonLinkPoolTest(TestCase):
     def test_clp_replication_factor(self):
         with self.assertRaises(Exception) as context:
-            CarbonLinkPool(['127.0.0.1:2003'], replication_factor=2)
-        self.assertIn('replication_factor=2 cannot exceed servers=1',
-                      str(context.exception))
+            CarbonLinkPool(["127.0.0.1:2003"], replication_factor=2)
+        self.assertIn(
+            "replication_factor=2 cannot exceed servers=1",
+            str(context.exception),
+        )
 
     def test_clp_requests(self):
         hosts = [
-            '10.0.0.1:2003:cache0',
-            '10.0.0.2:2003:cache1',
-            '10.0.0.3:2003:cache2',
+            "10.0.0.1:2003:cache0",
+            "10.0.0.2:2003:cache1",
+            "10.0.0.3:2003:cache2",
         ]
         carbonlink = CarbonLinkPool(hosts, replication_factor=3)
 
-        with patch('socket.socket'):
+        with patch("socket.socket"):
             for host in hosts:
-                server, port, instance = host.split(':')
+                server, port, instance = host.split(":")
                 conn = carbonlink.get_connection((server, instance))
                 conn.connect.assert_called_with((server, int(port)))
                 carbonlink.connections[(server, instance)].add(conn)
@@ -168,41 +182,41 @@ class CarbonLinkPoolTest(TestCase):
         def mock_recv_query(size):
             data = pickle.dumps(dict(datapoints=[1, 2, 3]))
             if size == 4:
-                return struct.pack('!I', len(data))
+                return struct.pack("!I", len(data))
             elif size == len(data):
                 return data
             else:
-                raise ValueError('unexpected size %s' % size)
+                raise ValueError("unexpected size %s" % size)
 
         conn.recv.side_effect = mock_recv_query
-        datapoints = carbonlink.query('hosts.worker1.cpu')
+        datapoints = carbonlink.query("hosts.worker1.cpu")
         self.assertEqual(datapoints, [1, 2, 3])
 
-        datapoints = carbonlink.query('carbon.send_to_all.request')
+        datapoints = carbonlink.query("carbon.send_to_all.request")
         self.assertEqual(datapoints, [1, 2, 3] * 3)
 
         def mock_recv_get_metadata(size):
-            data = pickle.dumps(dict(value='foo'))
+            data = pickle.dumps(dict(value="foo"))
             if size == 4:
-                return struct.pack('!I', len(data))
+                return struct.pack("!I", len(data))
             elif size == len(data):
                 return data
             else:
-                raise ValueError('unexpected size %s' % size)
+                raise ValueError("unexpected size %s" % size)
 
         conn.recv.side_effect = mock_recv_get_metadata
-        metadata = carbonlink.get_metadata('hosts.worker1.cpu', 'key')
-        self.assertEqual(metadata, 'foo')
+        metadata = carbonlink.get_metadata("hosts.worker1.cpu", "key")
+        self.assertEqual(metadata, "foo")
 
         def mock_recv_set_metadata(size):
-            data = pickle.dumps(dict(old_value='foo', new_value='bar'))
+            data = pickle.dumps(dict(old_value="foo", new_value="bar"))
             if size == 4:
-                return struct.pack('!I', len(data))
+                return struct.pack("!I", len(data))
             elif size == len(data):
                 return data
             else:
-                raise ValueError('unexpected size %s' % size)
+                raise ValueError("unexpected size %s" % size)
 
         conn.recv.side_effect = mock_recv_set_metadata
-        results = carbonlink.set_metadata('hosts.worker1.cpu', 'foo', 'bar')
-        self.assertEqual(results, {'old_value': 'foo', 'new_value': 'bar'})
+        results = carbonlink.set_metadata("hosts.worker1.cpu", "foo", "bar")
+        self.assertEqual(results, {"old_value": "foo", "new_value": "bar"})

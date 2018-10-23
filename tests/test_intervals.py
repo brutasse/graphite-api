@@ -11,7 +11,7 @@ class IntervalTestCase(TestCase):
         i = Interval(0, 1)
         j = Interval(1, 2)
         k = Interval(0, 1)
-        l = Interval(0, 0)
+        m = Interval(0, 0)
         self.assertNotEqual(i, j)
         self.assertEqual(i, k)
         self.assertEqual(hash(i), hash(k))
@@ -22,9 +22,9 @@ class IntervalTestCase(TestCase):
         self.assertTrue(j > i)
 
         self.assertTrue(i)
-        self.assertFalse(l)
+        self.assertFalse(m)
 
-        self.assertEqual(repr(i), '<Interval: (0, 1)>')
+        self.assertEqual(repr(i), "<Interval: (0, 1)>")
 
         self.assertIsNone(i.intersect(j))
         self.assertEqual(i.intersect(k), k)
@@ -32,17 +32,16 @@ class IntervalTestCase(TestCase):
         self.assertEqual(i.union(j), Interval(0, 2))
 
         with self.assertRaises(TypeError):
-            j.union(l)
+            j.union(m)
 
-        self.assertEqual(union_overlapping([i, j, k, l]),
-                         [Interval(0, 2)])
+        self.assertEqual(union_overlapping([i, j, k, m]), [Interval(0, 2)])
 
     def test_interval_set(self):
         i = Interval(0, 1)
         j = Interval(1, 2)
 
         s = IntervalSet([i, j])
-        self.assertEqual(repr(s), '[<Interval: (0, 2)>]')
+        self.assertEqual(repr(s), "[<Interval: (0, 2)>]")
         s = IntervalSet([i, j], disjoint=True)
 
         it = iter(s)
@@ -52,10 +51,11 @@ class IntervalTestCase(TestCase):
         self.assertTrue(s)
         self.assertFalse(IntervalSet([]))
 
-        self.assertEqual(s - IntervalSet([i]),
-                         IntervalSet([j]))
+        self.assertEqual(s - IntervalSet([i]), IntervalSet([j]))
 
         self.assertFalse(IntervalSet([]).intersect(s))
 
-        self.assertEqual(s.union(IntervalSet([Interval(3, 4)])),
-                         IntervalSet([Interval(3, 4), i, j]))
+        self.assertEqual(
+            s.union(IntervalSet([Interval(3, 4)])),
+            IntervalSet([Interval(3, 4), i, j]),
+        )
