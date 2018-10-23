@@ -3,7 +3,6 @@ import random
 import socket
 import struct
 import time
-
 from hashlib import md5
 from importlib import import_module
 from io import BytesIO
@@ -15,24 +14,25 @@ from structlog import get_logger
 logger = get_logger()
 
 pickle_safe = {
-    'copy_reg': set(['_reconstructor']),
-    '__builtin__': set(['object', 'list']),
-    'collections': set(['deque']),
+    "copy_reg": set(["_reconstructor"]),
+    "__builtin__": set(["object", "list"]),
+    "collections": set(["deque"]),
 }
-renames = {
-    'copy_reg': 'copyreg',
-    '__builtin__': 'builtins',
-}
+renames = {"copy_reg": "copyreg", "__builtin__": "builtins"}
 
 
 try:
     import pyhash
+
     hasher = pyhash.fnv1a_32()
 
-    def fnv32a(string, seed=0x811c9dc5):
+    def fnv32a(string, seed=0x811C9DC5):
         return hasher(string, seed=seed)
+
+
 except ImportError:
-    def fnv32a(string, seed=0x811c9dc5):
+
+    def fnv32a(string, seed=0x811C9DC5):
         """
         FNV-1a Hash (http://isthe.com/chongo/tech/comp/fnv/) in Python.
         Taken from https://gist.github.com/vaiorabbit/5670985
@@ -49,17 +49,20 @@ except ImportError:
 def allowed_module(module, name):
     if module not in pickle_safe:
         raise pickle.UnpicklingError(
-            'Attempting to unpickle unsafe module %s' % module)
+            "Attempting to unpickle unsafe module %s" % module
+        )
     if name not in pickle_safe[module]:
         raise pickle.UnpicklingError(
-            'Attempting to unpickle unsafe class %s' % name)
+            "Attempting to unpickle unsafe class %s" % name
+        )
     if module in renames:
-        module = 'six.moves.{0}'.format(renames[module])
+        module = "six.moves.{0}".format(renames[module])
     mod = import_module(module)
     return getattr(mod, name)
 
 
 if six.PY2:
+
     class SafeUnpickler(object):
         @classmethod
         def find_class(cls, module, name):
@@ -70,7 +73,10 @@ if six.PY2:
             obj = pickle.Unpickler(BytesIO(s))
             obj.find_global = cls.find_class
             return obj.load()
+
+
 else:
+
     class SafeUnpickler(pickle.Unpickler):
         def find_class(self, module, name):
             return allowed_module(module, name)
@@ -82,7 +88,7 @@ else:
 
 
 class ConsistentHashRing(object):
-    def __init__(self, nodes, replica_count=100, hash_type='carbon_ch'):
+    def __init__(self, nodes, replica_count=100, hash_type="carbon_ch"):
         self.ring = []
         self.ring_len = len(self.ring)
         self.nodes = set()
@@ -93,8 +99,8 @@ class ConsistentHashRing(object):
             self.add_node(node)
 
     def compute_ring_position(self, key):
-        if self.hash_type == 'fnv1a_ch':
-            big_hash = '{0:x}'.format(int(fnv32a(str(key))))
+        if self.hash_type == "fnv1a_ch":
+            big_hash = "{0:x}".format(int(fnv32a(str(key))))
             small_hash = int(big_hash[:4], 16) ^ int(big_hash[4:], 16)
         else:
             big_hash = md5(str(key).encode()).hexdigest()
@@ -105,7 +111,7 @@ class ConsistentHashRing(object):
         self.nodes.add(key)
         self.nodes_len = len(self.nodes)
         for i in range(self.replica_count):
-            if self.hash_type == 'fnv1a_ch':
+            if self.hash_type == "fnv1a_ch":
                 replica_key = "%d-%s" % (i, key[1])
             else:
                 replica_key = "%s:%d" % (key, i)
@@ -145,16 +151,23 @@ class ConsistentHashRing(object):
 
 
 class CarbonLinkPool(object):
-    def __init__(self, hosts, timeout=1, retry_delay=15,
-                 carbon_prefix='carbon', replication_factor=1,
-                 hashing_keyfunc=lambda x: x, hashing_type='carbon_ch'):
+    def __init__(
+        self,
+        hosts,
+        timeout=1,
+        retry_delay=15,
+        carbon_prefix="carbon",
+        replication_factor=1,
+        hashing_keyfunc=lambda x: x,
+        hashing_type="carbon_ch",
+    ):
         self.carbon_prefix = carbon_prefix
         self.retry_delay = retry_delay
         self.hosts = []
         self.ports = {}
         servers = set()
         for host in hosts:
-            parts = host.split(':')
+            parts = host.split(":")
             if len(parts) == 2:
                 parts.append(None)
             server, port, instance = parts
@@ -165,11 +178,14 @@ class CarbonLinkPool(object):
         self.timeout = float(timeout)
         if len(servers) < replication_factor:
             raise Exception(
-                "replication_factor=%d cannot exceed servers=%d" % (
-                    replication_factor, len(servers)))
+                "replication_factor=%d cannot exceed servers=%d"
+                % (replication_factor, len(servers))
+            )
         self.replication_factor = replication_factor
 
-        self.hash_ring = ConsistentHashRing(self.hosts, hash_type=hashing_type)
+        self.hash_ring = ConsistentHashRing(
+            self.hosts, hash_type=hashing_type
+        )
         self.keyfunc = hashing_keyfunc
         self.connections = {}
         self.last_failure = {}
@@ -224,34 +240,43 @@ class CarbonLinkPool(object):
     def query(self, metric):
         if not self.hosts:
             return []
-        request = dict(type='cache-query', metric=metric)
+        request = dict(type="cache-query", metric=metric)
         results = self.send_request(request)
-        logger.debug("carbonlink request returned", metric=metric,
-                     datapoints=len(results['datapoints']))
-        return results['datapoints']
+        logger.debug(
+            "carbonlink request returned",
+            metric=metric,
+            datapoints=len(results["datapoints"]),
+        )
+        return results["datapoints"]
 
     def get_metadata(self, metric, key):
-        request = dict(type='get-metadata', metric=metric, key=key)
+        request = dict(type="get-metadata", metric=metric, key=key)
         results = self.send_request(request)
-        logger.debug("carbonlink get-metadata request received",
-                     metric=metric, key=key)
-        return results['value']
+        logger.debug(
+            "carbonlink get-metadata request received", metric=metric, key=key
+        )
+        return results["value"]
 
     def set_metadata(self, metric, key, value):
-        request = dict(type='set-metadata', metric=metric,
-                       key=key, value=value)
+        request = dict(
+            type="set-metadata", metric=metric, key=key, value=value
+        )
         results = self.send_request(request)
-        logger.debug("carbonlink set-metadata request received",
-                     metric=metric, key=key, value=value)
+        logger.debug(
+            "carbonlink set-metadata request received",
+            metric=metric,
+            key=key,
+            value=value,
+        )
         return results
 
     def send_request(self, request):
-        metric = request['metric']
+        metric = request["metric"]
         serialized_request = pickle.dumps(request, protocol=2)
         len_prefix = struct.pack("!L", len(serialized_request))
         request_packet = len_prefix + serialized_request
         result = {}
-        result.setdefault('datapoints', [])
+        result.setdefault("datapoints", [])
 
         if metric.startswith(self.carbon_prefix):
             return self.send_request_to_all(request)
@@ -267,20 +292,21 @@ class CarbonLinkPool(object):
             logger.info("carbonlink exception", exc_info=True, host=str(host))
         else:
             self.connections[host].add(conn)
-            if 'error' in result:
-                logger.info("carbonlink error", error=result['error'])
-                raise CarbonLinkRequestError(result['error'])
-            logger.debug("carbonlink finished receiving",
-                         metric=metric, host=host)
+            if "error" in result:
+                logger.info("carbonlink error", error=result["error"])
+                raise CarbonLinkRequestError(result["error"])
+            logger.debug(
+                "carbonlink finished receiving", metric=metric, host=host
+            )
         return result
 
     def send_request_to_all(self, request):
-        metric = request['metric']
+        metric = request["metric"]
         serialized_request = pickle.dumps(request, protocol=2)
         len_prefix = struct.pack("!L", len(serialized_request))
         request_packet = len_prefix + serialized_request
         results = {}
-        results.setdefault('datapoints', [])
+        results.setdefault("datapoints", [])
 
         for host in self.hosts:
             conn = self.get_connection(host)
@@ -290,18 +316,23 @@ class CarbonLinkPool(object):
                 result = self.recv_response(conn)
             except Exception:
                 self.last_failure[host] = time.time()
-                logger.info("carbonlink exception", exc_info=True,
-                            host=str(host))
+                logger.info(
+                    "carbonlink exception", exc_info=True, host=str(host)
+                )
             else:
                 self.connections[host].add(conn)
-                if 'error' in result:
-                    logger.info("carbonlink error",
-                                host=str(host), error=result['error'])
+                if "error" in result:
+                    logger.info(
+                        "carbonlink error",
+                        host=str(host),
+                        error=result["error"],
+                    )
                 else:
-                    if len(result['datapoints']) > 1:
-                        results['datapoints'].extend(result['datapoints'])
-            logger.debug("carbonlink finished receiving",
-                         metric=metric, host=str(host))
+                    if len(result["datapoints"]) > 1:
+                        results["datapoints"].extend(result["datapoints"])
+            logger.debug(
+                "carbonlink finished receiving", metric=metric, host=str(host)
+            )
         return results
 
     def recv_response(self, conn):
@@ -317,7 +348,7 @@ class CarbonLinkRequestError(Exception):
 
 # Socket helper functions
 def recv_exactly(conn, num_bytes):
-    buf = b''
+    buf = b""
     while len(buf) < num_bytes:
         data = conn.recv(num_bytes - len(buf))
         if not data:

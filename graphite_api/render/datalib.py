@@ -21,7 +21,7 @@ logger = get_logger()
 
 
 class TimeSeries(list):
-    def __init__(self, name, start, end, step, values, consolidate='average'):
+    def __init__(self, name, start, end, step, values, consolidate="average"):
         list.__init__(self, values)
         self.name = name
         self.start = start
@@ -35,19 +35,36 @@ class TimeSeries(list):
     def __eq__(self, other):
         if isinstance(other, TimeSeries):
             color_eq = True
-            if hasattr(self, 'color'):
-                if hasattr(other, 'color'):
-                    color_eq = (self.color == other.color)
+            if hasattr(self, "color"):
+                if hasattr(other, "color"):
+                    color_eq = self.color == other.color
                 else:
                     color_eq = False
-            elif hasattr(other, 'color'):
+            elif hasattr(other, "color"):
                 color_eq = False
 
-            return ((self.name, self.start, self.step, self.consolidationFunc,
-                     self.valuesPerPoint, self.options) ==
-                    (other.name, other.start, other.step,
-                     other.consolidationFunc, other.valuesPerPoint,
-                     other.options)) and list.__eq__(self, other) and color_eq
+            return (
+                (
+                    (
+                        self.name,
+                        self.start,
+                        self.step,
+                        self.consolidationFunc,
+                        self.valuesPerPoint,
+                        self.options,
+                    )
+                    == (
+                        other.name,
+                        other.start,
+                        other.step,
+                        other.consolidationFunc,
+                        other.valuesPerPoint,
+                        other.options,
+                    )
+                )
+                and list.__eq__(self, other)
+                and color_eq
+            )
         return False
 
     def __iter__(self):
@@ -83,20 +100,25 @@ class TimeSeries(list):
         usable = [v for v in values if v is not None]
         if not usable:
             return None
-        if self.consolidationFunc == 'sum':
+        if self.consolidationFunc == "sum":
             return sum(usable)
-        if self.consolidationFunc == 'average':
+        if self.consolidationFunc == "average":
             return float(sum(usable)) / len(usable)
-        if self.consolidationFunc == 'max':
+        if self.consolidationFunc == "max":
             return max(usable)
-        if self.consolidationFunc == 'min':
+        if self.consolidationFunc == "min":
             return min(usable)
         raise Exception(
-            "Invalid consolidation function: '%s'" % self.consolidationFunc)
+            "Invalid consolidation function: '%s'" % self.consolidationFunc
+        )
 
     def __repr__(self):
-        return 'TimeSeries(name=%s, start=%s, end=%s, step=%s)' % (
-            self.name, self.start, self.end, self.step)
+        return "TimeSeries(name=%s, start=%s, end=%s, step=%s)" % (
+            self.name,
+            self.start,
+            self.end,
+            self.step,
+        )
 
 
 class DataStore(object):
@@ -104,6 +126,7 @@ class DataStore(object):
     Simple object to store results of multi fetches.
     Also aids in looking up data by pathExpressions.
     """
+
     def __init__(self):
         self.paths = defaultdict(set)
         self.data = defaultdict(list)
@@ -121,23 +144,20 @@ class DataStore(object):
         # Dont add if empty
         if not nonempty(data):
             for d in self.data[path]:
-                if nonempty(d['values']):
+                if nonempty(d["values"]):
                     return
 
         # Add data to path
         for expr in exprs:
             self.paths[expr].add(path)
-        self.data[path].append({
-            'time_info': time_info,
-            'values': data
-        })
+        self.data[path].append({"time_info": time_info, "values": data})
 
     def get_series_list(self, path_expr):
         series_list = []
         for path in self.get_paths(path_expr):
             for data in self.data.get(path):
-                start, end, step = data['time_info']
-                series = TimeSeries(path, start, end, step, data['values'])
+                start, end, step = data["time_info"]
+                series = TimeSeries(path, start, end, step, data["values"])
                 series.pathExpression = path_expr
                 series_list.append(series)
         return series_list
@@ -145,10 +165,11 @@ class DataStore(object):
 
 def fetchData(requestContext, pathExprs):
     from ..app import app
-    startTime = int(epoch(requestContext['startTime']))
-    endTime = int(epoch(requestContext['endTime']))
-    if 'now' in requestContext:
-        now = int(epoch(requestContext['now']))
+
+    startTime = int(epoch(requestContext["startTime"]))
+    endTime = int(epoch(requestContext["endTime"]))
+    if "now" in requestContext:
+        now = int(epoch(requestContext["now"]))
     else:
         now = None
 
@@ -168,7 +189,7 @@ def fetchData(requestContext, pathExprs):
             if not node.is_leaf:
                 continue
             if node.path not in path_to_exprs:
-                if hasattr(node, '__fetch_multi__'):
+                if hasattr(node, "__fetch_multi__"):
                     multi_nodes[node.__fetch_multi__].append(node)
                 else:
                     single_nodes.append(node)
@@ -176,19 +197,19 @@ def fetchData(requestContext, pathExprs):
 
     # Multi fetches
     for finder in app.store.finders:
-        if not hasattr(finder, '__fetch_multi__'):
+        if not hasattr(finder, "__fetch_multi__"):
             continue
         nodes = multi_nodes[finder.__fetch_multi__]
         if not nodes:
             continue
         try:
-            time_info, series = finder.fetch_multi(nodes, startTime, endTime,
-                                                   now, requestContext)
+            time_info, series = finder.fetch_multi(
+                nodes, startTime, endTime, now, requestContext
+            )
         except TypeError:
             time_info, series = finder.fetch_multi(nodes, startTime, endTime)
         for path, values in series.items():
-            data_store.add_data(path, time_info, values,
-                                path_to_exprs[path])
+            data_store.add_data(path, time_info, values, path_to_exprs[path])
 
     # Single fetches
     fetches = [
@@ -197,15 +218,16 @@ def fetchData(requestContext, pathExprs):
     ]
     for path, results in fetches:
         if not results:
-            logger.info("no results", path=path, start=startTime,
-                        end=endTime)
+            logger.info("no results", path=path, start=startTime, end=endTime)
             continue
 
         try:
             time_info, values = results
         except ValueError as e:
-            raise Exception("could not parse timeInfo/values from metric "
-                            "'%s': %s" % (path, e))
+            raise Exception(
+                "could not parse timeInfo/values from metric "
+                "'%s': %s" % (path, e)
+            )
         data_store.add_data(path, time_info, values, path_to_exprs[path])
 
     return data_store

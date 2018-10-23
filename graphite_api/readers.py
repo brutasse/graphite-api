@@ -6,7 +6,7 @@ logger = get_logger()
 
 
 class MultiReader(object):
-    __slots__ = ('nodes',)
+    __slots__ = ("nodes",)
 
     def __init__(self, nodes):
         self.nodes = nodes
@@ -23,8 +23,9 @@ class MultiReader(object):
 
         for node in self.nodes:
             try:
-                results.append(node.fetch(startTime, endTime, now,
-                                          requestContext))
+                results.append(
+                    node.fetch(startTime, endTime, now, requestContext)
+                )
             except Exception:
                 logger.error("fetch error", exc_info=True)
 

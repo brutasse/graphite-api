@@ -8,6 +8,7 @@ class PathsTest(TestCase):
     TestCase for pathsFromTarget function
 
     """
+
     def validate_paths(self, expected, test):
         """
         Assert the lengths of the expected list and the test list are the same
@@ -27,7 +28,7 @@ class PathsTest(TestCase):
         Tests a target containing a single path expression.
 
         """
-        target = 'test.simple.metric'
+        target = "test.simple.metric"
         expected = [target]
         self.validate_paths(expected, pathsFromTarget({}, target))
 
@@ -37,9 +38,9 @@ class PathsTest(TestCase):
         arguments.
 
         """
-        path_1 = 'test.1.metric'
-        path_2 = 'test.2.metric'
-        target = 'sumSeries(%s,%s)' % (path_1, path_2)
+        path_1 = "test.1.metric"
+        path_2 = "test.2.metric"
+        target = "sumSeries(%s,%s)" % (path_1, path_2)
         expected = [path_1, path_2]
         self.validate_paths(expected, pathsFromTarget({}, target))
 
@@ -49,9 +50,9 @@ class PathsTest(TestCase):
         a kwarg.
 
         """
-        path_a = 'test.a.metric'
-        path_b = 'test.b.metric'
-        target = 'someFunc(%s,b=%s)' % (path_a, path_b)
+        path_a = "test.a.metric"
+        path_b = "test.b.metric"
+        target = "someFunc(%s,b=%s)" % (path_a, path_b)
         expected = [path_a, path_b]
         self.validate_paths(expected, pathsFromTarget({}, target))
 
@@ -62,11 +63,11 @@ class PathsTest(TestCase):
 
         """
         paths = (
-            'test.a.metric',
-            'test.b.metric',
-            'test.c.metric',
-            'test.d.metric',
+            "test.a.metric",
+            "test.b.metric",
+            "test.c.metric",
+            "test.d.metric",
         )
-        target = 'outerFunc(innerFunc(%s, %s), s=innerFunc(%s, %s))' % paths
+        target = "outerFunc(innerFunc(%s, %s), s=innerFunc(%s, %s))" % paths
         expected = list(paths)
         self.validate_paths(expected, pathsFromTarget({}, target))

@@ -1,14 +1,14 @@
 class Node(object):
-    __slots__ = ('name', 'path', 'local', 'is_leaf')
+    __slots__ = ("name", "path", "local", "is_leaf")
 
     def __init__(self, path):
         self.path = path
-        self.name = path.split('.')[-1]
+        self.name = path.split(".")[-1]
         self.local = True
         self.is_leaf = False
 
     def __repr__(self):
-        return '<%s[%x]: %s>' % (self.__class__.__name__, id(self), self.path)
+        return "<%s[%x]: %s>" % (self.__class__.__name__, id(self), self.path)
 
 
 class BranchNode(Node):
@@ -16,7 +16,7 @@ class BranchNode(Node):
 
 
 class LeafNode(Node):
-    __slots__ = ('reader', 'is_leaf')
+    __slots__ = ("reader", "is_leaf")
 
     def __init__(self, path, reader):
         super(LeafNode, self).__init__(path)
@@ -25,7 +25,9 @@ class LeafNode(Node):
 
     def fetch(self, startTime, endTime, now=None, requestContext=None):
         try:
-            result = self.reader.fetch(startTime, endTime, now, requestContext)
+            result = self.reader.fetch(
+                startTime, endTime, now, requestContext
+            )
         except TypeError:
             result = self.reader.fetch(startTime, endTime)
 
@@ -36,4 +38,4 @@ class LeafNode(Node):
         return self.reader.get_intervals()
 
     def __repr__(self):
-        return '<LeafNode[%x]: %s (%s)>' % (id(self), self.path, self.reader)
+        return "<LeafNode[%x]: %s (%s)>" % (id(self), self.path, self.reader)

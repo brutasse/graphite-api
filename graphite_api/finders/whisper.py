@@ -23,51 +23,59 @@ logger = get_logger()
 
 class WhisperFinder(object):
     def __init__(self, config):
-        self.directories = config['whisper']['directories']
+        self.directories = config["whisper"]["directories"]
         self.carbonlink = None
-        if 'carbon' in config:
-            self.carbonlink = CarbonLinkPool(**config['carbon'])
+        if "carbon" in config:
+            self.carbonlink = CarbonLinkPool(**config["carbon"])
         else:
             self.carbonlink = None
 
     def find_nodes(self, query):
-        logger.debug("find_nodes", finder="whisper", start=query.startTime,
-                     end=query.endTime, pattern=query.pattern)
-        clean_pattern = query.pattern.replace('\\', '')
-        pattern_parts = clean_pattern.split('.')
+        logger.debug(
+            "find_nodes",
+            finder="whisper",
+            start=query.startTime,
+            end=query.endTime,
+            pattern=query.pattern,
+        )
+        clean_pattern = query.pattern.replace("\\", "")
+        pattern_parts = clean_pattern.split(".")
 
         for root_dir in self.directories:
             if not os.path.isdir(root_dir):
                 os.makedirs(root_dir)
             for absolute_path in self._find_paths(root_dir, pattern_parts):
-                if os.path.basename(absolute_path).startswith('.'):
+                if os.path.basename(absolute_path).startswith("."):
                     continue
 
-                relative_path = absolute_path[len(root_dir):].lstrip(os.sep)
+                relative_path = absolute_path[len(root_dir) :].lstrip(os.sep)
                 metric_path = fs_to_metric(relative_path)
-                real_metric_path = get_real_metric_path(absolute_path,
-                                                        metric_path)
+                real_metric_path = get_real_metric_path(
+                    absolute_path, metric_path
+                )
 
-                metric_path_parts = metric_path.split('.')
+                metric_path_parts = metric_path.split(".")
                 for field_index in find_escaped_pattern_fields(query.pattern):
                     metric_path_parts[field_index] = pattern_parts[
-                        field_index].replace('\\', '')
-                metric_path = '.'.join(metric_path_parts)
+                        field_index
+                    ].replace("\\", "")
+                metric_path = ".".join(metric_path_parts)
 
                 # Now we construct and yield an appropriate Node object
                 if os.path.isdir(absolute_path):
                     yield BranchNode(metric_path)
 
                 elif os.path.isfile(absolute_path):
-                    if absolute_path.endswith('.wsp'):
-                        reader = WhisperReader(absolute_path, real_metric_path,
-                                               self.carbonlink)
+                    if absolute_path.endswith(".wsp"):
+                        reader = WhisperReader(
+                            absolute_path, real_metric_path, self.carbonlink
+                        )
                         yield LeafNode(metric_path, reader)
 
-                    elif absolute_path.endswith('.wsp.gz'):
-                        reader = GzippedWhisperReader(absolute_path,
-                                                      real_metric_path,
-                                                      self.carbonlink)
+                    elif absolute_path.endswith(".wsp.gz"):
+                        reader = GzippedWhisperReader(
+                            absolute_path, real_metric_path, self.carbonlink
+                        )
                         yield LeafNode(metric_path, reader)
 
     def _find_paths(self, current_dir, patterns):
@@ -88,13 +96,16 @@ class WhisperFinder(object):
         if using_globstar:
             matching_subdirs = map(lambda x: x[0], walk(current_dir))
         else:
-            subdirs = [e for e in entries
-                       if os.path.isdir(os.path.join(current_dir, e))]
+            subdirs = [
+                e
+                for e in entries
+                if os.path.isdir(os.path.join(current_dir, e))
+            ]
             matching_subdirs = match_entries(subdirs, pattern)
 
         # For terminal globstar, add a pattern for all files in subdirs
         if using_globstar and not patterns:
-            patterns = ['*']
+            patterns = ["*"]
 
         if patterns:  # we've still got more directories to traverse
             for subdir in matching_subdirs:
@@ -104,10 +115,13 @@ class WhisperFinder(object):
 
         else:  # we've got the last pattern
             if not has_wildcard:
-                entries = [pattern + '.wsp', pattern + '.wsp.gz']
-            files = [e for e in entries
-                     if os.path.isfile(os.path.join(current_dir, e))]
-            matching_files = match_entries(files, pattern + '.*')
+                entries = [pattern + ".wsp", pattern + ".wsp.gz"]
+            files = [
+                e
+                for e in entries
+                if os.path.isfile(os.path.join(current_dir, e))
+            ]
+            matching_files = match_entries(files, pattern + ".*")
 
             for _basename in matching_files + matching_subdirs:
                 yield os.path.join(current_dir, _basename)
@@ -115,7 +129,7 @@ class WhisperFinder(object):
 
 class WhisperReader(object):
 
-    __slots__ = ('fs_path', 'real_metric_path', 'carbonlink')
+    __slots__ = ("fs_path", "real_metric_path", "carbonlink")
 
     def __init__(self, fs_path, real_metric_path, carbonlink=None):
         self.fs_path = fs_path
@@ -123,14 +137,19 @@ class WhisperReader(object):
         self.carbonlink = carbonlink
 
     def get_intervals(self):
-        start = time.time() - whisper.info(self.fs_path)['maxRetention']
+        start = time.time() - whisper.info(self.fs_path)["maxRetention"]
         end = max(stat(self.fs_path).st_mtime, start)
         return IntervalSet([Interval(start, end)])
 
     def fetch(self, startTime, endTime):  # noqa
-        logger.debug("fetch", reader="whisper", path=self.fs_path,
-                     metric_path=self.real_metric_path,
-                     start=startTime, end=endTime)
+        logger.debug(
+            "fetch",
+            reader="whisper",
+            path=self.fs_path,
+            metric_path=self.real_metric_path,
+            start=startTime,
+            end=endTime,
+        )
         data = whisper.fetch(self.fs_path, startTime, endTime)
         if not data:
             return None
@@ -155,21 +174,28 @@ class WhisperReader(object):
 
 class GzippedWhisperReader(WhisperReader):
     def get_intervals(self):
-        fh = gzip.GzipFile(self.fs_path, 'rb')
+        fh = gzip.GzipFile(self.fs_path, "rb")
         try:
-            info = getattr(whisper, '__readHeader')(fh)  # evil, but necessary.
+            info = getattr(whisper, "__readHeader")(
+                fh
+            )  # evil, but necessary.
         finally:
             fh.close()
 
-        start = time.time() - info['maxRetention']
+        start = time.time() - info["maxRetention"]
         end = max(stat(self.fs_path).st_mtime, start)
         return IntervalSet([Interval(start, end)])
 
     def fetch(self, startTime, endTime):
-        logger.debug("fetch", reader="gzip_whisper", path=self.fs_path,
-                     metric_path=self.real_metric_path,
-                     start=startTime, end=endTime)
-        fh = gzip.GzipFile(self.fs_path, 'rb')
+        logger.debug(
+            "fetch",
+            reader="gzip_whisper",
+            path=self.fs_path,
+            metric_path=self.real_metric_path,
+            start=startTime,
+            end=endTime,
+        )
+        fh = gzip.GzipFile(self.fs_path, "rb")
         try:
             return whisper.file_fetch(fh, startTime, endTime)
         finally:
@@ -177,16 +203,16 @@ class GzippedWhisperReader(WhisperReader):
 
 
 def find_escaped_pattern_fields(pattern_string):
-    pattern_parts = pattern_string.split('.')
+    pattern_parts = pattern_string.split(".")
     for index, part in enumerate(pattern_parts):
         if is_escaped_pattern(part):
             yield index
 
 
 def is_escaped_pattern(s):
-    for symbol in '*?[{':
+    for symbol in "*?[{":
         i = s.find(symbol)
         if i > 0:
-            if s[i-1] == '\\':
+            if s[i - 1] == "\\":
                 return True
     return False
