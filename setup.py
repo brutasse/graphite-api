@@ -7,7 +7,7 @@ install_requires = [
     'Flask',
     'PyYAML',
     'cairocffi',
-    'pyparsing>=1.5.7',
+    'pyparsing==2.4.0',
     'pytz',
     'six',
     'structlog',
