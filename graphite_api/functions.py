@@ -243,8 +243,7 @@ def sumSeriesWithRegex(requestContext, seriesList, pos, reg):
     kafkaimport2-test2
 
     """
-    newSeries = {}
-    newNames = list()
+    newSeries = defaultdict(list)
 
     for series in seriesList:
         newname = series.name.split('.')[pos]
@@ -253,15 +252,15 @@ def sumSeriesWithRegex(requestContext, seriesList, pos, reg):
         if result:
             newname = "-".join(result.groups())
 
-        if newname in newSeries:
-            newSeries[newname] = sumSeries(requestContext,
-                                           (series, newSeries[newname]))[0]
-        else:
-            newSeries[newname] = series
-            newNames.append(newname)
-        newSeries[newname].name = newname
+        newSeries[newname].append(series)
 
-    return [newSeries[name] for name in newNames]
+    ret = []
+    for name, series in newSeries.items():
+        summedSeries = sumSeries(requestContext, series)[0]
+        summedSeries.name = name
+        ret.append(summedSeries)
+
+    return ret
 
 
 def sumSeriesWithWildcards(requestContext, seriesList, *positions):
