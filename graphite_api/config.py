@@ -37,6 +37,16 @@ default_conf = {
             '/srv/graphite/whisper',
         ],
     },
+    'tagdb': {
+        'path': 'graphite_api.tags.redis.RedisTagDB',
+        'autocomplete_limit': 100,
+        'redis': {
+            'host': 'localhost',
+            'port': 6379,
+            'db': 0,
+            'password': '',
+        },
+    },
     'time_zone': get_localzone().zone,
 }
 if default_conf['time_zone'] == 'local':  # tzlocal didn't find anything
@@ -134,7 +144,9 @@ def configure(app):
     finders = []
     for finder in config['finders']:
         finders.append(load_by_path(finder)(config))
-    loaded_config['store'] = Store(finders)
+    path = config.get('tagdb', {}).get('path') or 'graphite_api.tags.base.DummyTagDB'
+    tagdb = get_tagdb(path, config, app.cache)
+    loaded_config['store'] = Store(finders, tagdb=tagdb)
     app.config['GRAPHITE'] = loaded_config
     app.config['TIME_ZONE'] = config['time_zone']
     logger.info("configured timezone", timezone=app.config['TIME_ZONE'])
@@ -185,3 +197,9 @@ def configure_logging(config):
         logger.info("loading configuration", path=config['path'])
     else:
         logger.info("loading default configuration")
+
+
+def get_tagdb(tagdb_path, config, cache=None):
+    module_name, class_name = tagdb_path.rsplit('.', 1)
+    module = import_module(module_name)
+    return getattr(module, class_name)(config, cache=cache)
