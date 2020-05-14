@@ -9,8 +9,9 @@ from .utils import is_pattern
 
 
 class Store(object):
-    def __init__(self, finders=None):
+    def __init__(self, finders=None, tagdb=None):
         self.finders = finders
+        self.tagdb = tagdb
 
     def find(self, pattern, startTime=None, endTime=None, local=True):
         query = FindQuery(pattern, startTime, endTime)

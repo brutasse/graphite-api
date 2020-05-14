@@ -548,6 +548,117 @@ def render():
     return response
 
 
+@app.route('/tags/tagSeries', methods=['POST'])
+def tags_series():
+    path = RequestParams.get('path')
+    if not path:
+        return jsonify({'error': 'no path specified'}, status=400)
+
+    return jsonify(app.store.tagdb.tag_series(path))
+
+
+@app.route('/tags/tagMultiSeries', methods=['POST'])
+def tags_multiseries():
+    paths = []
+    # Normal format: ?path=name;tag1=value1;tag2=value2&path=name;tag1=value2;tag2=value2
+    if len(RequestParams.getlist('path')) > 0:
+        paths = RequestParams.getlist('path')
+    # Rails/PHP/jQuery common practice format: ?path[]=...&path[]=...
+    elif len(RequestParams.getlist('path[]')) > 0:
+        paths = RequestParams.getlist('path[]')
+    else:
+        return jsonify({'error': 'no paths specified'}, status=400)
+
+    return jsonify(app.store.tagdb.tag_multi_series(paths))
+
+
+@app.route('/tags/delSeries', methods=['POST'])
+def tags_delseries():
+    paths = []
+    # Normal format: ?path=name;tag1=value1;tag2=value2&path=name;tag1=value2;tag2=value2
+    if len(RequestParams.getlist('path')) > 0:
+        paths = RequestParams.getlist('path')
+    # Rails/PHP/jQuery common practice format: ?path[]=...&path[]=...
+    elif len(RequestParams.getlist('path[]')) > 0:
+        paths = RequestParams.getlist('path[]')
+    else:
+        return jsonify({'error': 'no path specified'}, status=400)
+
+    return jsonify(app.store.tagdb.del_multi_series(paths))
+
+
+@app.route('/tags/findSeries', methods=methods)
+def tags_findseries():
+    exprs = []
+    # Normal format: ?expr=tag1=value1&expr=tag2=value2
+    if len(RequestParams.getlist('expr')) > 0:
+        exprs = RequestParams.getlist('expr')
+    # Rails/PHP/jQuery common practice format: ?expr[]=tag1=value1&expr[]=tag2=value2
+    elif len(RequestParams.getlist('expr[]')) > 0:
+        exprs = RequestParams.getlist('expr[]')
+
+    if not exprs:
+        return jsonify({'error': 'no tag expressions specified'}, status=400)
+
+    return jsonify(app.store.tagdb.find_series(exprs))
+
+
+@app.route('/tags', methods=['GET'])
+def tags_taglist():
+    return jsonify(app.store.tagdb.list_tags(
+        tagFilter=RequestParams.get('filter'),
+        limit=RequestParams.get('limit'),
+    ))
+
+
+@app.route('/tags/<string:tag>', methods=['GET'])
+def tags_tagdetails(tag):
+    return jsonify(app.store.tagdb.get_tag(
+        tag,
+        valueFilter=RequestParams.get('filter'),
+        limit=RequestParams.get('limit'),
+    ))
+
+
+@app.route('/tags/autoComplete/tags', methods=methods)
+def tags_autocomplete_tags():
+    exprs = []
+    # Normal format: ?expr=tag1=value1&expr=tag2=value2
+    if len(RequestParams.getlist('expr')) > 0:
+        exprs = RequestParams.getlist('expr')
+    # Rails/PHP/jQuery common practice format: ?expr[]=tag1=value1&expr[]=tag2=value2
+    elif len(RequestParams.getlist('expr[]')) > 0:
+        exprs = RequestParams.getlist('expr[]')
+
+    return jsonify(app.store.tagdb_auto_complete_tags(
+        exprs,
+        tagPrefix=RequestParams.get('tagPrefix'),
+        limit=RequestParams.get('limit'),
+    ))
+
+
+@app.route('/tags/autoComplete/values', methods=methods)
+def tags_autocomplete_values():
+    exprs = []
+    # Normal format: ?expr=tag1=value1&expr=tag2=value2
+    if len(RequestParams.getlist('expr')) > 0:
+        exprs = RequestParams.getlist('expr')
+    # Rails/PHP/jQuery common practice format: ?expr[]=tag1=value1&expr[]=tag2=value2
+    elif len(RequestParams.getlist('expr[]')) > 0:
+        exprs = RequestParams.getlist('expr[]')
+
+    tag = RequestParams.get('tag')
+    if not tag:
+        return jsonify({'error': 'no tag specified'}, status=400)
+
+    return jsonify(app.store.tagdb_auto_complete_values(
+        exprs,
+        tag,
+        valuePrefix=RequestParams.get('valuePrefix'),
+        limit=RequestParams.get('limit'),
+    ))
+
+
 def tree_json(nodes, base_path, wildcards=False):
     results = []
 
