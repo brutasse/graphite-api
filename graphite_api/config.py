@@ -37,7 +37,7 @@ default_conf = {
             '/srv/graphite/whisper',
         ],
     },
-    'time_zone': get_localzone().zone,
+    'time_zone': str(get_localzone()),
 }
 if default_conf['time_zone'] == 'local':  # tzlocal didn't find anything
     default_conf['time_zone'] = 'UTC'
